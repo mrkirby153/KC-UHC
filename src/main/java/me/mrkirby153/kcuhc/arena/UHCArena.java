@@ -1,5 +1,7 @@
 package me.mrkirby153.kcuhc.arena;
 
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.gui.SpectateInventory;
@@ -529,8 +531,8 @@ public class UHCArena implements Runnable, Listener {
                 /// INIT: 300 TRAVELD: 300 - currSize
                 // CurrSize: 200, therefore traveled = 100
                 //
-                double blocksLeft = world.getWorldBorder().getSize() - (dmStarted? 1 : endSize);
-                double percent = 1- (blocksLeft / worldborderInitSize);
+                double blocksLeft = world.getWorldBorder().getSize() - (dmStarted ? 1 : endSize);
+                double percent = 1 - (blocksLeft / worldborderInitSize);
                 if (percent > 1) {
                     percent = 1;
                 }
@@ -746,7 +748,7 @@ public class UHCArena implements Runnable, Listener {
 
     public void setWorldborder(double radius, int time) {
         worldborderInitSize = world.getWorldBorder().getSize();
-        System.out.println("Worldborder init Size: "+worldborderInitSize);
+        System.out.println("Worldborder init Size: " + worldborderInitSize);
         world.getWorldBorder().setSize(radius, time);
         if (nether != null)
             nether.getWorldBorder().setSize(radius * 2, time);
@@ -758,6 +760,26 @@ public class UHCArena implements Runnable, Listener {
 
     public int endSize() {
         return endSize;
+    }
+
+
+    public void sendEveryoneToTeamChannels() {
+        ByteArrayDataOutput out = ByteStreams.newDataOutput();
+        out.writeUTF(UHC.plugin.serverId());
+        out.writeUTF("assignTeams");
+        out.writeInt((int) players.stream().filter(p -> TeamHandler.getTeamForPlayer(p) != null).count());
+        players.stream().filter(p -> TeamHandler.getTeamForPlayer(p) != null).forEach(p -> {
+            out.writeUTF(p.getUniqueId().toString());
+            out.writeUTF(TeamHandler.getTeamForPlayer(p).getName());
+        });
+        UHC.discordHandler.sendMessage(out.toByteArray());
+    }
+
+    public void bringEveryoneToLobby() {
+        ByteArrayDataOutput out = ByteStreams.newDataOutput();
+        out.writeUTF(UHC.plugin.serverId());
+        out.writeUTF("toLobby");
+        UHC.discordHandler.sendMessage(out.toByteArray());
     }
 
     public enum State {

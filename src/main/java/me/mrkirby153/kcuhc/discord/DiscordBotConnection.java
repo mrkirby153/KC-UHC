@@ -7,78 +7,86 @@ import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
 import javax.crypto.Cipher;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.*;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class DiscordBotConnection{
+public class DiscordBotConnection {
 
     private final String host;
     private final int port;
 
     private InputStream inputStream;
-    private OutputStream os;
+    private OutputStream outputStream;
     private Socket socket;
 
     private KeyPair ourKey;
     private PublicKey theirKey;
+    private ExecutorService executor;
 
     private boolean connected = false;
 
-    public DiscordBotConnection(String host, int port){
+    public DiscordBotConnection(String host, int port) {
         this.host = host;
         this.port = port;
         ourKey = Cryptography.generateKeypair(2048);
+        executor = Executors.newCachedThreadPool();
     }
 
 
-    public void connect(){
+    public void connect() {
         try {
+            if(connected)
+                return;
             socket = new Socket(host, port);
             inputStream = socket.getInputStream();
-            os = socket.getOutputStream();
+            outputStream = socket.getOutputStream();
             // Perform the handshake
             // Write our key
-            os.write(ourKey.getPublic().getEncoded());
-            os.flush();
+            outputStream.write(ourKey.getPublic().getEncoded());
+            outputStream.flush();
             // Wait for thiers
             byte[] theirKey = new byte[2048];
             inputStream.read(theirKey);
             this.theirKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(theirKey));
             connected = true;
-            connected = true;
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
+            UHC.plugin.getLogger().severe("An error occurred from the socket! Disconnecting");
+            connected = false;
+            try{
+                socket.close();
+            } catch (IOException e1) {
+                UHC.plugin.getLogger().severe("An error occurred when closing the socket because of an error.");
+            }
         }
     }
 
-    public void sendMessage(byte[] message){
+    public ByteArrayDataInput sendMessage(byte[] message) {
+        if(!connected)
+            throw new IllegalStateException("Not connected to the discord bot!");
         try {
             ByteBuffer buff = ByteBuffer.allocate(4);
             buff.order(ByteOrder.LITTLE_ENDIAN);
-            byte[] encrypted = Cryptography.encrypt(ourKey.getPublic(), message);
+            byte[] encrypted = Cryptography.encrypt(theirKey, message);
             buff.putInt(encrypted.length);
             buff.rewind();
-            os.write(buff.array());
-            os.write(encrypted);
-            os.flush();
-            processResponse();
-        } catch (Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    private void processResponse(){
-        try {
+            outputStream.write(buff.array());
+            outputStream.write(encrypted);
+            outputStream.flush();
             if (inputStream == null)
-                return;
+                return null;
             byte[] messageSizeBytes = new byte[4];
-            if (inputStream.read(messageSizeBytes) <= 0) return;
+            if (inputStream.read(messageSizeBytes) <= 0) return null;
             ByteBuffer msgLenBuff = ByteBuffer.wrap(messageSizeBytes);
             msgLenBuff.order(ByteOrder.LITTLE_ENDIAN);
             msgLenBuff.rewind();
@@ -89,15 +97,35 @@ public class DiscordBotConnection{
             byte[] rawDecrypted = Cryptography.decrypt(ourKey.getPrivate(), encodedMessage);
             if (rawDecrypted == null) {
                 UHC.plugin.getLogger().info("Decryption failed!");
-                return;
+                return null;
             }
             ByteArrayDataInput in = ByteStreams.newDataInput(rawDecrypted);
             String command = in.readUTF();
-            DiscordBotResponseEvent responseEvent = new DiscordBotResponseEvent(command, in);
-            UHC.plugin.getServer().getPluginManager().callEvent(responseEvent);
-        } catch (Exception e){
+            return in;
+        } catch (Exception e) {
             e.printStackTrace();
+            connected = false;
+            UHC.plugin.getLogger().warning("Disconnected from robot!");
+            try{
+                socket.close();
+            } catch (Exception e1){
+                e.printStackTrace();
+            }
         }
+        return null;
+    }
+
+
+    public void processAsync(Runnable runnable, Callback callback){
+        executor.execute(()->{
+            runnable.run();
+            if(callback != null)
+            callback.call();
+        });
+    }
+
+    public void processAsync(Runnable runnable){
+        processAsync(runnable, null);
     }
 
 
@@ -107,7 +135,7 @@ public class DiscordBotConnection{
         private final String command;
         private final ByteArrayDataInput response;
 
-        public DiscordBotResponseEvent(String command, ByteArrayDataInput response){
+        public DiscordBotResponseEvent(String command, ByteArrayDataInput response) {
             this.command = command;
             this.response = response;
         }
@@ -120,7 +148,7 @@ public class DiscordBotConnection{
             return response;
         }
 
-        public static HandlerList getHandlerList(){
+        public static HandlerList getHandlerList() {
             return handlers;
         }
 
@@ -165,5 +193,9 @@ public class DiscordBotConnection{
             }
             return null;
         }
+    }
+
+    public interface Callback{
+        void call();
     }
 }

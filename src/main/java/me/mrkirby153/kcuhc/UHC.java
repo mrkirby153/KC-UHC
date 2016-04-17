@@ -3,10 +3,7 @@ package me.mrkirby153.kcuhc;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.TeamSpectator;
 import me.mrkirby153.kcuhc.arena.UHCArena;
-import me.mrkirby153.kcuhc.command.CommandMusic;
-import me.mrkirby153.kcuhc.command.CommandSpectate;
-import me.mrkirby153.kcuhc.command.CommandTeam;
-import me.mrkirby153.kcuhc.command.CommandUHC;
+import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.discord.DiscordBotConnection;
 import me.mrkirby153.kcuhc.discord.DiscordHandler;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
@@ -59,8 +56,8 @@ public class UHC extends JavaPlugin {
                 new JDABuilder(botToken).addListener(handler).buildBlocking();
             } catch (LoginException | InterruptedException e) {
                 e.printStackTrace();
-            }
-            getCommand("discord").setExecutor(new CommandDiscord());*/
+            }*/
+            getCommand("discord").setExecutor(new CommandDiscord());
             discordHandler = new DiscordBotConnection(getConfig().getString("discord.botHost"), getConfig().getInt("discord.botPort"));
             discordHandler.connect();
             if (getConfig().getString("discord.serverId") == null || getConfig().getString("discord.serverId").isEmpty()) {
@@ -95,10 +92,6 @@ public class UHC extends JavaPlugin {
     public void onDisable() {
         TeamHandler.unregisterAll();
         JukeboxHandler.shutdown();
-        if (handler != null)
-            handler.shutdown();
-        if (jda != null)
-            jda.shutdown();
     }
 
     public static boolean isAdmin(Player player) {
@@ -107,5 +100,9 @@ public class UHC extends JavaPlugin {
 
     public static boolean isAdmin(String string) {
         return admins.contains(string);
+    }
+
+    public String serverId() {
+        return getConfig().getString("discord.serverId");
     }
 }
