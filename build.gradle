@@ -1,0 +1,77 @@
+buildscript{
+    repositories{
+        mavenCentral();
+        maven{
+            name = "Quarxel"
+            url = "http://repo.thesandwichnetwork.tk/nexus/content/groups/quarxel/"
+            credentials{
+                username project.repositoryUsername
+                password project.repositoryPassword
+            }
+        }
+    }
+    dependencies{
+        classpath group: 'me.mrkirby153.quarxel', name: 'QuarxelManager', version: '1.1-SNAPSHOT'
+    }
+}
+
+apply plugin: 'quarxel'
+group = 'me.mrkirby153'
+version = '1.0-SNAPSHOT'
+
+repositories{
+    mavenCentral();
+    mavenLocal();
+    jcenter();
+    maven{
+        name = "Quarxel"
+        url = "http://repo.thesandwichnetwork.tk/nexus/content/repositories/quarxel/"
+        credentials{
+            username project.repositoryUsername
+            password project.repositoryPassword
+        }
+    }
+    maven{
+        name="Spigot"
+        url="https://hub.spigotmc.org/nexus/content/groups/public/"
+    }
+    maven{
+        name="Sonatype"
+        url="https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+    maven{
+        name="bintray"
+        url="http://jcenter.bintray.com"
+    }
+}
+configurations{
+    provided
+    compile.extendsFrom provided
+}
+
+dependencies{
+    provided name: "spigot-api", group:"org.spigotmc", version: "1.9-R0.1-SNAPSHOT"
+    compile 'net.dv8tion:JDA:1.4.0_238'
+    compile 'commons-io:commons-io:2.4'
+    provided 'org.spigotmc:spigot:1.9.2-1'
+}
+jar {
+    dependsOn configurations.runtime
+    from {
+        (configurations.runtime - configurations.provided).collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    } {
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+}
+quarxel {
+    serverLocation '/testServer'
+    if(project.hasProperty("serverArgs")){
+        serverArgs project.serverArgs
+    } else {
+        serverArgs '-Xmx1G'
+    }
+}

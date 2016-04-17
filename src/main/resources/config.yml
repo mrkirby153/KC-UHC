@@ -1,0 +1,7 @@
+admins: []
+discord:
+  # DO NOT CHANGE THE FOLLOWING VALUE! THIS IS RELATED TO THE INTERNAL WORKINGS OF THE DISCORDBOT HANDLER!
+  serverId: ''
+  useDiscord: false
+  botHost: 'localhost'
+  botPort: 6969
