@@ -45,7 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-import static me.mrkirby153.kcuhc.UHC.handler;
+import static me.mrkirby153.kcuhc.UHC.discordHandler;
 import static me.mrkirby153.kcuhc.arena.UHCArena.State.COUNTDOWN;
 
 public class UHCArena implements Runnable, Listener {
@@ -232,8 +232,7 @@ public class UHCArena implements Runnable, Listener {
         for (Player p : players()) {
             RegenTicket.give(p);
         }
-        if (handler != null)
-            handler.sendEveryoneToChannels();
+        sendEveryoneToTeamChannels();
         startingPlayers = players.size() - getSpectatorCount();
         state = State.RUNNING;
     }
@@ -245,10 +244,13 @@ public class UHCArena implements Runnable, Listener {
     public void spectate(Player player, boolean switchRole) {
         TeamHandler.joinTeam(TeamHandler.spectatorsTeam(), player);
         if (switchRole) {
-            if (handler != null)
-                handler.removeTeamRole(player);
-            if (handler != null)
-                handler.joinTeamChannel(player);
+            if(discordHandler != null){
+                ByteArrayDataOutput out = ByteStreams.newDataOutput();
+                out.writeUTF(UHC.plugin.serverId());
+                out.writeUTF("assignRole");
+                out.writeUTF(player.getUniqueId().toString());
+                out.writeUTF(TeamHandler.spectatorsTeam().getName());
+            }
         }
     }
 
@@ -305,8 +307,7 @@ public class UHCArena implements Runnable, Listener {
         worldborderDist.removeAll();
         HandlerList.unregisterAll(gameListener);
         UHC.plugin.getServer().getPluginManager().registerEvents(pregameListener, UHC.plugin);
-        if (handler != null)
-            handler.bringEveryoneToLobby();
+        bringEveryoneToLobby();
         MOTDHandler.setMotd(ChatColor.RESET + "" + ChatColor.RED + ChatColor.MAGIC + "|..|" + ChatColor.RESET + "  " + ChatColor.GOLD + winner + ChatColor.RED + " has won the game!  " + ChatColor.RED + ChatColor.MAGIC + "|..|");
         launchedFw = 0;
         state = State.ENDGAME;
@@ -316,11 +317,6 @@ public class UHCArena implements Runnable, Listener {
         JukeboxHandler.shutdown();
         countdown = 10;
         barProgress = 1;
-        if (handler != null) {
-            Bukkit.broadcastMessage(ChatColor.GOLD + "Generating discord channels, expect a bit of lag");
-            handler.cleanupTeams();
-            handler.initChannels();
-        }
         for (Player p : players) {
             worldborderDist.addPlayer(p);
         }
@@ -328,8 +324,8 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void essentiallyDisable() {
-        if (handler != null)
-            handler.shutdown();
+        if (UHC.discordHandler != null)
+            UHC.discordHandler.deleteAllTeamChannels(null);
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.setAllowFlight(false);
             p.setGameMode(GameMode.SURVIVAL);
@@ -764,22 +760,31 @@ public class UHCArena implements Runnable, Listener {
 
 
     public void sendEveryoneToTeamChannels() {
-        ByteArrayDataOutput out = ByteStreams.newDataOutput();
-        out.writeUTF(UHC.plugin.serverId());
-        out.writeUTF("assignTeams");
-        out.writeInt((int) players.stream().filter(p -> TeamHandler.getTeamForPlayer(p) != null).count());
-        players.stream().filter(p -> TeamHandler.getTeamForPlayer(p) != null).forEach(p -> {
-            out.writeUTF(p.getUniqueId().toString());
-            out.writeUTF(TeamHandler.getTeamForPlayer(p).getName());
-        });
-        UHC.discordHandler.sendMessage(out.toByteArray());
+        if(discordHandler == null)
+            return;
+        Bukkit.broadcastMessage(ChatColor.GOLD+"Creating discord channels...");
+        UHC.discordHandler.createAllTeamChannels(()-> UHC.discordHandler.processAsync(()->{
+            Bukkit.broadcastMessage(ChatColor.GOLD+"Assigning teams and moving everyone...");
+            ByteArrayDataOutput out = ByteStreams.newDataOutput();
+            out.writeUTF(UHC.plugin.serverId());
+            out.writeUTF("assignTeams");
+            out.writeInt((int) players.stream().filter(p -> TeamHandler.getTeamForPlayer(p) != null).count());
+            players.stream().filter(p -> TeamHandler.getTeamForPlayer(p) != null).forEach(p -> {
+                out.writeUTF(p.getUniqueId().toString());
+                out.writeUTF(TeamHandler.getTeamForPlayer(p).getName());
+            });
+            UHC.discordHandler.sendMessage(out.toByteArray());
+        },()->Bukkit.broadcastMessage(ChatColor.GOLD+"Everyone should now be in their discord channels")));
     }
 
     public void bringEveryoneToLobby() {
+        if(discordHandler == null)
+            return;
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeUTF(UHC.plugin.serverId());
         out.writeUTF("toLobby");
         UHC.discordHandler.sendMessage(out.toByteArray());
+        UHC.discordHandler.deleteAllTeamChannels(null);
     }
 
     public enum State {

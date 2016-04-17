@@ -67,7 +67,7 @@ public class UHC extends JavaPlugin {
                 for (int i = 0; i < 15; i++) {
                     id += acceptableChars.charAt(r.nextInt(acceptableChars.length()));
                 }
-                getConfig().set("discsord.serverId", id);
+                getConfig().set("discord.serverId", id);
                 saveConfig();
                 getLogger().info("Set server id to " + id);
             }
@@ -92,6 +92,8 @@ public class UHC extends JavaPlugin {
     public void onDisable() {
         TeamHandler.unregisterAll();
         JukeboxHandler.shutdown();
+        if(discordHandler != null)
+            discordHandler.shutdown();
     }
 
     public static boolean isAdmin(Player player) {

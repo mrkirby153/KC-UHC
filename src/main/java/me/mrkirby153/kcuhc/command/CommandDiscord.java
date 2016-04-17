@@ -5,9 +5,8 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
-import me.mrkirby153.kcuhc.arena.TeamHandler;
-import me.mrkirby153.kcuhc.arena.UHCTeam;
 import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.BaseComponent;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -26,6 +25,14 @@ public class CommandDiscord extends BaseCommand{
         Player player = (Player) sender;
         if(args[0].equalsIgnoreCase("reconnect")){
             UHC.discordHandler.connect();
+        }
+        if(args[0].equalsIgnoreCase("join")){
+            BaseComponent component = UtilChat.generateFormattedChat("To add the discord bot to your server, click ", ChatColor.GREEN);
+            component.addExtra(UtilChat.generateHyperlink(UtilChat.generateBoldChat("[HERE]", ChatColor.BLUE),
+                    "https://discordapp.com/oauth2/authorize?&client_id=169671604131856384&scope=bot&permissions=66202682", new BaseComponent[]{
+                            UtilChat.generateFormattedChat("Click to add the Discord bot to your server!", ChatColor.WHITE)
+                    }));
+            player.spigot().sendMessage(component);
         }
         if(args[0].equalsIgnoreCase("serverlink")){
             String guildId = args[1];
@@ -56,28 +63,12 @@ public class CommandDiscord extends BaseCommand{
         if(args[0].equalsIgnoreCase("cinit")){
 //            UHC.handler.initChannels();
             sender.sendMessage(UtilChat.generateFormattedChat("Generating discord channels", ChatColor.GOLD, 0).toLegacyText());
-            UHC.discordHandler.processAsync(()->{
-                for (UHCTeam team : TeamHandler.teams()) {
-                    ByteArrayDataOutput out = ByteStreams.newDataOutput();
-                    out.writeUTF(UHC.plugin.serverId());
-                    out.writeUTF("newTeam");
-                    out.writeUTF(team.getName());
-                    UHC.discordHandler.sendMessage(out.toByteArray());
-                }
-            }, ()-> player.spigot().sendMessage(UtilChat.generateFormattedChat("Channels generated!", ChatColor.GREEN, 0)));
+            UHC.discordHandler.createAllTeamChannels(()-> player.spigot().sendMessage(UtilChat.generateFormattedChat("Channels generated!", ChatColor.GREEN, 0)));
         }
         if(args[0].equalsIgnoreCase("shutdown")){
 //            UHC.handler.shutdown();
             sender.sendMessage(UtilChat.generateFormattedChat("Deleting discord channels", ChatColor.GOLD, 0).toLegacyText());
-            UHC.discordHandler.processAsync(() -> {
-                for (UHCTeam team : TeamHandler.teams()) {
-                    ByteArrayDataOutput out = ByteStreams.newDataOutput();
-                    out.writeUTF(UHC.plugin.serverId());
-                    out.writeUTF("removeTeam");
-                    out.writeUTF(team.getName());
-                    UHC.discordHandler.sendMessage(out.toByteArray());
-                }
-            }, ()->player.spigot().sendMessage(UtilChat.generateFormattedChat("Done!", ChatColor.GRAY, 8)));
+            UHC.discordHandler.deleteAllTeamChannels(()->player.spigot().sendMessage(UtilChat.generateFormattedChat("Done!", ChatColor.GRAY, 0)));
         }
         if(args[0].equalsIgnoreCase("disperse")){
 //            UHC.handler.sendEveryoneToChannels();

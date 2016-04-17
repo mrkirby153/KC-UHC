@@ -5,7 +5,9 @@ import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
-import org.bukkit.entity.Player;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
@@ -41,32 +43,25 @@ public class MOTDHandler implements Listener {
                             event.getPlayer().teleport(UHC.arena.getCenter().add(0, 2, 0));
                         else if (event.getPlayer().getLocation().distanceSquared(UHC.arena.getCenter()) > Math.pow(50, 2))
                             event.getPlayer().teleport(UHC.arena.getCenter().add(0, 2, 0));
-                        if (UHC.handler != null) {
-                            if (!UHC.handler.hasLinkedDiscord(event.getPlayer().getUniqueId())) {
-                                BaseComponent greeting = UtilChat.generateFormattedChat("Hello, ", ChatColor.GOLD, 0);
-                                greeting.addExtra(UtilChat.generateFormattedChat(event.getPlayer().getName(), ChatColor.GREEN, 0));
-                                greeting.addExtra(UtilChat.generateFormattedChat(" and welcome to TKA UHC", ChatColor.GOLD, 0));
+                        BaseComponent greeting = UtilChat.generateFormattedChat("Welcome to KC-UHC ", ChatColor.YELLOW);
+                        greeting.addExtra(UtilChat.generateFormattedChat(event.getPlayer().getName(), ChatColor.GREEN));
 
-                                BaseComponent discordNotification = UtilChat.generateFormattedChat("It looks like you haven't linked your minecraft account to Discord yet.", ChatColor.GOLD, 0);
+                        BaseComponent discord = UtilChat.generateFormattedChat("If you have not done so already, please join the discord server by clicking ", ChatColor.YELLOW);
+                        discord.addExtra(UtilChat.generateHyperlink(UtilChat.generateFormattedChat("[HERE]", ChatColor.BLUE, 8), UHC.plugin.getConfig().getString("discord.inviteUrl"),
+                                UtilChat.generateFormattedChat("Join the discord server", ChatColor.WHITE)));
 
-                                BaseComponent joinServer = UtilChat.generateFormattedChat("Please join the server by clicking ", ChatColor.GREEN, 0);
-                                joinServer.addExtra(UtilChat.generateHyperlink(UtilChat.generateFormattedChat("[HERE]", ChatColor.BLUE, 0), UHC.plugin.getConfig().getString("discord.inviteUrl"),
-                                        UtilChat.generateFormattedChat("Join the discord server", ChatColor.DARK_PURPLE, 0)));
+                        BaseComponent browserWarning = UtilChat.generateBoldChat("Please note that voice chat is only supported on the offical discord client, Firefox, Chrome, and Opera", ChatColor.DARK_RED);
 
-                                BaseComponent browserWarning = UtilChat.generateBoldChat("Please note that voice chat is only compatible with Firefox, Chrome, and Opera", ChatColor.DARK_RED);
+                        BaseComponent linkCommand = UtilChat.generateFormattedChat("Once you have joined the discord server, click ", ChatColor.YELLOW);
+                        TextComponent cmd = new TextComponent("[HERE]");
+                        cmd.setColor(ChatColor.BLUE);
+                        cmd.setBold(true);
+                        cmd.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{UtilChat.generateFormattedChat("Click to get your link code!", ChatColor.WHITE)}));
+                        cmd.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/discord link"));
+                        linkCommand.addExtra(cmd);
+                        linkCommand.addExtra(UtilChat.generateFormattedChat(" to link your account with discord!", ChatColor.YELLOW));
 
-                                BaseComponent command = UtilChat.generateFormattedChat("Once you've joined the server, type ", ChatColor.GOLD, 0);
-                                command.addExtra(UtilChat.generateFormattedChat("/discord link", ChatColor.BLUE, 0));
-                                command.addExtra(UtilChat.generateFormattedChat(" to get your unique link code", ChatColor.GOLD, 0));
-
-                                Player.Spigot s = event.getPlayer().spigot();
-                                s.sendMessage(greeting);
-                                s.sendMessage(discordNotification);
-                                s.sendMessage(joinServer);
-                                s.sendMessage(browserWarning);
-                                s.sendMessage(command);
-                            }
-                        }
+                        UtilChat.sendMultiple(event.getPlayer(), greeting, discord, browserWarning, linkCommand);
                     }
                 }.runTaskLater(UHC.plugin, 10L);
         }

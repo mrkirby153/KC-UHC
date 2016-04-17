@@ -1,8 +1,11 @@
 package me.mrkirby153.kcuhc.discord;
 
 import com.google.common.io.ByteArrayDataInput;
+import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.arena.TeamHandler;
+import me.mrkirby153.kcuhc.arena.UHCTeam;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -11,7 +14,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.*;
@@ -124,8 +126,42 @@ public class DiscordBotConnection {
         });
     }
 
+    public void deleteAllTeamChannels(Callback callback){
+        processAsync(()->{
+            for (UHCTeam team : TeamHandler.teams()) {
+                ByteArrayDataOutput out = ByteStreams.newDataOutput();
+                out.writeUTF(UHC.plugin.serverId());
+                out.writeUTF("removeTeam");
+                out.writeUTF(team.getName());
+                UHC.discordHandler.sendMessage(out.toByteArray());
+            }
+        }, callback);
+    }
+
+    public void createAllTeamChannels(Callback callback){
+        processAsync(()->{
+            for (UHCTeam team : TeamHandler.teams()) {
+                ByteArrayDataOutput out = ByteStreams.newDataOutput();
+                out.writeUTF(UHC.plugin.serverId());
+                out.writeUTF("newTeam");
+                out.writeUTF(team.getName());
+                UHC.discordHandler.sendMessage(out.toByteArray());
+            }
+        }, callback);
+    }
+
     public void processAsync(Runnable runnable){
         processAsync(runnable, null);
+    }
+
+    public void shutdown(){
+        try {
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        connected = false;
+        UHC.discordHandler = null;
     }
 
 

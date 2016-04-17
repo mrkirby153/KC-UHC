@@ -47,6 +47,10 @@ public class UtilChat {
         return tc;
     }
 
+    public static BaseComponent generateFormattedChat(String message, ChatColor color){
+        return generateFormattedChat(message, color, 0);
+    }
+
     public static BaseComponent generateItalicChat(String message, ChatColor color) {
         return generateFormattedChat(message, color, 4);
     }

@@ -1,7 +1,16 @@
 admins: []
 discord:
-  # DO NOT CHANGE THE FOLLOWING VALUE! THIS IS RELATED TO THE INTERNAL WORKINGS OF THE DISCORDBOT HANDLER!
+  #######################################################
+  #                       WARNING                       #
+  #                                                     #
+  #    Do not change the below value or share it with   #
+  #  anyone! This is a unique ID generated to identify  #
+  #  your server with the robot. Giving this id out may #
+  #   cause discord integration to not work correctly   #
+  #######################################################
   serverId: ''
+  # Enables discord integration
   useDiscord: false
   botHost: 'localhost'
   botPort: 6969
+  inviteUrl: ''

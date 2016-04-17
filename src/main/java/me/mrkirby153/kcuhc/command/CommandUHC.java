@@ -66,8 +66,8 @@ public class CommandUHC extends BaseCommand {
                 return true;
             }
             if (args[0].equalsIgnoreCase("singlepersonteams")) {
-                if (UHC.handler != null)
-                    UHC.handler.shutdown();
+                if(UHC.discordHandler != null)
+                    UHC.discordHandler.shutdown();
                 List<ChatColor> usedColors = new ArrayList<>();
                 List<ChatColor> blacklistedColors = Arrays.asList(ChatColor.BOLD, ChatColor.STRIKETHROUGH, ChatColor.RESET, ChatColor.MAGIC, ChatColor.UNDERLINE);
                 for (Player p : Bukkit.getOnlinePlayers()) {
