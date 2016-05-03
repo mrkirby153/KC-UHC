@@ -179,6 +179,10 @@ public class UHCArena implements Runnable, Listener {
         winningTeamColor = Color.WHITE;
         state = State.INITIALIZED;
         queuedTeamRemovals.clear();
+        uuidToStringMap.clear();
+        logoutTimes.clear();
+        players.clear();
+        previouslyOpped.clear();
     }
 
     public void start() {
@@ -202,9 +206,11 @@ public class UHCArena implements Runnable, Listener {
         PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 30 * 20, 20, true, false);
         for (Player p : players) {
             PacketPlayOutTitle timings = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TIMES, null, 10, 20 * 5, 20);
-            PacketPlayOutTitle title = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE,
+            PacketPlayOutTitle title = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, IChatBaseComponent.ChatSerializer.a("{\"text\":\"\"}"));
+            PacketPlayOutTitle subtitle = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE,
                     IChatBaseComponent.ChatSerializer.a(String.format("{\"text\":\"%s\"}", ChatColor.GOLD + "The game has begun!")));
             ((CraftPlayer) p).getHandle().playerConnection.sendPacket(timings);
+            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(subtitle);
             ((CraftPlayer) p).getHandle().playerConnection.sendPacket(title);
             if (!TeamHandler.isSpectator(p)) {
                 p.setGameMode(GameMode.SURVIVAL);
@@ -225,6 +231,7 @@ public class UHCArena implements Runnable, Listener {
                 p.setOp(false);
                 previouslyOpped.add(p);
             }
+            worldborderDist.addPlayer(p);
         }
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), String.format("spreadplayers %d %d %d %d true @a[team=!%s]", center.getBlockX(), center.getBlockZ(), 50, startSize / 2, TeamHandler.SPECTATORS_TEAM));
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), String.format("xp -3000l @a[team=!%s]", TeamHandler.SPECTATORS_TEAM));
@@ -323,9 +330,6 @@ public class UHCArena implements Runnable, Listener {
         JukeboxHandler.shutdown();
         countdown = 10;
         barProgress = 1;
-        for (Player p : players) {
-            worldborderDist.addPlayer(p);
-        }
         state = COUNTDOWN;
     }
 
@@ -356,7 +360,7 @@ public class UHCArena implements Runnable, Listener {
     public ArrayList<UHCPlayerTeam> teamsLeft() {
         ArrayList<UHCPlayerTeam> uniqueTeams = new ArrayList<>();
         for (Player p : players) {
-            if(queuedTeamRemovals.contains(p.getUniqueId()))
+            if (queuedTeamRemovals.contains(p.getUniqueId()))
                 continue;
             UHCTeam team = TeamHandler.getTeamForPlayer(p);
             if (!(team instanceof UHCPlayerTeam))
@@ -399,6 +403,7 @@ public class UHCArena implements Runnable, Listener {
         playerLoc.getWorld().dropItemNaturally(playerLoc, head);
         closeToBorder.removePlayer(dead);
         players.remove(dead);
+        spectate(dead);
         dead.spigot().sendMessage(UtilChat.generateBoldChat("You have died and are now a spectator", net.md_5.bungee.api.ChatColor.RED));
     }
 
@@ -577,6 +582,8 @@ public class UHCArena implements Runnable, Listener {
             case ENDGAME:
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     p.setAllowFlight(true);
+                    p.getInventory().clear();
+                    TeamHandler.leaveTeam(p);
                 }
                 if (this.launchedFw++ < this.FIREWORKS_TO_LAUNCH) {
                     int distFromWB = 16;

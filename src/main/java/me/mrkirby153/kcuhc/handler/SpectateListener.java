@@ -2,7 +2,6 @@ package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
-import me.mrkirby153.kcuhc.arena.UHCArena;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Player;
@@ -75,12 +74,5 @@ public class SpectateListener implements Listener {
 
     @EventHandler
     public void onRespawn(final PlayerRespawnEvent event) {
-        if (UHC.arena.currentState() == UHCArena.State.RUNNING)
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    UHC.arena.spectate(event.getPlayer());
-                }
-            }.runTaskLater(UHC.plugin, 10);
     }
 }

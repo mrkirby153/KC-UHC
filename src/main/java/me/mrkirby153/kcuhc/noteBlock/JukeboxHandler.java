@@ -2,6 +2,7 @@ package me.mrkirby153.kcuhc.noteBlock;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
+import me.mrkirby153.kcuhc.arena.UHCArena;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.boss.BarColor;
@@ -119,22 +120,23 @@ public class JukeboxHandler implements Listener {
 
     @EventHandler
     public void playerJoinEvent(PlayerJoinEvent event) {
-        if (currentSong != null) {
-            if (!playersNotListening.contains(event.getPlayer().getUniqueId())) {
-                currentSong.addPlayer(event.getPlayer());
-                event.getPlayer().spigot().sendMessage(UtilChat.generateFormattedChat("You can disable music by typing /music off", net.md_5.bungee.api.ChatColor.GOLD, 0));
-            }
-            if (!nowPlayingBar.getPlayers().contains(event.getPlayer())) {
-                nowPlayingBar.addPlayer(event.getPlayer());
-            }
+        if (UHC.arena.currentState() != UHCArena.State.RUNNING)
+            if (currentSong != null) {
+                if (!playersNotListening.contains(event.getPlayer().getUniqueId())) {
+                    currentSong.addPlayer(event.getPlayer());
+                    event.getPlayer().spigot().sendMessage(UtilChat.generateFormattedChat("You can disable music by typing /music off", net.md_5.bungee.api.ChatColor.GOLD, 0));
+                }
+                if (!nowPlayingBar.getPlayers().contains(event.getPlayer())) {
+                    nowPlayingBar.addPlayer(event.getPlayer());
+                }
 
-        }
+            }
     }
 
     @EventHandler
     public void songEnd(SongEndedEvent event) {
         if (playing) {
-            new BukkitRunnable(){
+            new BukkitRunnable() {
 
                 @Override
                 public void run() {
