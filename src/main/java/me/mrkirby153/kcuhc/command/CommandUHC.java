@@ -40,7 +40,7 @@ public class CommandUHC extends BaseCommand {
                 return true;
             }
             if (args[0].equalsIgnoreCase("stop")) {
-                UHC.arena.stop("Forced Stop");
+                UHC.arena.stop("Nobody");
                 return true;
             }
             if (args[0].equalsIgnoreCase("state")) {
