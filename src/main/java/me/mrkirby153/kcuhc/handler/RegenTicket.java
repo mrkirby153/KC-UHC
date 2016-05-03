@@ -138,6 +138,10 @@ public class RegenTicket implements Listener {
         return u.equals(player.getUniqueId());
     }
 
+    public static void clearRegenTickets(){
+        regenTickets.clear();
+    }
+
     private boolean isTicket(ItemStack stack) {
         return regenTickets.containsValue(stack);
     }

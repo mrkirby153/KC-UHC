@@ -261,6 +261,7 @@ public class UHCArena implements Runnable, Listener {
 
     public void stop(String winner) {
         String orig = winner;
+        RegenTicket.clearRegenTickets();
         winner = WordUtils.capitalizeFully(winner.replace('_', ' '));
         JukeboxHandler.nextSong();
         WorldBorder border = world.getWorldBorder();
