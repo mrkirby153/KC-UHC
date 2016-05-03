@@ -93,6 +93,10 @@ public class UHCArena implements Runnable, Listener {
 
     private List<Player> previouslyOpped = new ArrayList<>();
 
+    private HashMap<UUID, String> uuidToStringMap = new HashMap<>();
+    private HashMap<UUID, Long> logoutTimes = new HashMap<>();
+    private ArrayList<UUID> queuedTeamRemovals = new ArrayList<>();
+
 
     public UHCArena(World world, int startSize, int endSize, int duration, Location center) {
         this.world = world;
@@ -174,6 +178,7 @@ public class UHCArena implements Runnable, Listener {
         launchedFw = 0;
         winningTeamColor = Color.WHITE;
         state = State.INITIALIZED;
+        queuedTeamRemovals.clear();
     }
 
     public void start() {
@@ -244,7 +249,7 @@ public class UHCArena implements Runnable, Listener {
     public void spectate(Player player, boolean switchRole) {
         TeamHandler.joinTeam(TeamHandler.spectatorsTeam(), player);
         if (switchRole) {
-            if(discordHandler != null){
+            if (discordHandler != null) {
                 ByteArrayDataOutput out = ByteStreams.newDataOutput();
                 out.writeUTF(UHC.plugin.serverId());
                 out.writeUTF("assignRole");
@@ -350,6 +355,8 @@ public class UHCArena implements Runnable, Listener {
     public ArrayList<UHCPlayerTeam> teamsLeft() {
         ArrayList<UHCPlayerTeam> uniqueTeams = new ArrayList<>();
         for (Player p : players) {
+            if(queuedTeamRemovals.contains(p.getUniqueId()))
+                continue;
             UHCTeam team = TeamHandler.getTeamForPlayer(p);
             if (!(team instanceof UHCPlayerTeam))
                 continue;
@@ -598,6 +605,7 @@ public class UHCArena implements Runnable, Listener {
                 worldborderDist.removeAll();
                 break;
         }
+        updateDisconnect();
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -691,7 +699,7 @@ public class UHCArena implements Runnable, Listener {
     public void addPlayer(Player player) {
         boolean exists = false;
         for (Player p : players) {
-            if (p.getUniqueId() == player.getUniqueId())
+            if (p.getUniqueId().equals(player.getUniqueId()))
                 exists = true;
         }
         if (exists) {
@@ -727,10 +735,36 @@ public class UHCArena implements Runnable, Listener {
     public void playerDisconnect(Player player) {
         if (TeamHandler.isSpectator(player))
             return;
-        TeamHandler.leaveTeam(player);
-        spectate(player);
-        players.remove(player);
-        Bukkit.broadcastMessage(ChatColor.RED + player.getName() + " has been eliminated because they quit!");
+        uuidToStringMap.put(player.getUniqueId(), player.getName());
+
+        logoutTimes.put(player.getUniqueId(), System.currentTimeMillis() + (300000));
+        Bukkit.broadcastMessage(UtilChat.generateBoldChat(player.getName() + " has disconnected! They have 5 minutes to log back in before they are" +
+                " eliminated!", net.md_5.bungee.api.ChatColor.WHITE).toLegacyText());
+    }
+
+    public void updateDisconnect() {
+        Iterator<Map.Entry<UUID, Long>> iterator = logoutTimes.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<UUID, Long> entry = iterator.next();
+            if (System.currentTimeMillis() > entry.getValue()) {
+                String playerName = uuidToStringMap.get(entry.getKey());
+                Bukkit.broadcastMessage(UtilChat.generateBoldChat(playerName + " has been eliminated because they logged off 5 minutes ago!", net.md_5.bungee.api.ChatColor.WHITE).toLegacyText());
+                queuedTeamRemovals.add(entry.getKey());
+                iterator.remove();
+                uuidToStringMap.remove(entry.getKey());
+            }
+        }
+    }
+
+    public void playerJoin(Player player) {
+        if (queuedTeamRemovals.contains(player.getUniqueId())) {
+            queuedTeamRemovals.remove(player.getUniqueId());
+            TeamHandler.leaveTeam(player);
+            spectate(player);
+            players.remove(player);
+            player.spigot().sendMessage(UtilChat.generateFormattedChat("Due to you being logged off for more than 5 minutes, you have been removed from the game",
+                    net.md_5.bungee.api.ChatColor.GOLD, 8));
+        }
     }
 
     public void startDeathmatch() {
@@ -760,11 +794,11 @@ public class UHCArena implements Runnable, Listener {
 
 
     public void sendEveryoneToTeamChannels() {
-        if(discordHandler == null)
+        if (discordHandler == null)
             return;
-        Bukkit.broadcastMessage(ChatColor.GOLD+"Creating discord channels...");
-        UHC.discordHandler.createAllTeamChannels(()-> UHC.discordHandler.processAsync(()->{
-            Bukkit.broadcastMessage(ChatColor.GOLD+"Assigning teams and moving everyone...");
+        Bukkit.broadcastMessage(ChatColor.GOLD + "Creating discord channels...");
+        UHC.discordHandler.createAllTeamChannels(() -> UHC.discordHandler.processAsync(() -> {
+            Bukkit.broadcastMessage(ChatColor.GOLD + "Assigning teams and moving everyone...");
             ByteArrayDataOutput out = ByteStreams.newDataOutput();
             out.writeUTF(UHC.plugin.serverId());
             out.writeUTF("assignTeams");
@@ -774,11 +808,11 @@ public class UHCArena implements Runnable, Listener {
                 out.writeUTF(TeamHandler.getTeamForPlayer(p).getName());
             });
             UHC.discordHandler.sendMessage(out.toByteArray());
-        },()->Bukkit.broadcastMessage(ChatColor.GOLD+"Everyone should now be in their discord channels")));
+        }, () -> Bukkit.broadcastMessage(ChatColor.GOLD + "Everyone should now be in their discord channels")));
     }
 
     public void bringEveryoneToLobby() {
-        if(discordHandler == null)
+        if (discordHandler == null)
             return;
         ByteArrayDataOutput out = ByteStreams.newDataOutput();
         out.writeUTF(UHC.plugin.serverId());

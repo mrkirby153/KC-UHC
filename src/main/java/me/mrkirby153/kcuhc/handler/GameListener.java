@@ -2,6 +2,7 @@ package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -18,6 +19,7 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        UHC.arena.playerJoin(event.getPlayer());
         if (TeamHandler.getTeamForPlayer(event.getPlayer()) == null)
             TeamHandler.joinTeam(TeamHandler.spectatorsTeam(), event.getPlayer());
         else
@@ -25,7 +27,8 @@ public class GameListener implements Listener {
     }
 
     @EventHandler
-    public void onLeave(PlayerQuitEvent event){
+    public void onLeave(PlayerQuitEvent event) {
+        event.setQuitMessage(ChatColor.RED + event.getPlayer().getName() + " has left!");
         UHC.arena.playerDisconnect(event.getPlayer());
     }
 }
