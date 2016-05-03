@@ -3,15 +3,12 @@ package me.mrkirby153.kcuhc.handler;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCArena;
-import me.mrkirby153.kcuhc.item.InventoryHandler;
 import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
@@ -27,24 +24,6 @@ public class SpectateListener implements Listener {
         if(TeamHandler.isSpectator(event.getPlayer()))
             event.setCancelled(true);
     }
-
-
-    @EventHandler
-    public void omDamage(EntityDamageByEntityEvent event) {
-        if(UHC.arena.currentState() == UHCArena.State.ENDGAME || UHC.arena.currentState() == UHCArena.State.INITIALIZED || UHC.arena.currentState() == UHCArena.State.WAITING){
-            event.setCancelled(true);
-        }
-        if(event.getDamager() instanceof Player){
-            Player player = (Player) event.getDamager();
-            if (TeamHandler.getTeamForPlayer(player) == TeamHandler.getTeamByName(TeamHandler.SPECTATORS_TEAM) && UHC.arena.currentState() == UHCArena.State.RUNNING) {
-                player.setGameMode(GameMode.SPECTATOR);
-                InventoryHandler.instance().removeHotbar(player);
-                player.setSpectatorTarget(event.getEntity());
-                event.setCancelled(true);
-            }
-        }
-    }
-
     @EventHandler
     public void onExpTarget(EntityTargetEvent event){
         if(event.getEntity() instanceof ExperienceOrb){

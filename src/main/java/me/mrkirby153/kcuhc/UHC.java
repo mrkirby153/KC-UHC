@@ -83,7 +83,6 @@ public class UHC extends JavaPlugin {
         getCommand("team").setExecutor(new CommandTeam());
         getCommand("spectate").setExecutor(new CommandSpectate());
         getCommand("music").setExecutor(new CommandMusic());
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, new TeamSpectator.SpectateTask(), 0, 2);
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new UHCArena.PlayerActionBarUpdater(), 0, 1);
     }
 
