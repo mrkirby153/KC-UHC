@@ -35,7 +35,7 @@ public class MOTDHandler implements Listener {
             if (UHC.arena.currentState() == UHCArena.State.GENERATING_WORLD) {
                 event.disallow(PlayerLoginEvent.Result.KICK_OTHER, ChatColor.RED + "We're not quite ready for you yet\n" + ChatColor.GOLD + "Check back in a few");
             }
-            if (UHC.arena.currentState() != UHCArena.State.RUNNING)
+            if (UHC.arena.currentState() != UHCArena.State.RUNNING && UHC.plugin.getConfig().getBoolean("discord.useDiscord"))
                 new BukkitRunnable() {
                     @Override
                     public void run() {
