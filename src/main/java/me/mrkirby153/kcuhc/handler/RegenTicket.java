@@ -155,9 +155,13 @@ public class RegenTicket implements Listener {
             double currHealth = player.getHealth();
             double maxHealth = player.getMaxHealth();
             double healAmount = maxHealth - currHealth;
+            int healed = 20 - player.getFoodLevel();
             player.setHealth(maxHealth);
+            player.setFoodLevel(20);
+            player.setExhaustion(3.8F);
             player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1, 1);
             player.spigot().sendMessage(UtilChat.generateFormattedChat("You have restored " + (int) healAmount + " health!", net.md_5.bungee.api.ChatColor.GREEN, 8));
+            player.spigot().sendMessage(UtilChat.generateFormattedChat("You have restored " + healed + " hunger!", net.md_5.bungee.api.ChatColor.DARK_GREEN, 8));
             player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 300);
         }
     }
