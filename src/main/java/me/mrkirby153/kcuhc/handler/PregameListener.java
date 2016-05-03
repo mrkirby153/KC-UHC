@@ -1,6 +1,7 @@
 package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.arena.UHCArena;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -36,17 +37,19 @@ public class PregameListener implements Listener {
     @EventHandler
     public void onLogin(AsyncPlayerPreLoginEvent event) {
         // Remove the player's data
-        UUID u = event.getUniqueId();
-        for (World w : Bukkit.getWorlds()) {
-            File worldFolder = new File(Bukkit.getWorldContainer(), w.getName());
-            File dataFolder = new File(worldFolder, "playerdata");
-            File datFile = new File(dataFolder, u.toString() + ".dat");
-            if (datFile.exists())
-                if (datFile.delete()) {
-                    UHC.plugin.getLogger().info("Deleted " + event.getName() + "'s data for world " + w.getName());
-                } else {
-                    UHC.plugin.getLogger().warning("Could not delete " + event.getName() + "'s data for world " + w.getName());
-                }
+        if (UHC.arena.currentState() != UHCArena.State.RUNNING) {
+            UUID u = event.getUniqueId();
+            for (World w : Bukkit.getWorlds()) {
+                File worldFolder = new File(Bukkit.getWorldContainer(), w.getName());
+                File dataFolder = new File(worldFolder, "playerdata");
+                File datFile = new File(dataFolder, u.toString() + ".dat");
+                if (datFile.exists())
+                    if (datFile.delete()) {
+                        UHC.plugin.getLogger().info("Deleted " + event.getName() + "'s data for world " + w.getName());
+                    } else {
+                        UHC.plugin.getLogger().warning("Could not delete " + event.getName() + "'s data for world " + w.getName());
+                    }
+            }
         }
     }
 
