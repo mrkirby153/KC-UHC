@@ -51,7 +51,6 @@ configurations{
 
 dependencies{
     provided name: "spigot-api", group:"org.spigotmc", version: "1.9-R0.1-SNAPSHOT"
-    compile 'net.dv8tion:JDA:1.4.0_238'
     compile 'commons-io:commons-io:2.4'
     provided 'org.spigotmc:spigot:1.9.2-1'
 }

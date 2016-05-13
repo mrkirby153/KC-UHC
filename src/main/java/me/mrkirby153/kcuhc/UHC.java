@@ -5,13 +5,11 @@ import me.mrkirby153.kcuhc.arena.TeamSpectator;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.discord.DiscordBotConnection;
-import me.mrkirby153.kcuhc.discord.DiscordHandler;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
 import me.mrkirby153.kcuhc.handler.RegenTicket;
 import me.mrkirby153.kcuhc.handler.SpectateListener;
 import me.mrkirby153.kcuhc.item.InventoryHandler;
 import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
-import net.dv8tion.jda.JDA;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,10 +25,6 @@ public class UHC extends JavaPlugin {
     public static UHCArena arena;
 
     public static ArrayList<String> admins;
-    public static JDA jda;
-
-    @Deprecated
-    public static DiscordHandler handler;
 
     public static SpectateListener spectateListener;
 
