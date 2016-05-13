@@ -52,7 +52,7 @@ configurations{
 dependencies{
     provided name: "spigot-api", group:"org.spigotmc", version: "1.9-R0.1-SNAPSHOT"
     compile 'commons-io:commons-io:2.4'
-    provided 'org.spigotmc:spigot:1.9.2-1'
+    provided 'org.spigotmc:spigot:1.9.4-1'
 }
 jar {
     dependsOn configurations.runtime

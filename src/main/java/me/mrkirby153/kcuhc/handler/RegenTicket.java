@@ -1,13 +1,14 @@
 package me.mrkirby153.kcuhc.handler;
 
+
 import me.mrkirby153.kcuhc.UtilChat;
-import net.minecraft.server.v1_9_R1.NBTTagCompound;
-import net.minecraft.server.v1_9_R1.NBTTagList;
+import net.minecraft.server.v1_9_R2.NBTTagCompound;
+import net.minecraft.server.v1_9_R2.NBTTagList;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_9_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_9_R2.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -107,12 +108,14 @@ public class RegenTicket implements Listener {
         lore.add(ChatColor.RED + "can only be used by " + ChatColor.GOLD + player.getName());
         meta.setLore(lore);
         item.setItemMeta(meta);
-        net.minecraft.server.v1_9_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
+        net.minecraft.server.v1_9_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
         NBTTagCompound tag;
         if (!nmsStack.hasTag())
             tag = new NBTTagCompound();
         else
             tag = nmsStack.getTag();
+        if(tag == null)
+            tag = new NBTTagCompound();
         NBTTagList ench = nmsStack.getEnchantments() == null ? new NBTTagList() : null;
         UUID playerUUID = player.getUniqueId();
         tag.setString("owner", playerUUID.toString());
@@ -130,7 +133,7 @@ public class RegenTicket implements Listener {
     }
 
     private boolean canUse(Player player, ItemStack stack) {
-        net.minecraft.server.v1_9_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(stack);
+        net.minecraft.server.v1_9_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(stack);
         NBTTagCompound tag = nmsStack.getTag();
         if (tag == null)
             return false;

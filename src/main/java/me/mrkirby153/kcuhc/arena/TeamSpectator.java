@@ -1,13 +1,14 @@
 package me.mrkirby153.kcuhc.arena;
 
+
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.gui.SpectateInventory;
 import me.mrkirby153.kcuhc.item.InventoryHandler;
 import net.md_5.bungee.api.ChatColor;
-import net.minecraft.server.v1_9_R1.EntityPlayer;
+import net.minecraft.server.v1_9_R2.EntityPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.craftbukkit.v1_9_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;

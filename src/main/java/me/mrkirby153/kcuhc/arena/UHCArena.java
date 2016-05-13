@@ -1,5 +1,6 @@
 package me.mrkirby153.kcuhc.arena;
 
+
 import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
@@ -12,17 +13,17 @@ import me.mrkirby153.kcuhc.handler.RegenTicket;
 import me.mrkirby153.kcuhc.item.InventoryHandler;
 import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import net.md_5.bungee.api.chat.TextComponent;
-import net.minecraft.server.v1_9_R1.IChatBaseComponent;
-import net.minecraft.server.v1_9_R1.PacketPlayOutChat;
-import net.minecraft.server.v1_9_R1.PacketPlayOutTitle;
-import org.apache.commons.lang.WordUtils;
+import net.minecraft.server.v1_9_R2.IChatBaseComponent;
+import net.minecraft.server.v1_9_R2.PacketPlayOutChat;
+import net.minecraft.server.v1_9_R2.PacketPlayOutTitle;
+import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.*;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.v1_9_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
