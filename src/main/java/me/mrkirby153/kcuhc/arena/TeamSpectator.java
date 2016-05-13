@@ -58,10 +58,11 @@ public class TeamSpectator extends UHCTeam {
         InventoryHandler.instance().removeHotbar(player);
         showToPlayers(player);
         player.setAllowFlight(false);
+        player.setFlying(false);
         player.setWalkSpeed(0.2F);
         player.setFlySpeed(0.2F);
-        if(UHC.arena != null || UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.INITIALIZED
-                || UHC.arena.currentState() == UHCArena.State.ENDGAME)
+        if(UHC.arena != null && (UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.INITIALIZED
+                || UHC.arena.currentState() == UHCArena.State.ENDGAME))
             player.setAllowFlight(true);
         EntityPlayer ep = ((CraftPlayer) player).getHandle();
         ep.collides = true;
