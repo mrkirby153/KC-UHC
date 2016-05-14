@@ -18,8 +18,15 @@ public class TeamHandler {
     private static HashMap<String, UHCTeam> teamNameToTeamMap = new HashMap<>();
 
     public static void joinTeam(UHCTeam team, Player player) {
-        if (getTeamForPlayer(player) != null)
+        if (getTeamForPlayer(player) != null) {
+            for (UHCTeam t : teams()) {
+                if (t.getPlayers().contains(player.getUniqueId())) {
+                    System.out.println("Removing " + player.getName() + " from " + team.getName());
+                    t.removePlayer(player);
+                }
+            }
             leaveTeam(player);
+        }
         team.addPlayer(player);
         UHC.arena.scoreboard.setPlayerTeam(player, team.getName());
         playerToTeamMap.put(player.getUniqueId(), team);
@@ -71,8 +78,8 @@ public class TeamHandler {
 //            t.unregister();
 //        }
         Iterator<Map.Entry<String, UHCTeam>> i = teamNameToTeamMap.entrySet().iterator();
-        while(i.hasNext()){
-            if(i.next().getKey().equals(name))
+        while (i.hasNext()) {
+            if (i.next().getKey().equals(name))
                 i.remove();
         }
     }
@@ -108,7 +115,7 @@ public class TeamHandler {
 
     public static void unregisterAll() {
         Object clone = teamNameToTeamMap.clone();
-        if(!(clone instanceof Map))
+        if (!(clone instanceof Map))
             return;
         @SuppressWarnings("unchecked")
         Map<String, UHCTeam> teams = (Map<String, UHCTeam>) clone;
