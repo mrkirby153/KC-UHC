@@ -13,6 +13,7 @@ import me.mrkirby153.kcuhc.handler.PregameListener;
 import me.mrkirby153.kcuhc.handler.RegenTicket;
 import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
+import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_9_R2.IChatBaseComponent;
 import net.minecraft.server.v1_9_R2.PacketPlayOutChat;
@@ -48,6 +49,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static me.mrkirby153.kcuhc.UHC.discordHandler;
+import static me.mrkirby153.kcuhc.UtilChat.generateBoldChat;
 import static me.mrkirby153.kcuhc.arena.UHCArena.State.COUNTDOWN;
 
 public class UHCArena implements Runnable, Listener {
@@ -104,6 +106,10 @@ public class UHCArena implements Runnable, Listener {
 
     private long startTime = 0;
 
+    private long nextEndgamePhaseIn = -1;
+    private EndgamePhase currentEndgamePhase = EndgamePhase.NORMALGAME;
+    private EndgamePhase nextEndgamePhase;
+
 
     public UHCArena(World world, int startSize, int endSize, int duration, Location center) {
         this.world = world;
@@ -118,6 +124,7 @@ public class UHCArena implements Runnable, Listener {
         maxZ = center.getBlockZ() + startSize;
         UHC.plugin.getServer().getPluginManager().registerEvents(pregameListener, UHC.plugin);
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this, 0, 20);
+        UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, () -> drawScoreboard(), 0, 1L);
         closeToBorder = Bukkit.createBossBar(ChatColor.RED + "You are close to the worldborder!", BarColor.PINK, BarStyle.SOLID);
         countdownBar = Bukkit.createBossBar(ChatColor.RED + "Starting in ", BarColor.PINK, BarStyle.SOLID);
         worldborderDist = Bukkit.createBossBar(ChatColor.GOLD + "Worldborder " + ChatColor.RED + "X: " + ChatColor.GREEN +
@@ -167,6 +174,9 @@ public class UHCArena implements Runnable, Listener {
         char heart = '\u2764';
         belowName.setDisplayName(ChatColor.RED + Character.toString(heart));
         belowName.setDisplaySlot(DisplaySlot.BELOW_NAME);*/
+        currentEndgamePhase = EndgamePhase.NORMALGAME;
+        nextEndgamePhase = null;
+        nextEndgamePhaseIn = -1;
         scoreboard.createTeams();
         WorldBorder border = world.getWorldBorder();
         border.setSize(60);
@@ -195,6 +205,9 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void start() {
+        currentEndgamePhase = EndgamePhase.NORMALGAME;
+        nextEndgamePhase = null;
+        nextEndgamePhaseIn = -1;
         WorldBorder border = world.getWorldBorder();
         border.setSize(startSize);
         border.setWarningDistance(WORLDBORDER_WARN_DIST);
@@ -242,11 +255,12 @@ public class UHCArena implements Runnable, Listener {
             }
             worldborderDist.addPlayer(p);
         }
-        // TODO: 5/13/2016 Write spreadplayers algorithm, as args no longer work :(
+/*        // TODO: 5/13/2016 Write spreadplayers algorithm, as args no longer work :(
         String format = String.format("spreadplayers %d %d %d %d true @a[team=!%s]", center.getBlockX(), center.getBlockZ(), 50, startSize / 2, TeamHandler.SPECTATORS_TEAM);
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), format);
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), String.format("xp -3000l @a[team=!%s]", TeamHandler.SPECTATORS_TEAM));
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), String.format("achievement take * @a[team=!%s]", TeamHandler.SPECTATORS_TEAM));
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), format);*/
+        new SpreadPlayersHandler().execute(world.getName(), center.getBlockX(), center.getBlockZ(), 50, startSize / 2);
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "xp -3000l @a");
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "achievement take * @a");
         for (Entity e : world.getEntities()) {
             if (e instanceof Tameable) {
                 ((Tameable) e).setOwner(null);
@@ -416,8 +430,7 @@ public class UHCArena implements Runnable, Listener {
         playerLoc.getWorld().dropItemNaturally(playerLoc, head);
         closeToBorder.removePlayer(dead);
         players.remove(dead);
-        spectate(dead);
-        dead.spigot().sendMessage(UtilChat.generateBoldChat("You have died and are now a spectator", net.md_5.bungee.api.ChatColor.RED));
+        dead.spigot().sendMessage(generateBoldChat("You have died and are now a spectator", net.md_5.bungee.api.ChatColor.RED));
     }
 
     public void saveToFile() {
@@ -573,6 +586,7 @@ public class UHCArena implements Runnable, Listener {
                 if (nether != null)
                     if (nether.getWorldBorder().getSize() == endSize)
                         nether.getWorldBorder().setWarningDistance(0);
+                updateEndgame();
                 if (deathmatch != -1) {
                     deathmatch--;
                     if (deathmatch > 0) {
@@ -633,6 +647,94 @@ public class UHCArena implements Runnable, Listener {
     }
 
 
+    private void updateEndgame() {
+        switch (currentEndgamePhase) {
+            case NORMALGAME:
+                if (world.getWorldBorder().getSize() <= endSize) {
+                    if (nextEndgamePhase != EndgamePhase.HUNGER_III) {
+                        nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.HUNGER_III.getDuration();
+                        nextEndgamePhase = EndgamePhase.HUNGER_III;
+                    }
+                }
+                break;
+            case HUNGER_III:
+                for (Player p : players()) {
+                    if (TeamHandler.isSpectator(p))
+                        return;
+                    if (!p.hasPotionEffect(PotionEffectType.HUNGER))
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, Integer.MAX_VALUE, 2, false, true));
+                }
+                if (nextEndgamePhase != EndgamePhase.WITHER) {
+                    nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.WITHER.getDuration();
+                    nextEndgamePhase = EndgamePhase.WITHER;
+                }
+                break;
+            case WITHER:
+                for (Player p : players()) {
+                    if (TeamHandler.isSpectator(p))
+                        return;
+                    if (!p.hasPotionEffect(PotionEffectType.HUNGER))
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, Integer.MAX_VALUE, 2, false, true));
+                    if (!p.hasPotionEffect(PotionEffectType.WITHER))
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, Integer.MAX_VALUE, 0, false, true));
+                }
+        }
+        if (nextEndgamePhase != null && currentEndgamePhase != EndgamePhase.WITHER)
+            announcePhase(nextEndgamePhase);
+        if (currentEndgamePhase != EndgamePhase.WITHER)
+            activatePhase();
+    }
+
+
+    boolean firstAnnounce = true;
+
+    private void announcePhase(EndgamePhase phase) {
+        long time = nextEndgamePhaseIn - System.currentTimeMillis();
+        int seconds = (int) time / 1000;
+        boolean shouldAnnounce = false;
+        if (seconds >= 60) {
+            shouldAnnounce = (seconds % 60) == 0;
+        } else if (seconds < 60 && seconds >= 30) {
+            shouldAnnounce = (seconds % 30) == 0;
+        } else if (seconds < 30 && seconds >= 10) {
+            shouldAnnounce = (seconds % 10) == 0;
+        } else if (seconds < 10) {
+            shouldAnnounce = true;
+        }
+        time -= 1000;
+        if (time <= 0)
+            return;
+        if (firstAnnounce || shouldAnnounce) {
+            firstAnnounce = false;
+            BaseComponent text = generateBoldChat(phase.getName(), net.md_5.bungee.api.ChatColor.LIGHT_PURPLE);
+            text.addExtra(UtilChat.generateBoldChat(" will be applied in " + UtilTime.format(1, time, UtilTime.TimeUnit.FIT), net.md_5.bungee.api.ChatColor.GREEN));
+            for (Player p : players()) {
+                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
+                p.spigot().sendMessage(text);
+            }
+        }
+    }
+
+    private void activatePhase() {
+        if (nextEndgamePhaseIn != -1 && System.currentTimeMillis() > nextEndgamePhaseIn) {
+            activatePhase(nextEndgamePhase);
+        }
+    }
+
+    private void activatePhase(EndgamePhase newPhase) {
+        if (newPhase == null)
+            return;
+        this.currentEndgamePhase = newPhase;
+        firstAnnounce = true;
+        BaseComponent text = generateBoldChat(newPhase.getName(), net.md_5.bungee.api.ChatColor.LIGHT_PURPLE);
+        text.addExtra(UtilChat.generateBoldChat(" active!", net.md_5.bungee.api.ChatColor.GREEN));
+        for (Player p : players()) {
+            p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F);
+            p.spigot().sendMessage(text);
+        }
+    }
+
+
     private void drawScoreboard() {
         scoreboard.reset();
         switch (currentState()) {
@@ -650,13 +752,13 @@ public class UHCArena implements Runnable, Listener {
                 for (UHCTeam team : teams) {
                     playerCount += team.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count();
                 }
-                int spacesNeeded = teams.size() + playerCount;
+                int spacesNeeded = playerCount;
                 scoreboard.add("Alive: " + ChatColor.GREEN + playerCount);
-                if (spacesNeeded <= 12) {
+                scoreboard.add(" ");
+                if (spacesNeeded <= ((nextEndgamePhaseIn == -1) ? 11 : 8)) {
                     teams.forEach(team -> {
                         if (team.getPlayers().size() == 0)
                             return;
-                        scoreboard.add(" ");
                         for (UUID u : team.getPlayers()) {
                             Player p = Bukkit.getPlayer(u);
                             if (p == null)
@@ -664,6 +766,7 @@ public class UHCArena implements Runnable, Listener {
                             scoreboard.add(team.getColor() + p.getName());
                         }
                     });
+                    scoreboard.add(" ");
                 } else {
                     scoreboard.add(" ");
 //                    teams.forEach(team -> scoreboard.add(team.getPlayers().stream().map(Bukkit::getPlayer).count() + " " + team.getColor() + team.getName()));
@@ -677,6 +780,16 @@ public class UHCArena implements Runnable, Listener {
                             return;
                         scoreboard.add(onlinePlayers + " " + team.getColor() + WordUtils.capitalizeFully(team.getName().replace('_', ' ')));
                     });
+                    scoreboard.add(" ");
+                }
+                if (nextEndgamePhase != null && nextEndgamePhaseIn != -1) {
+                    scoreboard.add(ChatColor.DARK_RED + "" + ChatColor.BOLD + nextEndgamePhase.getName());
+                    if (System.currentTimeMillis() > nextEndgamePhaseIn) {
+                        scoreboard.add(" ACTIVE");
+                    } else {
+                        int trim = (int) (nextEndgamePhaseIn - System.currentTimeMillis());
+                        scoreboard.add("    in " + UtilTime.format(1, trim, UtilTime.TimeUnit.FIT));
+                    }
                     scoreboard.add(" ");
                 }
                 scoreboard.add("Duration: " + UtilTime.format(1, System.currentTimeMillis() - startTime, UtilTime.TimeUnit.FIT));
@@ -822,7 +935,7 @@ public class UHCArena implements Runnable, Listener {
         uuidToStringMap.put(player.getUniqueId(), player.getName());
 
         logoutTimes.put(player.getUniqueId(), System.currentTimeMillis() + (300000));
-        Bukkit.broadcastMessage(UtilChat.generateBoldChat(player.getName() + " has disconnected! They have 5 minutes to log back in before they are" +
+        Bukkit.broadcastMessage(generateBoldChat(player.getName() + " has disconnected! They have 5 minutes to log back in before they are" +
                 " eliminated!", net.md_5.bungee.api.ChatColor.WHITE).toLegacyText());
     }
 
@@ -832,7 +945,7 @@ public class UHCArena implements Runnable, Listener {
             Map.Entry<UUID, Long> entry = iterator.next();
             if (System.currentTimeMillis() > entry.getValue()) {
                 String playerName = uuidToStringMap.get(entry.getKey());
-                Bukkit.broadcastMessage(UtilChat.generateBoldChat(playerName + " has been eliminated because they logged off 5 minutes ago!", net.md_5.bungee.api.ChatColor.WHITE).toLegacyText());
+                Bukkit.broadcastMessage(generateBoldChat(playerName + " has been eliminated because they logged off 5 minutes ago!", net.md_5.bungee.api.ChatColor.WHITE).toLegacyText());
                 queuedTeamRemovals.add(entry.getKey());
                 iterator.remove();
                 uuidToStringMap.remove(entry.getKey());
@@ -855,7 +968,7 @@ public class UHCArena implements Runnable, Listener {
         deathmatch = 30;
         for (Player p : players) {
             p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_AMBIENT, 1, 1);
-            p.spigot().sendMessage(UtilChat.generateBoldChat("When deathmatch starts, the world border will shrink to 1 block over the course of 5 minutes. " +
+            p.spigot().sendMessage(generateBoldChat("When deathmatch starts, the world border will shrink to 1 block over the course of 5 minutes. " +
                     "Good luck!", net.md_5.bungee.api.ChatColor.GREEN));
         }
     }
@@ -912,6 +1025,33 @@ public class UHCArena implements Runnable, Listener {
         COUNTDOWN,
         RUNNING,
         ENDGAME
+    }
+
+    private enum EndgamePhase {
+        NORMALGAME("Normal Game", -1),
+        HUNGER_III("Hunger III", 300000),
+        WITHER("Wither", 300000);
+/*
+        NORMALGAME("Normal Game", -1),
+        HUNGER_III("Hunger III", 30000),
+        WITHER("Wither", 30000);
+*/
+
+        private long duration;
+        private String name;
+
+        EndgamePhase(String friendlyName, long duration) {
+            this.duration = duration;
+            this.name = friendlyName;
+        }
+
+        public long getDuration() {
+            return duration;
+        }
+
+        public String getName() {
+            return name;
+        }
     }
 
     public static class PlayerActionBarUpdater implements Runnable {
