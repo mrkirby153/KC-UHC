@@ -68,9 +68,10 @@ public abstract class Inventory<T extends JavaPlugin> implements Listener {
         playerInventoryHashMap.remove(player);
     }
 
-    public static void closeInventory(Player player){
+    public static void closeInventory(Player player) {
         Inventory inv = playerInventoryHashMap.remove(player);
-        inv.close();
+        if (inv != null)
+            inv.close();
     }
 
     public void addItem(int slot, ShopItem item, Action action) {
@@ -127,8 +128,13 @@ public abstract class Inventory<T extends JavaPlugin> implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onClick(InventoryClickEvent event) {
+        if(event.getWhoClicked() != player)
+            return;
         event.setCancelled(true);
-        if (event.getClickedInventory().getType() == InventoryType.PLAYER) {
+        org.bukkit.inventory.Inventory clickedInventory = event.getClickedInventory();
+        if(clickedInventory == null)
+            return;
+        if (clickedInventory.getType() == InventoryType.PLAYER) {
             Action a = getAction(event.getSlot());
             if (a != null) {
                 a.onClick((Player) event.getWhoClicked(), event.getClick());
@@ -147,6 +153,8 @@ public abstract class Inventory<T extends JavaPlugin> implements Listener {
 
     @EventHandler
     public void interact(PlayerInteractEvent event) {
+        if(event.getPlayer() != player)
+            return;
         ClickType clickType = null;
         switch (event.getAction()) {
             case RIGHT_CLICK_AIR:
@@ -174,7 +182,7 @@ public abstract class Inventory<T extends JavaPlugin> implements Listener {
     }
 
     @EventHandler
-    public void logout(PlayerQuitEvent event){
+    public void logout(PlayerQuitEvent event) {
         close();
     }
 }
