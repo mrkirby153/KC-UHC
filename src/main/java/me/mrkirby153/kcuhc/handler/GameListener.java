@@ -3,6 +3,7 @@ package me.mrkirby153.kcuhc.handler;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -66,6 +67,8 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event){
-        UHC.arena.spectate(event.getPlayer());
+        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, ()->{
+            UHC.arena.spectate(event.getPlayer());
+        }, 10L);
     }
 }
