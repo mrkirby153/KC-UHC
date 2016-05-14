@@ -12,6 +12,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 
 public class GameListener implements Listener {
 
@@ -60,5 +61,10 @@ public class GameListener implements Listener {
         double newDamage = oldDamage / 2;
         event.setDamage(newDamage);
         System.out.println(String.format("[DMG] OLD: [%.2f] NEW: [%.2f]", oldDamage, newDamage));
+    }
+
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event){
+        UHC.arena.spectate(event.getPlayer());
     }
 }
