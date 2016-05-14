@@ -5,6 +5,7 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
+import me.mrkirby153.kcuhc.UtilTime;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.handler.GameListener;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
@@ -100,6 +101,8 @@ public class UHCArena implements Runnable, Listener {
     private HashMap<UUID, String> uuidToStringMap = new HashMap<>();
     private HashMap<UUID, Long> logoutTimes = new HashMap<>();
     private ArrayList<UUID> queuedTeamRemovals = new ArrayList<>();
+
+    private long startTime = 0;
 
 
     public UHCArena(World world, int startSize, int endSize, int duration, Location center) {
@@ -255,6 +258,7 @@ public class UHCArena implements Runnable, Listener {
         sendEveryoneToTeamChannels();
         startingPlayers = players.size() - getSpectatorCount();
         state = State.RUNNING;
+        startTime = System.currentTimeMillis();
     }
 
     public void spectate(Player player) {
@@ -675,6 +679,7 @@ public class UHCArena implements Runnable, Listener {
                     });
                     scoreboard.add(" ");
                 }
+                scoreboard.add("Duration: " + UtilTime.format(1, System.currentTimeMillis() - startTime, UtilTime.TimeUnit.FIT));
                 break;
             case ENDGAME:
                 scoreboard.add(" ");
