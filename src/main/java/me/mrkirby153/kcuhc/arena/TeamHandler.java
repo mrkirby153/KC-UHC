@@ -2,26 +2,18 @@ package me.mrkirby153.kcuhc.arena;
 
 import com.google.common.base.Throwables;
 import me.mrkirby153.kcuhc.UHC;
-import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Scoreboard;
-import org.bukkit.scoreboard.Team;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.UUID;
+import java.util.*;
 
 public class TeamHandler {
 
     public static final String SPECTATORS_TEAM = "spectators";
 
-    protected static Scoreboard board = Bukkit.getScoreboardManager().getMainScoreboard();
     private static HashMap<UUID, UHCTeam> playerToTeamMap = new HashMap<>();
     private static HashMap<String, UHCTeam> teamNameToTeamMap = new HashMap<>();
 
@@ -29,9 +21,7 @@ public class TeamHandler {
         if (getTeamForPlayer(player) != null)
             leaveTeam(player);
         team.addPlayer(player);
-        Team t = board.getTeam(team.getScoreboardName());
-        if (t != null)
-            t.addEntry(player.getName());
+        UHC.arena.scoreboard.setPlayerTeam(player, team.getName());
         playerToTeamMap.put(player.getUniqueId(), team);
         UHC.arena.addPlayer(player);
     }
@@ -39,10 +29,11 @@ public class TeamHandler {
     public static void leaveTeam(Player player) {
         UHCTeam team = playerToTeamMap.remove(player.getUniqueId());
         if (team != null) {
-            Team t = board.getTeam(team.getScoreboardName());
+/*            Team t = board.getTeam(team.getScoreboardName());
             if (t != null) {
                 t.removeEntry(player.getName());
-            }
+            }*/
+            UHC.arena.scoreboard.leaveTeam(player, team.getName());
             team.removePlayer(player);
             team.onLeave(player);
             System.out.println("Removing " + player.getName() + " from team " + team.getName());
@@ -51,14 +42,14 @@ public class TeamHandler {
 
     public static void registerTeam(String name, UHCTeam team) {
         teamNameToTeamMap.put(name, team);
-        Team boardTeam = board.getTeam(team.getScoreboardName());
+/*        Team boardTeam = board.getTeam(team.getScoreboardName());
         if (boardTeam != null)
             boardTeam.unregister();
         Team newTeam = board.registerNewTeam(team.getScoreboardName());
         newTeam.setPrefix(ChatColor.COLOR_CHAR + "" + getCode(team.getColor()));
         newTeam.setSuffix(ChatColor.RESET + "");
         newTeam.setCanSeeFriendlyInvisibles(true);
-        newTeam.setAllowFriendlyFire(false);
+        newTeam.setAllowFriendlyFire(false);*/
     }
 
     public static UHCTeam getTeamByName(String name) {
@@ -73,22 +64,17 @@ public class TeamHandler {
         return teamNameToTeamMap.values();
     }
 
-    public static void unregisterTeam(String name, boolean remove) {
-        Team t = board.getTeam(name);
-        if (t != null) {
-            System.out.println("Unregsitering team " + name);
-            t.unregister();
-        }
-        if (remove)
-            teamNameToTeamMap.remove(name);
-    }
-
     public static void unregisterTeam(String name) {
-        unregisterTeam(name, true);
-    }
-
-    public static void unregisterTeam(UHCTeam teamByName, boolean remove) {
-        unregisterTeam(teamByName.getScoreboardName(), remove);
+////        Team t = board.getTeam(name);
+//        if (t != null) {
+//            System.out.println("Unregsitering team " + name);
+//            t.unregister();
+//        }
+        Iterator<Map.Entry<String, UHCTeam>> i = teamNameToTeamMap.entrySet().iterator();
+        while(i.hasNext()){
+            if(i.next().getKey().equals(name))
+                i.remove();
+        }
     }
 
     public static void saveToFile() {
@@ -121,11 +107,12 @@ public class TeamHandler {
     }
 
     public static void unregisterAll() {
-        Iterator<UHCTeam> team = teamNameToTeamMap.values().iterator();
-        while (team.hasNext()) {
-            unregisterTeam(team.next(), false);
-            team.remove();
-        }
+        Object clone = teamNameToTeamMap.clone();
+        if(!(clone instanceof Map))
+            return;
+        @SuppressWarnings("unchecked")
+        Map<String, UHCTeam> teams = (Map<String, UHCTeam>) clone;
+        teams.values().forEach(TeamHandler::unregisterTeam);
     }
 
     private static char getCode(net.md_5.bungee.api.ChatColor color) {

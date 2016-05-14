@@ -5,13 +5,13 @@ import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
-import me.mrkirby153.kcuhc.gui.SpectateInventory;
+import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.handler.GameListener;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
 import me.mrkirby153.kcuhc.handler.PregameListener;
 import me.mrkirby153.kcuhc.handler.RegenTicket;
-import me.mrkirby153.kcuhc.item.InventoryHandler;
 import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
+import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_9_R2.IChatBaseComponent;
 import net.minecraft.server.v1_9_R2.PacketPlayOutChat;
@@ -38,13 +38,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static me.mrkirby153.kcuhc.UHC.discordHandler;
 import static me.mrkirby153.kcuhc.arena.UHCArena.State.COUNTDOWN;
@@ -63,6 +63,9 @@ public class UHCArena implements Runnable, Listener {
     private int deathmatch = -1;
     private boolean dmStarted = false;
     private boolean shouldEndCheck = true;
+    public UHCScoreboard scoreboard;
+
+    private String winner;
 
     private final World world;
     private final World nether;
@@ -82,12 +85,12 @@ public class UHCArena implements Runnable, Listener {
     private BossBar worldborderDist;
 
     private double barProgress = 1;
-    private final double BAR_PROGRESS_DEC = 0.1;
+    private static final double BAR_PROGRESS_DEC = 0.1;
     private final int WORLDBORDER_WARN_DIST = 50;
 
     private double worldborderInitSize;
 
-    private final int FIREWORKS_TO_LAUNCH = 10;
+    private static final int FIREWORKS_TO_LAUNCH = 10;
     private int launchedFw = 0;
 
     private Color winningTeamColor = Color.WHITE;
@@ -118,6 +121,7 @@ public class UHCArena implements Runnable, Listener {
                 "\u00B1 ??? " + ChatColor.RED + "Z: " + ChatColor.GREEN + "\u00B1 ???", BarColor.PINK, BarStyle.SOLID);
         worldborderDist.setProgress(0);
         UHC.plugin.getServer().getPluginManager().registerEvents(this, UHC.plugin);
+        this.scoreboard = new UHCScoreboard();
     }
 
     public void generate() {
@@ -146,7 +150,7 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void initialize() {
-        Objective health;
+/*        Objective health;
         if (board.getObjective("health") == null)
             health = board.registerNewObjective("health", "health");
         else
@@ -159,7 +163,8 @@ public class UHCArena implements Runnable, Listener {
         belowName = board.registerNewObjective("belowName", "health");
         char heart = '\u2764';
         belowName.setDisplayName(ChatColor.RED + Character.toString(heart));
-        belowName.setDisplaySlot(DisplaySlot.BELOW_NAME);
+        belowName.setDisplaySlot(DisplaySlot.BELOW_NAME);*/
+        scoreboard.createTeams();
         WorldBorder border = world.getWorldBorder();
         border.setSize(60);
         border.setWarningDistance(0);
@@ -234,7 +239,9 @@ public class UHCArena implements Runnable, Listener {
             }
             worldborderDist.addPlayer(p);
         }
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), String.format("spreadplayers %d %d %d %d true @a[team=!%s]", center.getBlockX(), center.getBlockZ(), 50, startSize / 2, TeamHandler.SPECTATORS_TEAM));
+        // TODO: 5/13/2016 Write spreadplayers algorithm, as args no longer work :(
+        String format = String.format("spreadplayers %d %d %d %d true @a[team=!%s]", center.getBlockX(), center.getBlockZ(), 50, startSize / 2, TeamHandler.SPECTATORS_TEAM);
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), format);
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), String.format("xp -3000l @a[team=!%s]", TeamHandler.SPECTATORS_TEAM));
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), String.format("achievement take * @a[team=!%s]", TeamHandler.SPECTATORS_TEAM));
         for (Entity e : world.getEntities()) {
@@ -269,6 +276,7 @@ public class UHCArena implements Runnable, Listener {
 
     public void stop(String winner) {
         String orig = winner;
+        this.winner = winner;
         RegenTicket.clearRegenTickets();
         winner = WordUtils.capitalizeFully(winner.replace('_', ' '));
         JukeboxHandler.nextSong();
@@ -548,6 +556,8 @@ public class UHCArena implements Runnable, Listener {
                 }
                 if (percent < 0)
                     percent = 0;
+                if (Double.isNaN(percent))
+                    percent = 0;
                 worldborderDist.setProgress(percent);
                 if (worldborderDist.getProgress() > 1.0)
                     worldborderDist.setProgress(1.0);
@@ -615,6 +625,66 @@ public class UHCArena implements Runnable, Listener {
                 break;
         }
         updateDisconnect();
+        drawScoreboard();
+    }
+
+
+    private void drawScoreboard() {
+        scoreboard.reset();
+        switch (currentState()) {
+            case WAITING:
+            case INITIALIZED:
+                scoreboard.add(" ");
+                scoreboard.add(ChatColor.RED + "" + ChatColor.BOLD + "WAITING...");
+                scoreboard.add(" ");
+                scoreboard.add("Players: " + Bukkit.getOnlinePlayers().size() + "/" + Bukkit.getMaxPlayers());
+                scoreboard.add(" ");
+                break;
+            case RUNNING:
+                List<UHCTeam> teams = TeamHandler.teams().stream().filter(t -> !t.getName().equals(TeamHandler.SPECTATORS_TEAM)).collect(Collectors.toList());
+                int playerCount = 0;
+                for (UHCTeam team : teams) {
+                    playerCount += team.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count();
+                }
+                int spacesNeeded = teams.size() + playerCount;
+                scoreboard.add("Alive: " + ChatColor.GREEN + playerCount);
+                if (spacesNeeded <= 12) {
+                    teams.forEach(team -> {
+                        if (team.getPlayers().size() == 0)
+                            return;
+                        scoreboard.add(" ");
+                        for (UUID u : team.getPlayers()) {
+                            Player p = Bukkit.getPlayer(u);
+                            if (p == null)
+                                continue;
+                            scoreboard.add(team.getColor() + p.getName());
+                        }
+                    });
+                } else {
+                    scoreboard.add(" ");
+//                    teams.forEach(team -> scoreboard.add(team.getPlayers().stream().map(Bukkit::getPlayer).count() + " " + team.getColor() + team.getName()));
+                    teams.forEach(team -> {
+                        int onlinePlayers = 0;
+                        for (UUID u : team.getPlayers()) {
+                            if (Bukkit.getPlayer(u) != null)
+                                onlinePlayers++;
+                        }
+                        if (onlinePlayers == 0)
+                            return;
+                        scoreboard.add(onlinePlayers + " " + team.getColor() + WordUtils.capitalizeFully(team.getName().replace('_', ' ')));
+                    });
+                    scoreboard.add(" ");
+                }
+                break;
+            case ENDGAME:
+                scoreboard.add(" ");
+                scoreboard.add(ChatColor.RED + "" + ChatColor.BOLD + "ENDED!");
+                scoreboard.add(" ");
+                scoreboard.add(ChatColor.GOLD + "WINNER:");
+                scoreboard.add("   " + winner);
+                scoreboard.add(" ");
+        }
+        scoreboard.draw();
     }
 
     @EventHandler(priority = EventPriority.MONITOR)

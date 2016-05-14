@@ -5,9 +5,9 @@ import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
-import me.mrkirby153.kcuhc.gui.SpectateInventory;
+import me.mrkirby153.kcuhc.gui.CompassInventory;
+import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.handler.RegenTicket;
-import me.mrkirby153.kcuhc.item.InventoryHandler;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -20,6 +20,7 @@ import java.util.UUID;
 public class CommandTeam extends BaseCommand {
 
     private boolean assignSelf = true;
+
     @Override
     @SuppressWarnings("unchecked")
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -45,12 +46,12 @@ public class CommandTeam extends BaseCommand {
                 }
                 return true;
             }
-            if(args[0].equalsIgnoreCase("manualassign")){
+            if (args[0].equalsIgnoreCase("manualassign")) {
                 if (restrictAdmin(sender)) {
                     return true;
                 }
                 assignSelf = !assignSelf;
-                if(assignSelf){
+                if (assignSelf) {
                     sender.sendMessage(UtilChat.generateFormattedChat("Players can now assign their own teams", ChatColor.GREEN, 8).toLegacyText());
                 } else {
                     sender.sendMessage(UtilChat.generateFormattedChat("Players can no longer assign their own teams", ChatColor.RED, 8).toLegacyText());
@@ -58,16 +59,16 @@ public class CommandTeam extends BaseCommand {
                 return true;
             }
             /// --- TEMP ---
-            if(args[0].equalsIgnoreCase("spectateinv")){
-                InventoryHandler.instance().showHotbar((Player) sender, new SpectateInventory());
-                return true;
-            }
-            if(args[0].equalsIgnoreCase("rspecinv")){
-                InventoryHandler.instance().removeHotbar((Player) sender);
-                return true;
-            }
-            if(args[0].equalsIgnoreCase("rticket")){
+            if (args[0].equalsIgnoreCase("rticket")) {
                 RegenTicket.give((Player) sender);
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("specgui")) {
+                new CompassInventory((Player) sender);
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("specinv")) {
+                new SpecInventory(UHC.plugin, (Player) sender);
                 return true;
             }
             /// --- END TEMP ---
@@ -85,8 +86,8 @@ public class CommandTeam extends BaseCommand {
                 sender.sendMessage("Loaded");
                 return true;
             }
-            if(!(UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.INITIALIZED)){
-                if(sender instanceof Player) {
+            if (!(UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.INITIALIZED)) {
+                if (sender instanceof Player) {
                     sender.sendMessage(UtilChat.generateLegacyError("You cannot change teams when the game has started!"));
                     return true;
                 }
@@ -96,8 +97,9 @@ public class CommandTeam extends BaseCommand {
                     return true;
                 int playerCount = 0;
                 int teamCount = 0;
+                TeamHandler.loadFromFile();
                 for (UHCTeam t : TeamHandler.teams()) {
-                    if(t == TeamHandler.getTeamByName(TeamHandler.SPECTATORS_TEAM))
+                    if (t == TeamHandler.getTeamByName(TeamHandler.SPECTATORS_TEAM))
                         continue;
                     ArrayList<UUID> uuuids = (ArrayList<UUID>) t.getPlayers().clone();
                     for (UUID u : uuuids) {
@@ -118,11 +120,11 @@ public class CommandTeam extends BaseCommand {
                 return true;
             String teamToJoin = args[0];
             Player p = (Player) sender;
-            if(!assignSelf && !UHC.isAdmin(p)){
+            if (!assignSelf && !UHC.isAdmin(p)) {
                 p.spigot().sendMessage(UtilChat.generateError("You cannot assign your team. Please wait for it to be assigned for you"));
                 return true;
             }
-            if(teamToJoin.equalsIgnoreCase("spectators")){
+            if (teamToJoin.equalsIgnoreCase("spectators")) {
                 p.spigot().sendMessage(UtilChat.generateError("Use /spectate to join the spectators team!"));
                 return true;
             }
