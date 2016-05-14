@@ -76,8 +76,8 @@ public class RegenTicket implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onDamage(EntityDamageByEntityEvent event) {
-//        if(event.isCancelled())
-//            return;
+        if(event.isCancelled())
+            return;
         if (!(event.getDamager() instanceof Player) || !(event.getEntity() instanceof Player)) {
             return; // Not involving a player
         }
