@@ -67,7 +67,7 @@ public class UtilTime {
         return text;
     }
 
-    private static double trim(int degree, double d) {
+    public static double trim(int degree, double d) {
         String format = "#.#";
         for (int i = 1; i < degree; i++) {
             format += "#";
