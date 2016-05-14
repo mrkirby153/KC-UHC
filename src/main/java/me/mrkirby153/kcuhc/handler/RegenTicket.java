@@ -2,6 +2,7 @@ package me.mrkirby153.kcuhc.handler;
 
 
 import me.mrkirby153.kcuhc.UtilChat;
+import me.mrkirby153.kcuhc.arena.TeamHandler;
 import net.minecraft.server.v1_9_R2.NBTTagCompound;
 import net.minecraft.server.v1_9_R2.NBTTagList;
 import org.bukkit.ChatColor;
@@ -127,6 +128,8 @@ public class RegenTicket implements Listener {
     }
 
     public static void give(Player player) {
+        if(TeamHandler.isSpectator(player))
+            return;
         player.spigot().sendMessage(UtilChat.generateFormattedChat("You have been given a regen ticket. This ticket will restore " +
                 "you to full health. However, once PvP damage is given or delt, it is removed!", net.md_5.bungee.api.ChatColor.DARK_GREEN, 8));
         player.getInventory().addItem(createRegenTicket(player));
