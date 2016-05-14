@@ -2,8 +2,8 @@ package me.mrkirby153.kcuhc.arena;
 
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.gui.SpectateInventory;
-import me.mrkirby153.kcuhc.item.InventoryHandler;
+import me.mrkirby153.kcuhc.gui.SpecInventory;
+import me.mrkirby153.kcuhc.shop.Inventory;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_9_R2.EntityPlayer;
 import org.bukkit.Bukkit;
@@ -29,7 +29,7 @@ public class TeamSpectator extends UHCTeam {
         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, true, false));
         player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0, true, false));
         if (UHC.arena.currentState() == UHCArena.State.RUNNING)
-            InventoryHandler.instance().showHotbar(player, new SpectateInventory());
+            new SpecInventory(UHC.plugin, player);
         hideFromPlayers(player);
         player.setHealth(player.getMaxHealth());
         player.setFoodLevel(20);
@@ -55,7 +55,7 @@ public class TeamSpectator extends UHCTeam {
         player.setGameMode(GameMode.SURVIVAL);
         player.removePotionEffect(PotionEffectType.INVISIBILITY);
         player.removePotionEffect(PotionEffectType.NIGHT_VISION);
-        InventoryHandler.instance().removeHotbar(player);
+        Inventory.closeInventory(player);
         showToPlayers(player);
         player.setAllowFlight(false);
         player.setFlying(false);

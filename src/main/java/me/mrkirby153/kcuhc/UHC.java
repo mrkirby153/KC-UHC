@@ -8,7 +8,6 @@ import me.mrkirby153.kcuhc.discord.DiscordBotConnection;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
 import me.mrkirby153.kcuhc.handler.RegenTicket;
 import me.mrkirby153.kcuhc.handler.SpectateListener;
-import me.mrkirby153.kcuhc.item.InventoryHandler;
 import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -68,7 +67,6 @@ public class UHC extends JavaPlugin {
         }
         getServer().getPluginManager().registerEvents(new MOTDHandler(), this);
         getServer().getPluginManager().registerEvents(spectateListener = new SpectateListener(), this);
-        getServer().getPluginManager().registerEvents(InventoryHandler.instance(), this);
         getServer().getPluginManager().registerEvents(new JukeboxHandler(), this);
         getServer().getPluginManager().registerEvents(new RegenTicket(), this);
         TeamHandler.registerTeam(TeamHandler.SPECTATORS_TEAM, new TeamSpectator());

@@ -225,7 +225,7 @@ public class UHCArena implements Runnable, Listener {
                     p.removePotionEffect(e.getType());
                 }
             } else
-                InventoryHandler.instance().showHotbar(p, new SpectateInventory());
+                new SpecInventory(UHC.plugin, p);
             p.setBedSpawnLocation(center, true);
             p.addPotionEffects(Arrays.asList(resist, regen, sat));
             if (p.isOp()) {
