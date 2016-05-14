@@ -42,7 +42,7 @@ public class GameListener implements Listener {
             return;
         }
         System.out.println(event.getEntity().getName() + " was damaged by " + event.getCause().toString());
-        if (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK || event.getCause() == EntityDamageEvent.DamageCause.MAGIC) {
+        if (event.getCause() == EntityDamageEvent.DamageCause.ENTITY_ATTACK || event.getCause() == EntityDamageEvent.DamageCause.MAGIC || event.getCause() == EntityDamageEvent.DamageCause.WITHER) {
             return;
         }
         double oldDamage = event.getDamage();
