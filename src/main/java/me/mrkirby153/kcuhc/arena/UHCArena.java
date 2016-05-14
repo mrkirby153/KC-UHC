@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
 import static me.mrkirby153.kcuhc.UHC.discordHandler;
 import static me.mrkirby153.kcuhc.UtilChat.generateBoldChat;
 import static me.mrkirby153.kcuhc.arena.UHCArena.State.COUNTDOWN;
+import static me.mrkirby153.kcuhc.arena.UHCArena.State.RUNNING;
 
 public class UHCArena implements Runnable, Listener {
 
@@ -124,7 +125,8 @@ public class UHCArena implements Runnable, Listener {
         maxZ = center.getBlockZ() + startSize;
         UHC.plugin.getServer().getPluginManager().registerEvents(pregameListener, UHC.plugin);
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this, 0, 20);
-        UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, () -> drawScoreboard(), 0, 1L);
+        UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this::drawScoreboard, 0, 1L);
+        UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this::updateEndgame, 0L, 1L);
         closeToBorder = Bukkit.createBossBar(ChatColor.RED + "You are close to the worldborder!", BarColor.PINK, BarStyle.SOLID);
         countdownBar = Bukkit.createBossBar(ChatColor.RED + "Starting in ", BarColor.PINK, BarStyle.SOLID);
         worldborderDist = Bukkit.createBossBar(ChatColor.GOLD + "Worldborder " + ChatColor.RED + "X: " + ChatColor.GREEN +
@@ -295,6 +297,8 @@ public class UHCArena implements Runnable, Listener {
     public void stop(String winner) {
         String orig = winner;
         this.winner = winner;
+        this.nextEndgamePhaseIn = -1;
+        this.nextEndgamePhase = null;
         RegenTicket.clearRegenTickets();
         winner = WordUtils.capitalizeFully(winner.replace('_', ' '));
         JukeboxHandler.nextSong();
@@ -586,7 +590,6 @@ public class UHCArena implements Runnable, Listener {
                 if (nether != null)
                     if (nether.getWorldBorder().getSize() == endSize)
                         nether.getWorldBorder().setWarningDistance(0);
-                updateEndgame();
                 if (deathmatch != -1) {
                     deathmatch--;
                     if (deathmatch > 0) {
@@ -648,6 +651,8 @@ public class UHCArena implements Runnable, Listener {
 
 
     private void updateEndgame() {
+        if (state != RUNNING)
+            return;
         switch (currentEndgamePhase) {
             case NORMALGAME:
                 if (world.getWorldBorder().getSize() <= endSize) {
@@ -660,7 +665,7 @@ public class UHCArena implements Runnable, Listener {
             case HUNGER_III:
                 for (Player p : players()) {
                     if (TeamHandler.isSpectator(p))
-                        return;
+                        continue;
                     if (!p.hasPotionEffect(PotionEffectType.HUNGER))
                         p.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, Integer.MAX_VALUE, 2, false, true));
                 }
@@ -687,6 +692,8 @@ public class UHCArena implements Runnable, Listener {
 
 
     boolean firstAnnounce = true;
+    boolean announced = false;
+    String lastAnnounced = "-1";
 
     private void announcePhase(EndgamePhase phase) {
         long time = nextEndgamePhaseIn - System.currentTimeMillis();
@@ -700,11 +707,20 @@ public class UHCArena implements Runnable, Listener {
             shouldAnnounce = (seconds % 10) == 0;
         } else if (seconds < 10) {
             shouldAnnounce = true;
+            announced = false;
         }
+        if (!shouldAnnounce)
+            announced = false;
+        double dec = UtilTime.trim(1, time / 1000D);
+        String decString = Double.toString(dec);
+        String whole = decString.split("\\.")[0];
+        String fraction = decString.split("\\.")[1];
         time -= 1000;
-        if (time <= 0)
+        if(time < 0)
             return;
-        if (firstAnnounce || shouldAnnounce) {
+        if ((firstAnnounce || shouldAnnounce) && fraction.equalsIgnoreCase("0") && !announced && !lastAnnounced.equalsIgnoreCase(whole)) {
+            lastAnnounced = whole;
+            announced = true;
             firstAnnounce = false;
             BaseComponent text = generateBoldChat(phase.getName(), net.md_5.bungee.api.ChatColor.LIGHT_PURPLE);
             text.addExtra(UtilChat.generateBoldChat(" will be applied in " + UtilTime.format(1, time, UtilTime.TimeUnit.FIT), net.md_5.bungee.api.ChatColor.GREEN));
@@ -727,7 +743,7 @@ public class UHCArena implements Runnable, Listener {
         this.currentEndgamePhase = newPhase;
         firstAnnounce = true;
         BaseComponent text = generateBoldChat(newPhase.getName(), net.md_5.bungee.api.ChatColor.LIGHT_PURPLE);
-        text.addExtra(UtilChat.generateBoldChat(" active!", net.md_5.bungee.api.ChatColor.GREEN));
+        text.addExtra(UtilChat.generateBoldChat(" active!", net.md_5.bungee.api.ChatColor.DARK_RED));
         for (Player p : players()) {
             p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F);
             p.spigot().sendMessage(text);
@@ -750,7 +766,11 @@ public class UHCArena implements Runnable, Listener {
                 List<UHCTeam> teams = TeamHandler.teams().stream().filter(t -> !t.getName().equals(TeamHandler.SPECTATORS_TEAM)).collect(Collectors.toList());
                 int playerCount = 0;
                 for (UHCTeam team : teams) {
-                    playerCount += team.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count();
+                    for (UUID u : team.getPlayers()) {
+                        Player p = Bukkit.getPlayer(u);
+                        if (TeamHandler.getTeamForPlayer(p) == team)
+                            playerCount++;
+                    }
                 }
                 int spacesNeeded = playerCount;
                 scoreboard.add("Alive: " + ChatColor.GREEN + playerCount);
@@ -761,6 +781,8 @@ public class UHCArena implements Runnable, Listener {
                             return;
                         for (UUID u : team.getPlayers()) {
                             Player p = Bukkit.getPlayer(u);
+                            if (TeamHandler.getTeamForPlayer(p) != team)
+                                continue;
                             if (p == null)
                                 continue;
                             scoreboard.add(team.getColor() + p.getName());
@@ -768,12 +790,14 @@ public class UHCArena implements Runnable, Listener {
                     });
                     scoreboard.add(" ");
                 } else {
-                    scoreboard.add(" ");
 //                    teams.forEach(team -> scoreboard.add(team.getPlayers().stream().map(Bukkit::getPlayer).count() + " " + team.getColor() + team.getName()));
                     teams.forEach(team -> {
                         int onlinePlayers = 0;
                         for (UUID u : team.getPlayers()) {
-                            if (Bukkit.getPlayer(u) != null)
+                            Player player = Bukkit.getPlayer(u);
+                            if (TeamHandler.getTeamForPlayer(player) != team)
+                                continue;
+                            if (player != null)
                                 onlinePlayers++;
                         }
                         if (onlinePlayers == 0)
@@ -933,7 +957,7 @@ public class UHCArena implements Runnable, Listener {
         if (TeamHandler.isSpectator(player))
             return;
         uuidToStringMap.put(player.getUniqueId(), player.getName());
-
+        players.remove(player);
         logoutTimes.put(player.getUniqueId(), System.currentTimeMillis() + (300000));
         Bukkit.broadcastMessage(generateBoldChat(player.getName() + " has disconnected! They have 5 minutes to log back in before they are" +
                 " eliminated!", net.md_5.bungee.api.ChatColor.WHITE).toLegacyText());
@@ -1018,6 +1042,10 @@ public class UHCArena implements Runnable, Listener {
         UHC.discordHandler.deleteAllTeamChannels(null);
     }
 
+    public void setEndgamePhase(EndgamePhase endgamePhase) {
+        this.currentEndgamePhase = endgamePhase;
+    }
+
     public enum State {
         INITIALIZED,
         GENERATING_WORLD,
@@ -1027,7 +1055,7 @@ public class UHCArena implements Runnable, Listener {
         ENDGAME
     }
 
-    private enum EndgamePhase {
+    public enum EndgamePhase {
         NORMALGAME("Normal Game", -1),
         HUNGER_III("Hunger III", 300000),
         WITHER("Wither", 300000);
