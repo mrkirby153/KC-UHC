@@ -116,6 +116,26 @@ public class CommandUHC extends BaseCommand {
                     return true;
                 }
             }
+            if(args[0].equalsIgnoreCase("endgamestate")){
+                try {
+                    UHCArena.EndgamePhase p = UHCArena.EndgamePhase.valueOf(args[1].toUpperCase());
+                    UHC.arena.setEndgamePhase(p);
+                    sender.sendMessage("Set state to " + p.toString());
+                } catch (IllegalArgumentException e) {
+                    sender.sendMessage(UtilChat.generateLegacyError("Invalid state!"));
+                    return true;
+                }
+            }
+            if(args[0].equalsIgnoreCase("endgametime")){
+                long newTime = Long.parseLong(args[1]) + System.currentTimeMillis();
+                try{
+                    Field f = UHCArena.class.getDeclaredField("nextEndgamePhaseIn");
+                    f.setAccessible(true);
+                    f.set(UHC.arena, newTime);
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
             if (args[0].equalsIgnoreCase("winner")) {
                 try {
                     Field f = Color.class.getDeclaredField(args[1].toUpperCase());
