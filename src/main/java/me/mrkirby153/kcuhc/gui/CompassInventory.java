@@ -57,6 +57,15 @@ public class CompassInventory extends Shop<UHC> implements Runnable {
         if (endIndex > teams.size())
             endIndex = teams.size();
         List<UHCTeam> uhcTeams = teams.subList(startIndex, endIndex);
+        uhcTeams.sort((o1, o2) -> {
+            if (o1.getPlayers().size() > o2.getPlayers().size()) {
+                return -1;
+            } else if (o1.getPlayers().size() < o2.getPlayers().size()) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
         for (UHCTeam team : uhcTeams) {
             if (team == TeamHandler.spectatorsTeam())
                 continue;
@@ -79,7 +88,7 @@ public class CompassInventory extends Shop<UHC> implements Runnable {
                     continue;
                 int newSlot = currentRow * 9 + slot;
                 if (op instanceof Player) {
-                    if(team != TeamHandler.getTeamForPlayer((Player) op))
+                    if (team != TeamHandler.getTeamForPlayer((Player) op))
                         continue;
                     addButton(newSlot, playerItem((Player) op), new TeleportToPlayer((Player) op));
                     slot++;
