@@ -1157,6 +1157,8 @@ public class UHCArena implements Runnable, Listener {
         public void run() {
             if (UHC.arena.state == State.RUNNING) {
                 for (Player p : Bukkit.getOnlinePlayers()) {
+                    if(TeamHandler.isSpectator(p))
+                        continue;
                     Location l = p.getLocation();
                     TextComponent bc = (TextComponent) UtilChat.generateFormattedChat("Current Position: ", net.md_5.bungee.api.ChatColor.GOLD, 0);
                     bc.addExtra(UtilChat.generateFormattedChat("X: ", net.md_5.bungee.api.ChatColor.RED, 0));
