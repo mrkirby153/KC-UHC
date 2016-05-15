@@ -86,7 +86,6 @@ public class UHCArena implements Runnable, Listener {
 
     private BossBar closeToBorder;
     private BossBar countdownBar;
-    private BossBar worldborderDist;
 
     private double barProgress = 1;
     private static final double BAR_PROGRESS_DEC = 0.1;
@@ -129,9 +128,6 @@ public class UHCArena implements Runnable, Listener {
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this::updateEndgame, 0L, 1L);
         closeToBorder = Bukkit.createBossBar(ChatColor.RED + "You are close to the worldborder!", BarColor.PINK, BarStyle.SOLID);
         countdownBar = Bukkit.createBossBar(ChatColor.RED + "Starting in ", BarColor.PINK, BarStyle.SOLID);
-        worldborderDist = Bukkit.createBossBar(ChatColor.GOLD + "Worldborder " + ChatColor.RED + "X: " + ChatColor.GREEN +
-                "\u00B1 ??? " + ChatColor.RED + "Z: " + ChatColor.GREEN + "\u00B1 ???", BarColor.PINK, BarStyle.SOLID);
-        worldborderDist.setProgress(0);
         UHC.plugin.getServer().getPluginManager().registerEvents(this, UHC.plugin);
         this.scoreboard = new UHCScoreboard();
     }
@@ -255,7 +251,6 @@ public class UHCArena implements Runnable, Listener {
                 p.setOp(false);
                 previouslyOpped.add(p);
             }
-            worldborderDist.addPlayer(p);
         }
 /*        // TODO: 5/13/2016 Write spreadplayers algorithm, as args no longer work :(
         String format = String.format("spreadplayers %d %d %d %d true @a[team=!%s]", center.getBlockX(), center.getBlockZ(), 50, startSize / 2, TeamHandler.SPECTATORS_TEAM);
@@ -351,7 +346,6 @@ public class UHCArena implements Runnable, Listener {
         for (Player p : previouslyOpped) {
             p.setOp(true);
         }
-        worldborderDist.removeAll();
         HandlerList.unregisterAll(gameListener);
         UHC.plugin.getServer().getPluginManager().registerEvents(pregameListener, UHC.plugin);
         bringEveryoneToLobby();
@@ -380,7 +374,6 @@ public class UHCArena implements Runnable, Listener {
         Bukkit.getServer().getScheduler().cancelTasks(UHC.plugin);
         setWorldborder(world.getWorldBorder().getSize() + 150, 0);
         countdownBar.removeAll();
-        worldborderDist.removeAll();
         Objective healthObj = board.getObjective("health");
         if (healthObj != null)
             healthObj.unregister();
@@ -569,24 +562,6 @@ public class UHCArena implements Runnable, Listener {
                     }
                     state = State.ENDGAME;
                 }
-                double[] borderDist = worldborderLoc();
-                /// INIT: 300 TRAVELD: 300 - currSize
-                // CurrSize: 200, therefore traveled = 100
-                //
-                double blocksLeft = world.getWorldBorder().getSize() - (dmStarted ? 1 : endSize);
-                double percent = 1 - (blocksLeft / worldborderInitSize);
-                if (percent > 1) {
-                    percent = 1;
-                }
-                if (percent < 0)
-                    percent = 0;
-                if (Double.isNaN(percent))
-                    percent = 0;
-                worldborderDist.setProgress(percent);
-                if (worldborderDist.getProgress() > 1.0)
-                    worldborderDist.setProgress(1.0);
-                worldborderDist.setTitle(String.format(ChatColor.GOLD + "Worldborder " + ChatColor.RED + "X: " + ChatColor.GREEN +
-                        "\u00B1 %.2f " + ChatColor.RED + "Z: " + ChatColor.GREEN + "\u00B1 %.2f", borderDist[0], borderDist[1]));
                 if (world.getWorldBorder().getSize() == endSize) {
                     world.getWorldBorder().setWarningDistance(0);
                 }
@@ -645,7 +620,6 @@ public class UHCArena implements Runnable, Listener {
                 }
                 for (Player p : Bukkit.getOnlinePlayers())
                     p.setGlowing(false);
-                worldborderDist.removeAll();
                 break;
         }
         updateDisconnect();
