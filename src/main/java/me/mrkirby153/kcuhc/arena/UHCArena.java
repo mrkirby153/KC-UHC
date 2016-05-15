@@ -267,6 +267,9 @@ public class UHCArena implements Runnable, Listener {
             if (e instanceof Tameable) {
                 ((Tameable) e).setOwner(null);
             }
+            if(e.getType() == EntityType.DROPPED_ITEM){
+                e.remove();
+            }
         }
         for (Player p : players()) {
             RegenTicket.give(p);
@@ -669,24 +672,24 @@ public class UHCArena implements Runnable, Listener {
                     if (!p.hasPotionEffect(PotionEffectType.HUNGER))
                         p.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, Integer.MAX_VALUE, 2, false, true));
                 }
-                if (nextEndgamePhase != EndgamePhase.WITHER) {
-                    nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.WITHER.getDuration();
-                    nextEndgamePhase = EndgamePhase.WITHER;
+                if (nextEndgamePhase != EndgamePhase.POISON) {
+                    nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.POISON.getDuration();
+                    nextEndgamePhase = EndgamePhase.POISON;
                 }
                 break;
-            case WITHER:
+            case POISON:
                 for (Player p : players()) {
                     if (TeamHandler.isSpectator(p))
                         return;
                     if (!p.hasPotionEffect(PotionEffectType.HUNGER))
                         p.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, Integer.MAX_VALUE, 2, false, true));
-                    if (!p.hasPotionEffect(PotionEffectType.WITHER))
-                        p.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, Integer.MAX_VALUE, 0, false, true));
+                    if (!p.hasPotionEffect(PotionEffectType.POISON))
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, Integer.MAX_VALUE, 0, false, true));
                 }
         }
-        if (nextEndgamePhase != null && currentEndgamePhase != EndgamePhase.WITHER)
+        if (nextEndgamePhase != null && currentEndgamePhase != EndgamePhase.POISON)
             announcePhase(nextEndgamePhase);
-        if (currentEndgamePhase != EndgamePhase.WITHER)
+        if (currentEndgamePhase != EndgamePhase.POISON)
             activatePhase();
     }
 
@@ -715,8 +718,7 @@ public class UHCArena implements Runnable, Listener {
         String decString = Double.toString(dec);
         String whole = decString.split("\\.")[0];
         String fraction = decString.split("\\.")[1];
-        time -= 1000;
-        if (time < 0)
+        if (time <= 1000 || seconds <= 0)
             return;
         if ((firstAnnounce || shouldAnnounce) && fraction.equalsIgnoreCase("0") && !announced && !lastAnnounced.equalsIgnoreCase(whole)) {
             lastAnnounced = whole;
@@ -1061,11 +1063,11 @@ public class UHCArena implements Runnable, Listener {
     public enum EndgamePhase {
         NORMALGAME("Normal Game", -1),
         HUNGER_III("Hunger III", 300000),
-        WITHER("Wither", 300000);
+        POISON("Poison", 300000);
 /*
         NORMALGAME("Normal Game", -1),
         HUNGER_III("Hunger III", 30000),
-        WITHER("Wither", 30000);
+        POISON("Wither", 30000);
 */
 
         private long duration;
