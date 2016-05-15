@@ -716,7 +716,7 @@ public class UHCArena implements Runnable, Listener {
         String whole = decString.split("\\.")[0];
         String fraction = decString.split("\\.")[1];
         time -= 1000;
-        if(time < 0)
+        if (time < 0)
             return;
         if ((firstAnnounce || shouldAnnounce) && fraction.equalsIgnoreCase("0") && !announced && !lastAnnounced.equalsIgnoreCase(whole)) {
             lastAnnounced = whole;
@@ -768,6 +768,8 @@ public class UHCArena implements Runnable, Listener {
                 for (UHCTeam team : teams) {
                     for (UUID u : team.getPlayers()) {
                         Player p = Bukkit.getPlayer(u);
+                        if (p == null)
+                            continue;
                         if (TeamHandler.getTeamForPlayer(p) == team)
                             playerCount++;
                     }
@@ -775,15 +777,15 @@ public class UHCArena implements Runnable, Listener {
                 int spacesNeeded = playerCount;
                 scoreboard.add("Alive: " + ChatColor.GREEN + playerCount);
                 scoreboard.add(" ");
-                if (spacesNeeded <= ((nextEndgamePhaseIn == -1) ? 11 : 8)) {
+                if (spacesNeeded <= ((nextEndgamePhaseIn == -1) ? 10 : 7)) {
                     teams.forEach(team -> {
                         if (team.getPlayers().size() == 0)
                             return;
                         for (UUID u : team.getPlayers()) {
                             Player p = Bukkit.getPlayer(u);
-                            if (TeamHandler.getTeamForPlayer(p) != team)
-                                continue;
                             if (p == null)
+                                continue;
+                            if (TeamHandler.getTeamForPlayer(p) != team)
                                 continue;
                             scoreboard.add(team.getColor() + p.getName());
                         }
@@ -812,11 +814,12 @@ public class UHCArena implements Runnable, Listener {
                         scoreboard.add(" ACTIVE");
                     } else {
                         int trim = (int) (nextEndgamePhaseIn - System.currentTimeMillis());
-                        scoreboard.add("    in " + UtilTime.format(1, trim, UtilTime.TimeUnit.FIT));
+                        scoreboard.add("  in " + UtilTime.format(1, trim, UtilTime.TimeUnit.FIT));
                     }
                     scoreboard.add(" ");
                 }
-                scoreboard.add("Duration: " + UtilTime.format(1, System.currentTimeMillis() - startTime, UtilTime.TimeUnit.FIT));
+                scoreboard.add(ChatColor.GREEN + "" + ChatColor.BOLD + "Time Elapsed");
+                scoreboard.add("  " + UtilTime.format(1, System.currentTimeMillis() - startTime, UtilTime.TimeUnit.FIT));
                 break;
             case ENDGAME:
                 scoreboard.add(" ");
