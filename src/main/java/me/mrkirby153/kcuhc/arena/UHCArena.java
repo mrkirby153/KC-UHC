@@ -713,7 +713,7 @@ public class UHCArena implements Runnable, Listener {
             }
         }
         if ((shouldAnnounce || firstAnnounce) && !lastAnnounced.equalsIgnoreCase(tFormat)) {
-            if(tFormat.toLowerCase().contains("1.0 minutes"))
+            if (tFormat.toLowerCase().contains("1.0 minutes"))
                 return;
             lastAnnounced = Double.toString(nextPhase);
             shouldAnnounce = false;
@@ -795,10 +795,11 @@ public class UHCArena implements Runnable, Listener {
                         int onlinePlayers = 0;
                         for (UUID u : team.getPlayers()) {
                             Player player = Bukkit.getPlayer(u);
+                            if (player == null)
+                                continue;
                             if (TeamHandler.getTeamForPlayer(player) != team)
                                 continue;
-                            if (player != null)
-                                onlinePlayers++;
+                            onlinePlayers++;
                         }
                         if (onlinePlayers == 0)
                             return;
