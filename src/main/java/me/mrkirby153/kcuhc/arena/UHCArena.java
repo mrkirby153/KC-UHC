@@ -713,6 +713,8 @@ public class UHCArena implements Runnable, Listener {
             }
         }
         if ((shouldAnnounce || firstAnnounce) && !lastAnnounced.equalsIgnoreCase(tFormat)) {
+            if(tFormat.toLowerCase().contains("1.0 minutes"))
+                return;
             lastAnnounced = Double.toString(nextPhase);
             shouldAnnounce = false;
             firstAnnounce = false;
