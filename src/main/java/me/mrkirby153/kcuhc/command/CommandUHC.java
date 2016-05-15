@@ -4,6 +4,7 @@ import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCArena;
+import me.mrkirby153.kcuhc.arena.UHCTeam;
 import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -15,10 +16,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class CommandUHC extends BaseCommand {
     @Override
@@ -70,6 +68,7 @@ public class CommandUHC extends BaseCommand {
                     UHC.discordHandler.shutdown();
                 List<ChatColor> usedColors = new ArrayList<>();
                 List<ChatColor> blacklistedColors = Arrays.asList(ChatColor.BOLD, ChatColor.STRIKETHROUGH, ChatColor.RESET, ChatColor.MAGIC, ChatColor.UNDERLINE);
+                HashMap<Player, UHCTeam> teams = new HashMap<>();
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     if (TeamHandler.isSpectator(p)) {
                         continue;
@@ -82,7 +81,10 @@ public class CommandUHC extends BaseCommand {
                     usedColors.add(chosenColor);
                     sender.sendMessage(chosenColor + "Created team " + p.getName());
                     UHC.arena.newTeam(p.getName(), chosenColor);
-                    TeamHandler.joinTeam(TeamHandler.getTeamByName(p.getName()), p);
+                    teams.put(p, TeamHandler.getTeamByName(p.getName()));
+                }
+                for(Map.Entry<Player, UHCTeam> e : teams.entrySet()){
+                    TeamHandler.joinTeam(e.getValue(), e.getKey());
                 }
                 sender.sendMessage(UtilChat.generateFormattedChat("Created teams and assigned teams!", ChatColor.GREEN, 0).toLegacyText());
                 return true;
