@@ -125,7 +125,24 @@ public class UHCArena implements Runnable, Listener {
         UHC.plugin.getServer().getPluginManager().registerEvents(pregameListener, UHC.plugin);
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this, 0, 20);
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this::drawScoreboard, 0, 1L);
-        UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this::updateEndgame, 0L, 1L);
+//        UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this::updateEndgame, 0L, 2L);
+        UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this::endgameEffect, 0L, 1L);
+        Thread endgameThread = new Thread() {
+            @Override
+            public void run() {
+                while (true) {
+                    updateEndgame();
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        endgameThread.setName("Endgame Thread");
+        endgameThread.setDaemon(true);
+        endgameThread.start();
         closeToBorder = Bukkit.createBossBar(ChatColor.RED + "You are close to the worldborder!", BarColor.PINK, BarStyle.SOLID);
         countdownBar = Bukkit.createBossBar(ChatColor.RED + "Starting in ", BarColor.PINK, BarStyle.SOLID);
         UHC.plugin.getServer().getPluginManager().registerEvents(this, UHC.plugin);
@@ -681,6 +698,30 @@ public class UHCArena implements Runnable, Listener {
             announcePhase(nextEndgamePhase);
         if (currentEndgamePhase != SHRINKING_WORLDBORDER)
             activatePhase();
+    }
+
+    private void endgameEffect() {
+        if (state != RUNNING)
+            return;
+        switch (currentEndgamePhase) {
+            case POISON:
+                for (Player p : players()) {
+                    if (TeamHandler.isSpectator(p))
+                        continue;
+                    if (!p.hasPotionEffect(PotionEffectType.POISON)) {
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, Integer.MAX_VALUE, 0, false, true));
+                    }
+                }
+            case HUNGER_III:
+                for (Player p : players()) {
+                    if (TeamHandler.isSpectator(p))
+                        continue;
+                    if (!p.hasPotionEffect(PotionEffectType.HUNGER)) {
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, Integer.MAX_VALUE, 2, false, true));
+                    }
+                }
+                break;
+        }
     }
 
 
