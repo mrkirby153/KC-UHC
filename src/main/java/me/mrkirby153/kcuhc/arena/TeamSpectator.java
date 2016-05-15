@@ -1,6 +1,8 @@
 package me.mrkirby153.kcuhc.arena;
 
 
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.shop.Inventory;
@@ -30,6 +32,15 @@ public class TeamSpectator extends UHCTeam {
         player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0, true, false));
         if (UHC.arena.currentState() == UHCArena.State.RUNNING)
             new SpecInventory(UHC.plugin, player);
+        if (UHC.discordHandler != null) {
+            System.out.println("Giving " + player.getName() + " the spectator role");
+            ByteArrayDataOutput out = ByteStreams.newDataOutput();
+            out.writeUTF(UHC.plugin.serverId());
+            out.writeUTF("assignRole");
+            out.writeUTF(player.getUniqueId().toString());
+            out.writeUTF(TeamHandler.SPECTATORS_TEAM);
+            UHC.discordHandler.sendMessage(out.toByteArray());
+        }
         hideFromPlayers(player);
         player.setHealth(player.getMaxHealth());
         player.setFoodLevel(20);
@@ -61,11 +72,12 @@ public class TeamSpectator extends UHCTeam {
         player.setFlying(false);
         player.setWalkSpeed(0.2F);
         player.setFlySpeed(0.2F);
-        if(UHC.arena != null && (UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.INITIALIZED
+        if (UHC.arena != null && (UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.INITIALIZED
                 || UHC.arena.currentState() == UHCArena.State.ENDGAME))
             player.setAllowFlight(true);
         EntityPlayer ep = ((CraftPlayer) player).getHandle();
         ep.collides = true;
+        Inventory.closeInventory(player);
     }
 
     public void showToPlayers(Player player) {
