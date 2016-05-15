@@ -79,6 +79,8 @@ public class CompassInventory extends Shop<UHC> implements Runnable {
                     continue;
                 int newSlot = currentRow * 9 + slot;
                 if (op instanceof Player) {
+                    if(team != TeamHandler.getTeamForPlayer((Player) op))
+                        continue;
                     addButton(newSlot, playerItem((Player) op), new TeleportToPlayer((Player) op));
                     slot++;
                 } else {
