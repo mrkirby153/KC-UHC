@@ -452,7 +452,7 @@ public class UHCArena implements Runnable, Listener {
     private void warnAboutWorldBorder(Player player) {
         if (dmStarted)
             return;
-        if (player.getWorld().getWorldBorder().getSize() == endSize) {
+        if (player.getWorld().getWorldBorder().getSize() == endSize || currentEndgamePhase == SHRINKING_WORLDBORDER) {
             if (closeToBorder.getPlayers().contains(player))
                 closeToBorder.removePlayer(player);
             return;
@@ -626,6 +626,7 @@ public class UHCArena implements Runnable, Listener {
         drawScoreboard();
     }
 
+    private int runCount = 0;
 
     private void updateEndgame() {
         if (state != RUNNING)
@@ -660,10 +661,25 @@ public class UHCArena implements Runnable, Listener {
                     if (!p.hasPotionEffect(PotionEffectType.POISON))
                         p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, Integer.MAX_VALUE, 0, false, true));
                 }
+                if (nextEndgamePhase != SHRINKING_WORLDBORDER) {
+                    nextEndgamePhase = SHRINKING_WORLDBORDER;
+                    nextEndgamePhaseIn = System.currentTimeMillis() + SHRINKING_WORLDBORDER.getDuration();
+                }
+                break;
+            case SHRINKING_WORLDBORDER:
+                runCount++;
+                if (runCount % 40 == 0) {
+                    runCount = 0;
+                    WorldBorder wb = world.getWorldBorder();
+                    if (wb.getSize() > 1)
+                        wb.setSize(wb.getSize() - 1, 1);
+                }
+                nextEndgamePhase = null;
+                break;
         }
-        if (nextEndgamePhase != null && currentEndgamePhase != EndgamePhase.POISON)
+        if (nextEndgamePhase != null && currentEndgamePhase != SHRINKING_WORLDBORDER)
             announcePhase(nextEndgamePhase);
-        if (currentEndgamePhase != EndgamePhase.POISON)
+        if (currentEndgamePhase != SHRINKING_WORLDBORDER)
             activatePhase();
     }
 
@@ -1034,7 +1050,8 @@ public class UHCArena implements Runnable, Listener {
     public enum EndgamePhase {
         NORMALGAME("Normal Game", -1),
         HUNGER_III("Hunger III", 300000),
-        POISON("Poison", 300000);
+        POISON("Poison", 300000),
+        SHRINKING_WORLDBORDER("Shrinking Worldborder", 600000);
 /*
         NORMALGAME("Normal Game", -1),
         HUNGER_III("Hunger III", 30000),
