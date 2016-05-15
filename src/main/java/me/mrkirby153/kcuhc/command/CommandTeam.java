@@ -5,9 +5,6 @@ import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
-import me.mrkirby153.kcuhc.gui.CompassInventory;
-import me.mrkirby153.kcuhc.gui.SpecInventory;
-import me.mrkirby153.kcuhc.handler.RegenTicket;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -58,20 +55,6 @@ public class CommandTeam extends BaseCommand {
                 }
                 return true;
             }
-            /// --- TEMP ---
-            if (args[0].equalsIgnoreCase("rticket")) {
-                RegenTicket.give((Player) sender);
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("specgui")) {
-                new CompassInventory((Player) sender);
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("specinv")) {
-                new SpecInventory(UHC.plugin, (Player) sender);
-                return true;
-            }
-            /// --- END TEMP ---
             if (args[0].equalsIgnoreCase("save")) {
                 if (restrictAdmin(sender))
                     return true;
