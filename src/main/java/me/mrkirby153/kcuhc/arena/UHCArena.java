@@ -792,52 +792,89 @@ public class UHCArena implements Runnable, Listener {
                 scoreboard.add(" ");
                 break;
             case RUNNING:
-                List<UHCTeam> teams = TeamHandler.teams().stream().filter(t -> !t.getName().equals(TeamHandler.SPECTATORS_TEAM)).collect(Collectors.toList());
-                int playerCount = 0;
-                for (UHCTeam team : teams) {
-                    for (UUID u : team.getPlayers()) {
-                        Player p = Bukkit.getPlayer(u);
-                        if (p == null)
-                            continue;
-                        if (TeamHandler.getTeamForPlayer(p) == team)
-                            playerCount++;
+                List<UUID> players = this.players.stream().map(Entity::getUniqueId).collect(Collectors.toList());
+                players.addAll(logoutTimes.keySet());
+                players.sort((o1, o2) -> {
+                    Player p1 = Bukkit.getPlayer(o1);
+                    Player p2 = Bukkit.getPlayer(o2);
+                    if (p1 == null) {
+                        return 1;
                     }
-                }
-                int spacesNeeded = playerCount;
-                scoreboard.add("Alive: " + ChatColor.GREEN + playerCount);
-                scoreboard.add(" ");
-                if (spacesNeeded <= ((nextEndgamePhaseIn == -1) ? 10 : 7)) {
-                    teams.forEach(team -> {
-                        if (team.getPlayers().size() == 0)
-                            return;
-                        for (UUID u : team.getPlayers()) {
-                            Player p = Bukkit.getPlayer(u);
-                            if (p == null)
-                                continue;
-                            if (TeamHandler.getTeamForPlayer(p) != team)
-                                continue;
-                            scoreboard.add(team.getColor() + p.getName());
+                    if (p2 == null) {
+                        return -1;
+                    }
+                    UHCTeam team1 = TeamHandler.getTeamForPlayer(p1);
+                    UHCTeam team2 = TeamHandler.getTeamForPlayer(p2);
+                    if (team1 == null || TeamHandler.spectatorsTeam() == team1) {
+                        return -1;
+                    }
+                    if (team2 == null || TeamHandler.spectatorsTeam() == team2) {
+                        return 1;
+                    }
+                    if (team1.getName().equalsIgnoreCase(team2.getName())) {
+                        if (p1.getHealth() > p2.getHealth()) {
+                            return -1;
+                        } else if (p1.getHealth() < p2.getHealth()) {
+                            return 1;
+                        } else {
+                            // Healths are equal
+                            return 0;
                         }
-                    });
-                    scoreboard.add(" ");
+                    } else {
+                        return team1.getName().compareToIgnoreCase(team2.getName());
+                    }
+                });
+                int spacesNeeded = players.size() + this.logoutTimes.size();
+                if (spacesNeeded <= ((nextEndgamePhaseIn == -1) ? 10 : 5)) {
+                    for (UUID u : players) {
+                        OfflinePlayer op = Bukkit.getOfflinePlayer(u);
+                        Player onlinePlayer = null;
+                        UHCTeam team;
+                        if (op instanceof Player) {
+                            team = TeamHandler.getTeamForPlayer((Player) op);
+                            onlinePlayer = (Player) op;
+                        } else
+                            team = null;
+                        if (team == null) {
+                            scoreboard.add(ChatColor.GRAY + op.getName());
+                        } else {
+                            if (team == TeamHandler.spectatorsTeam())
+                                continue;
+                            scoreboard.add((int) onlinePlayer.getHealth() + " " + team.getColor() + op.getName());
+                        }
+                    }
                 } else {
-//                    teams.forEach(team -> scoreboard.add(team.getPlayers().stream().map(Bukkit::getPlayer).count() + " " + team.getColor() + team.getName()));
-                    teams.forEach(team -> {
-                        int onlinePlayers = 0;
-                        for (UUID u : team.getPlayers()) {
-                            Player player = Bukkit.getPlayer(u);
-                            if (player == null)
+                    HashMap<String, Integer> onlineCount = new HashMap<>();
+                    int offlineCount = 0;
+                    for (UUID u : players) {
+                        Player player = Bukkit.getPlayer(u);
+                        if (player != null) {
+                            UHCTeam team = TeamHandler.getTeamForPlayer(player);
+                            if (team == TeamHandler.spectatorsTeam())
                                 continue;
-                            if (TeamHandler.getTeamForPlayer(player) != team)
-                                continue;
-                            onlinePlayers++;
+                            Integer i = onlineCount.get(team.getName());
+                            if (i == null)
+                                i = 1;
+                            else
+                                i++;
+                            onlineCount.put(team.getName(), i);
+                        } else {
+                            offlineCount++;
                         }
-                        if (onlinePlayers == 0)
-                            return;
-                        scoreboard.add(onlinePlayers + " " + team.getColor() + WordUtils.capitalizeFully(team.getName().replace('_', ' ')));
-                    });
-                    scoreboard.add(" ");
+                    }
+                    for (String t : onlineCount.keySet()) {
+                        scoreboard.add(onlineCount.get(t) + " " + TeamHandler.getTeamByName(t).getColor() + WordUtils.capitalizeFully(t.replace('_', ' ')));
+                    }
+                    if (offlineCount > 0)
+                        scoreboard.add(offlineCount + "" + ChatColor.GRAY + " Offline");
                 }
+                scoreboard.add(" ");
+                if (nextEndgamePhase == null && (currentEndgamePhase == NORMALGAME || currentEndgamePhase == SHRINKING_WORLDBORDER)) {
+                    scoreboard.add(ChatColor.YELLOW + "" + ChatColor.BOLD + "Worldborder:");
+                    double[] wbPos = worldborderLoc();
+                    scoreboard.add("from -" + UtilTime.trim(1, wbPos[0])+ " to +" + UtilTime.trim(1, wbPos[0]));
+                    scoreboard.add(" ");
+                } else
                 if (nextEndgamePhase != null && nextEndgamePhaseIn != -1) {
                     scoreboard.add(ChatColor.DARK_RED + "" + ChatColor.BOLD + nextEndgamePhase.getName());
                     if (System.currentTimeMillis() > nextEndgamePhaseIn) {
@@ -1011,6 +1048,7 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void playerJoin(Player player) {
+        this.logoutTimes.remove(player.getUniqueId());
         if (queuedTeamRemovals.contains(player.getUniqueId())) {
             queuedTeamRemovals.remove(player.getUniqueId());
             TeamHandler.leaveTeam(player);
