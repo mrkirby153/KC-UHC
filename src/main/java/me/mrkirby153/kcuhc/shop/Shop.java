@@ -30,7 +30,6 @@ public abstract class Shop<T extends JavaPlugin> implements Listener {
         this.inventory = Bukkit.createInventory(null, rows * 9, title);
         this.module = module;
         this.player = player;
-        module.getServer().getPluginManager().registerEvents(this, module);
     }
 
     public void onOpen() {
@@ -61,6 +60,7 @@ public abstract class Shop<T extends JavaPlugin> implements Listener {
         onOpen();
         build();
         player.openInventory(getInventory());
+        module.getServer().getPluginManager().registerEvents(this, module);
     }
 
     final Action getAction(int slot) {
