@@ -50,8 +50,9 @@ import java.util.stream.Collectors;
 
 import static me.mrkirby153.kcuhc.UHC.discordHandler;
 import static me.mrkirby153.kcuhc.UtilChat.generateBoldChat;
-import static me.mrkirby153.kcuhc.arena.UHCArena.State.COUNTDOWN;
-import static me.mrkirby153.kcuhc.arena.UHCArena.State.RUNNING;
+import static me.mrkirby153.kcuhc.arena.UHCArena.EndgamePhase.NORMALGAME;
+import static me.mrkirby153.kcuhc.arena.UHCArena.EndgamePhase.SHRINKING_WORLDBORDER;
+import static me.mrkirby153.kcuhc.arena.UHCArena.State.*;
 
 public class UHCArena implements Runnable, Listener {
 
@@ -171,7 +172,7 @@ public class UHCArena implements Runnable, Listener {
     public void temp_FireworkLaunch(Color color) {
         this.launchedFw = 0;
         this.winningTeamColor = color;
-        this.state = State.ENDGAME;
+        this.state = ENDGAME;
     }
 
     public void initialize() {
@@ -368,7 +369,7 @@ public class UHCArena implements Runnable, Listener {
         bringEveryoneToLobby();
         MOTDHandler.setMotd(ChatColor.RESET + "" + ChatColor.RED + ChatColor.MAGIC + "|..|" + ChatColor.RESET + "  " + ChatColor.GOLD + winner + ChatColor.RED + " has won the game!  " + ChatColor.RED + ChatColor.MAGIC + "|..|");
         launchedFw = 0;
-        state = State.ENDGAME;
+        state = ENDGAME;
     }
 
     public void startCountdown() {
@@ -568,8 +569,6 @@ public class UHCArena implements Runnable, Listener {
                     p.setGlowing(false);
                     if (!TeamHandler.isSpectator(p))
                         warnAboutWorldBorder(p);
-                    if (!worldborderDist.getPlayers().contains(p))
-                        worldborderDist.addPlayer(p);
                 }
                 if (teamCountLeft() <= 1 && shouldEndCheck) {
                     if (teamsLeft().size() > 0) {
@@ -577,7 +576,7 @@ public class UHCArena implements Runnable, Listener {
                         this.winningTeamColor = team.toColor();
                         stop(team.getName());
                     }
-                    state = State.ENDGAME;
+                    state = ENDGAME;
                 }
                 if (world.getWorldBorder().getSize() == endSize) {
                     world.getWorldBorder().setWarningDistance(0);
