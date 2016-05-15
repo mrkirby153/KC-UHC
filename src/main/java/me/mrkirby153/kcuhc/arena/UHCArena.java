@@ -405,6 +405,9 @@ public class UHCArena implements Runnable, Listener {
     public ArrayList<UHCPlayerTeam> teamsLeft() {
         ArrayList<UHCPlayerTeam> uniqueTeams = new ArrayList<>();
         for (Player p : players) {
+/*            System.out.println("//////////////////////");
+            System.out.println(queuedTeamRemovals.toString());
+            System.out.println(logoutTimes.keySet().toString());*/
             if (queuedTeamRemovals.contains(p.getUniqueId()))
                 continue;
             UHCTeam team = TeamHandler.getTeamForPlayer(p);
@@ -778,6 +781,10 @@ public class UHCArena implements Runnable, Listener {
 
 
     private void drawScoreboard() {
+        for(Player p : Bukkit.getOnlinePlayers()){
+            if(p.getScoreboard() != scoreboard.getBoard())
+                p.setScoreboard(scoreboard.getBoard());
+        }
         scoreboard.reset();
         switch (currentState()) {
             case WAITING:
@@ -790,7 +797,6 @@ public class UHCArena implements Runnable, Listener {
                 break;
             case RUNNING:
                 List<UUID> players = this.players.stream().map(Entity::getUniqueId).collect(Collectors.toList());
-                players.addAll(logoutTimes.keySet());
                 players.sort((o1, o2) -> {
                     Player p1 = Bukkit.getPlayer(o1);
                     Player p2 = Bukkit.getPlayer(o2);
@@ -835,7 +841,7 @@ public class UHCArena implements Runnable, Listener {
                         if (team == null) {
                             scoreboard.add(ChatColor.GRAY + op.getName());
                         } else {
-                            if (team == TeamHandler.spectatorsTeam())
+                            if (team instanceof TeamSpectator)
                                 continue;
                             scoreboard.add((int) onlinePlayer.getHealth() + " " + team.getColor() + op.getName());
                         }
@@ -844,6 +850,8 @@ public class UHCArena implements Runnable, Listener {
                     List<UHCTeam> teams = TeamHandler.teams().stream().filter(t -> t != TeamHandler.spectatorsTeam()).collect(Collectors.toList());
                     int teamsIngame = 0;
                     for(UHCTeam t : teams){
+                        if(t instanceof TeamSpectator)
+                            continue;
                         if(t.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count() > 0)
                             teamsIngame++;
                     }
@@ -857,7 +865,7 @@ public class UHCArena implements Runnable, Listener {
                             Player player = Bukkit.getPlayer(u);
                             if (player != null) {
                                 UHCTeam team = TeamHandler.getTeamForPlayer(player);
-                                if (team == TeamHandler.spectatorsTeam())
+                                if (team instanceof TeamSpectator)
                                     continue;
                                 Integer i = onlineCount.get(team.getName());
                                 if (i == null)
@@ -995,13 +1003,10 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void addPlayer(Player player) {
-        boolean exists = false;
-        for (Player p : players) {
-            if (p.getUniqueId().equals(player.getUniqueId()))
-                exists = true;
-        }
-        if (exists) {
-            return;
+        Iterator<Player> p = players.iterator();
+        while(p.hasNext()){
+            if(p.next().getUniqueId().equals(player.getUniqueId()))
+                p.remove(); // Remove old player object
         }
         this.players.add(player);
     }
@@ -1031,10 +1036,13 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void playerDisconnect(Player player) {
-        if (TeamHandler.isSpectator(player))
+        UHCTeam teamForPlayer = TeamHandler.getTeamForPlayer(player);
+        if (teamForPlayer == null || teamForPlayer instanceof TeamSpectator) {
+            players.remove(player);
             return;
+        }
         uuidToStringMap.put(player.getUniqueId(), player.getName());
-        players.remove(player);
+//        players.remove(player);
         logoutTimes.put(player.getUniqueId(), System.currentTimeMillis() + (300000));
         Bukkit.broadcastMessage(generateBoldChat(player.getName() + " has disconnected! They have 5 minutes to log back in before they are" +
                 " eliminated!", net.md_5.bungee.api.ChatColor.WHITE).toLegacyText());
