@@ -19,11 +19,12 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public abstract class Inventory<T extends JavaPlugin> implements Listener {
 
 
-    private static HashMap<Player, Inventory<? extends JavaPlugin>> playerInventoryHashMap = new HashMap<>();
+    private static HashMap<UUID, Inventory<? extends JavaPlugin>> playerInventoryHashMap = new HashMap<>();
 
     protected T module;
 
@@ -44,7 +45,7 @@ public abstract class Inventory<T extends JavaPlugin> implements Listener {
         this.module = module;
         this.player = player;
         registerListener();
-        playerInventoryHashMap.put(player, this);
+        playerInventoryHashMap.put(player.getUniqueId(), this);
     }
 
 
@@ -65,11 +66,13 @@ public abstract class Inventory<T extends JavaPlugin> implements Listener {
 
     protected void close() {
         clear();
-        playerInventoryHashMap.remove(player);
+        onClose();
+        HandlerList.unregisterAll(this);
+        playerInventoryHashMap.remove(player.getUniqueId());
     }
 
     public static void closeInventory(Player player) {
-        Inventory inv = playerInventoryHashMap.remove(player);
+        Inventory inv = playerInventoryHashMap.remove(player.getUniqueId());
         if (inv != null)
             inv.close();
     }
@@ -128,11 +131,11 @@ public abstract class Inventory<T extends JavaPlugin> implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onClick(InventoryClickEvent event) {
-        if(event.getWhoClicked() != player)
+        if (event.getWhoClicked() != player)
             return;
         event.setCancelled(true);
         org.bukkit.inventory.Inventory clickedInventory = event.getClickedInventory();
-        if(clickedInventory == null)
+        if (clickedInventory == null)
             return;
         if (clickedInventory.getType() == InventoryType.PLAYER) {
             Action a = getAction(event.getSlot());
@@ -153,7 +156,7 @@ public abstract class Inventory<T extends JavaPlugin> implements Listener {
 
     @EventHandler
     public void interact(PlayerInteractEvent event) {
-        if(event.getPlayer() != player)
+        if (event.getPlayer() != player)
             return;
         ClickType clickType = null;
         switch (event.getAction()) {
