@@ -822,7 +822,7 @@ public class UHCArena implements Runnable, Listener {
                     }
                 });
                 int spacesNeeded = players.size() + this.logoutTimes.size();
-                if (spacesNeeded <= ((nextEndgamePhaseIn == -1) ? 10 : 5)) {
+                if (spacesNeeded <= ((nextEndgamePhaseIn == -1) ? 9 : 5)) {
                     for (UUID u : players) {
                         OfflinePlayer op = Bukkit.getOfflinePlayer(u);
                         Player onlinePlayer = null;
@@ -841,38 +841,48 @@ public class UHCArena implements Runnable, Listener {
                         }
                     }
                 } else {
-                    HashMap<String, Integer> onlineCount = new HashMap<>();
-                    int offlineCount = 0;
-                    for (UUID u : players) {
-                        Player player = Bukkit.getPlayer(u);
-                        if (player != null) {
-                            UHCTeam team = TeamHandler.getTeamForPlayer(player);
-                            if (team == TeamHandler.spectatorsTeam())
-                                continue;
-                            Integer i = onlineCount.get(team.getName());
-                            if (i == null)
-                                i = 1;
-                            else
-                                i++;
-                            onlineCount.put(team.getName(), i);
-                        } else {
-                            offlineCount++;
+                    List<UHCTeam> teams = TeamHandler.teams().stream().filter(t -> t != TeamHandler.spectatorsTeam()).collect(Collectors.toList());
+                    int teamsIngame = 0;
+                    for(UHCTeam t : teams){
+                        if(t.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count() > 0)
+                            teamsIngame++;
+                    }
+                    if (teamsIngame > 9) {
+                        scoreboard.add(ChatColor.AQUA  + "Teams: ");
+                        scoreboard.add(ChatColor.GOLD + "" + teamsIngame + ChatColor.WHITE + " alive");
+                    } else {
+                        HashMap<String, Integer> onlineCount = new HashMap<>();
+                        int offlineCount = 0;
+                        for (UUID u : players) {
+                            Player player = Bukkit.getPlayer(u);
+                            if (player != null) {
+                                UHCTeam team = TeamHandler.getTeamForPlayer(player);
+                                if (team == TeamHandler.spectatorsTeam())
+                                    continue;
+                                Integer i = onlineCount.get(team.getName());
+                                if (i == null)
+                                    i = 1;
+                                else
+                                    i++;
+                                onlineCount.put(team.getName(), i);
+                            } else {
+                                offlineCount++;
+                            }
                         }
+                        for (String t : onlineCount.keySet()) {
+                            scoreboard.add(onlineCount.get(t) + " " + TeamHandler.getTeamByName(t).getColor() + WordUtils.capitalizeFully(t.replace('_', ' ')));
+                        }
+                        if (offlineCount > 0)
+                            scoreboard.add(offlineCount + "" + ChatColor.GRAY + " Offline");
                     }
-                    for (String t : onlineCount.keySet()) {
-                        scoreboard.add(onlineCount.get(t) + " " + TeamHandler.getTeamByName(t).getColor() + WordUtils.capitalizeFully(t.replace('_', ' ')));
-                    }
-                    if (offlineCount > 0)
-                        scoreboard.add(offlineCount + "" + ChatColor.GRAY + " Offline");
                 }
                 scoreboard.add(" ");
                 if (nextEndgamePhase == null && (currentEndgamePhase == NORMALGAME || currentEndgamePhase == SHRINKING_WORLDBORDER)) {
                     scoreboard.add(ChatColor.YELLOW + "" + ChatColor.BOLD + "Worldborder:");
                     double[] wbPos = worldborderLoc();
-                    scoreboard.add("from -" + UtilTime.trim(1, wbPos[0])+ " to +" + UtilTime.trim(1, wbPos[0]));
+                    scoreboard.add("from -" + UtilTime.trim(1, wbPos[0]) + " to +" + UtilTime.trim(1, wbPos[0]));
                     scoreboard.add(" ");
-                } else
-                if (nextEndgamePhase != null && nextEndgamePhaseIn != -1) {
+                } else if (nextEndgamePhase != null && nextEndgamePhaseIn != -1) {
                     scoreboard.add(ChatColor.DARK_RED + "" + ChatColor.BOLD + nextEndgamePhase.getName());
                     if (System.currentTimeMillis() > nextEndgamePhaseIn) {
                         scoreboard.add(" ACTIVE");
@@ -1157,7 +1167,7 @@ public class UHCArena implements Runnable, Listener {
         public void run() {
             if (UHC.arena.state == State.RUNNING) {
                 for (Player p : Bukkit.getOnlinePlayers()) {
-                    if(TeamHandler.isSpectator(p))
+                    if (TeamHandler.isSpectator(p))
                         continue;
                     Location l = p.getLocation();
                     TextComponent bc = (TextComponent) UtilChat.generateFormattedChat("Current Position: ", net.md_5.bungee.api.ChatColor.GOLD, 0);
