@@ -267,7 +267,7 @@ public class UHCArena implements Runnable, Listener {
             if (e instanceof Tameable) {
                 ((Tameable) e).setOwner(null);
             }
-            if(e.getType() == EntityType.DROPPED_ITEM){
+            if (e.getType() == EntityType.DROPPED_ITEM) {
                 e.remove();
             }
         }
@@ -696,36 +696,30 @@ public class UHCArena implements Runnable, Listener {
 
     boolean firstAnnounce = true;
     boolean announced = false;
+    boolean shouldAnnounce = false;
     String lastAnnounced = "-1";
 
     private void announcePhase(EndgamePhase phase) {
         long time = nextEndgamePhaseIn - System.currentTimeMillis();
-        int seconds = (int) time / 1000;
-        boolean shouldAnnounce = false;
-        if (seconds >= 60) {
-            shouldAnnounce = (seconds % 60) == 0;
-        } else if (seconds < 60 && seconds >= 30) {
-            shouldAnnounce = (seconds % 30) == 0;
-        } else if (seconds < 30 && seconds >= 10) {
-            shouldAnnounce = (seconds % 10) == 0;
-        } else if (seconds < 10) {
-            shouldAnnounce = true;
-            announced = false;
+        double nextPhase = UtilTime.trim(1, time / 1000D);
+        String tFormat = UtilTime.format(1, time, UtilTime.TimeUnit.FIT);
+        if (nextPhase > 0) {
+            if (nextPhase >= 60) {
+                shouldAnnounce = (nextPhase % 60) == 0;
+            } else if (nextPhase >= 30) {
+                shouldAnnounce = (nextPhase % 30) == 0;
+            } else if (nextPhase <= 10) {
+                shouldAnnounce = (nextPhase % 1) == 0;
+            }
         }
-        if (!shouldAnnounce)
-            announced = false;
-        double dec = UtilTime.trim(1, time / 1000D);
-        String decString = Double.toString(dec);
-        String whole = decString.split("\\.")[0];
-        String fraction = decString.split("\\.")[1];
-        if (time <= 1000 || seconds <= 0)
-            return;
-        if ((firstAnnounce || shouldAnnounce) && fraction.equalsIgnoreCase("0") && !announced && !lastAnnounced.equalsIgnoreCase(whole)) {
-            lastAnnounced = whole;
-            announced = true;
+        if ((shouldAnnounce || firstAnnounce) && !lastAnnounced.equalsIgnoreCase(tFormat)) {
+            lastAnnounced = Double.toString(nextPhase);
+            shouldAnnounce = false;
             firstAnnounce = false;
+            announced = true;
+            lastAnnounced = tFormat;
             BaseComponent text = generateBoldChat(phase.getName(), net.md_5.bungee.api.ChatColor.LIGHT_PURPLE);
-            text.addExtra(UtilChat.generateBoldChat(" will be applied in " + UtilTime.format(1, time, UtilTime.TimeUnit.FIT), net.md_5.bungee.api.ChatColor.GREEN));
+            text.addExtra(UtilChat.generateBoldChat(" will be applied in " + tFormat, net.md_5.bungee.api.ChatColor.GREEN));
             for (Player p : players()) {
                 p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
                 p.spigot().sendMessage(text);
