@@ -107,6 +107,9 @@ public class CommandTeam extends BaseCommand {
                 p.spigot().sendMessage(UtilChat.generateError("You cannot assign your team. Please wait for it to be assigned for you"));
                 return true;
             }
+            if(args[0].equalsIgnoreCase("leave")){
+                TeamHandler.leaveTeam(p);
+            }
             if (teamToJoin.equalsIgnoreCase("spectators")) {
                 p.spigot().sendMessage(UtilChat.generateError("Use /spectate to join the spectators team!"));
                 return true;
