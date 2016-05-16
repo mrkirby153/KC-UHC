@@ -23,6 +23,21 @@ public class CommandDiscord extends BaseCommand{
             return true;
         }
         Player player = (Player) sender;
+        if (args[0].equalsIgnoreCase("link")) {
+            ByteArrayDataOutput out = ByteStreams.newDataOutput();
+            out.writeUTF(UHC.plugin.serverId());
+            out.writeUTF("linkCode");
+            out.writeUTF(player.getUniqueId().toString());
+            out.writeUTF(player.getName());
+            ByteArrayDataInput response = UHC.discordHandler.sendMessage(out.toByteArray());
+            int responseCode = response.readInt();
+            String code = response.readUTF();
+            player.sendMessage(ChatColor.GREEN + "Please log into handler and in the uhc-link channel, enter the following command: ");
+            player.sendMessage(ChatColor.AQUA + "!uhcbot link " + code);
+            return true;
+        }
+        if(!restrictAdmin(sender))
+            return true;
         if(args[0].equalsIgnoreCase("reconnect")){
             UHC.discordHandler.connect();
         }
@@ -45,21 +60,6 @@ public class CommandDiscord extends BaseCommand{
             UHC.discordHandler.sendMessage(out.toByteArray());
             ((Player) sender).spigot().sendMessage(UtilChat.generateFormattedChat("Linked this minecraft server to the discord server!", ChatColor.GREEN, 12));
         }
-        if (args[0].equalsIgnoreCase("link")) {
-            ByteArrayDataOutput out = ByteStreams.newDataOutput();
-            out.writeUTF(UHC.plugin.serverId());
-            out.writeUTF("linkCode");
-            out.writeUTF(player.getUniqueId().toString());
-            out.writeUTF(player.getName());
-            ByteArrayDataInput response = UHC.discordHandler.sendMessage(out.toByteArray());
-            int responseCode = response.readInt();
-            String code = response.readUTF();
-            player.sendMessage(ChatColor.GREEN + "Please log into handler and in the uhc-link channel, enter the following command: ");
-            player.sendMessage(ChatColor.AQUA + "!uhcbot link " + code);
-            return true;
-        }
-        if(restrictAdmin(sender))
-            return true;
         if(args[0].equalsIgnoreCase("cinit")){
 //            UHC.handler.initChannels();
             sender.sendMessage(UtilChat.generateFormattedChat("Generating discord channels", ChatColor.GOLD, 0).toLegacyText());
