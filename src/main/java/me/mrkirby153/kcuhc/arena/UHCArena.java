@@ -658,6 +658,7 @@ public class UHCArena implements Runnable, Listener {
                     if (nextEndgamePhase != EndgamePhase.HUNGER_III) {
                         nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.HUNGER_III.getDuration();
                         nextEndgamePhase = EndgamePhase.HUNGER_III;
+                        firstAnnounce = true;
                     }
                 }
                 break;
@@ -671,6 +672,7 @@ public class UHCArena implements Runnable, Listener {
                 if (nextEndgamePhase != EndgamePhase.POISON) {
                     nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.POISON.getDuration();
                     nextEndgamePhase = EndgamePhase.POISON;
+                    firstAnnounce = true;
                 }
                 break;
             case POISON:
