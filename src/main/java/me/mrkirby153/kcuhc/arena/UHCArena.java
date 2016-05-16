@@ -13,6 +13,7 @@ import me.mrkirby153.kcuhc.handler.PregameListener;
 import me.mrkirby153.kcuhc.handler.RegenTicket;
 import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
+import me.mrkirby153.kcuhc.shop.item.NullEnchantment;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_9_R2.IChatBaseComponent;
@@ -34,10 +35,16 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.bukkit.event.inventory.PrepareItemCraftEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scoreboard.Objective;
@@ -149,6 +156,7 @@ public class UHCArena implements Runnable, Listener {
         countdownBar = Bukkit.createBossBar(ChatColor.RED + "Starting in ", BarColor.PINK, BarStyle.SOLID);
         UHC.plugin.getServer().getPluginManager().registerEvents(this, UHC.plugin);
         this.scoreboard = new UHCScoreboard();
+        craftingRecipies();
     }
 
     public void generate() {
@@ -663,12 +671,6 @@ public class UHCArena implements Runnable, Listener {
                 }
                 break;
             case HUNGER_III:
-                for (Player p : players()) {
-                    if (TeamHandler.isSpectator(p))
-                        continue;
-                    if (!p.hasPotionEffect(PotionEffectType.HUNGER))
-                        p.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, Integer.MAX_VALUE, 2, false, true));
-                }
                 if (nextEndgamePhase != EndgamePhase.POISON) {
                     nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.POISON.getDuration();
                     nextEndgamePhase = EndgamePhase.POISON;
@@ -676,14 +678,6 @@ public class UHCArena implements Runnable, Listener {
                 }
                 break;
             case POISON:
-                for (Player p : players()) {
-                    if (TeamHandler.isSpectator(p))
-                        return;
-                    if (!p.hasPotionEffect(PotionEffectType.HUNGER))
-                        p.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, Integer.MAX_VALUE, 2, false, true));
-                    if (!p.hasPotionEffect(PotionEffectType.POISON))
-                        p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, Integer.MAX_VALUE, 0, false, true));
-                }
                 if (nextEndgamePhase != SHRINKING_WORLDBORDER) {
                     nextEndgamePhase = SHRINKING_WORLDBORDER;
                     nextEndgamePhaseIn = System.currentTimeMillis() + SHRINKING_WORLDBORDER.getDuration();
@@ -710,6 +704,7 @@ public class UHCArena implements Runnable, Listener {
         if (state != RUNNING)
             return;
         switch (currentEndgamePhase) {
+            case SHRINKING_WORLDBORDER:
             case POISON:
                 for (Player p : players()) {
                     if (TeamHandler.isSpectator(p))
@@ -785,8 +780,8 @@ public class UHCArena implements Runnable, Listener {
 
 
     private void drawScoreboard() {
-        for(Player p : Bukkit.getOnlinePlayers()){
-            if(p.getScoreboard() != scoreboard.getBoard())
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (p.getScoreboard() != scoreboard.getBoard())
                 p.setScoreboard(scoreboard.getBoard());
         }
         scoreboard.reset();
@@ -827,7 +822,6 @@ public class UHCArena implements Runnable, Listener {
                 });
                 int spacesNeeded = players.size() + this.logoutTimes.size();
                 if (spacesNeeded < ((nextEndgamePhaseIn == -1) ? 9 : 8)) {
-                    scoreboard.add(ChatColor.AQUA + "Teams Alive:");
                     for (UUID u : players) {
                         OfflinePlayer op = Bukkit.getOfflinePlayer(u);
                         Player onlinePlayer = null;
@@ -851,11 +845,11 @@ public class UHCArena implements Runnable, Listener {
                     for (UHCTeam t : teams) {
                         if (t instanceof TeamSpectator)
                             continue;
-                        if(t.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count() > 0)
+                        if (t.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count() > 0)
                             teamsIngame++;
                     }
+                    scoreboard.add(ChatColor.AQUA + "Teams: ");
                     if (teamsIngame > 9) {
-                        scoreboard.add(ChatColor.AQUA  + "Teams: ");
                         scoreboard.add(ChatColor.GOLD + "" + teamsIngame + ChatColor.WHITE + " alive");
                     } else {
                         HashMap<String, Integer> onlineCount = new HashMap<>();
@@ -922,6 +916,67 @@ public class UHCArena implements Runnable, Listener {
         if (!event.getEntity().getType().isAlive())
             return;
         updateEntityDamageName((LivingEntity) event.getEntity(), ((LivingEntity) event.getEntity()).getHealth() - event.getFinalDamage());
+    }
+
+    private void craftingRecipies() {
+        ShapedRecipe headApple = new ShapedRecipe(new ItemStack(Material.GOLDEN_APPLE, 1));
+        headApple.shape("GGG", "GHG", "GGG");
+        headApple.setIngredient('G', Material.GOLD_INGOT);
+        headApple.setIngredient('H', new MaterialData(Material.SKULL_ITEM, (byte) 3));
+        Bukkit.getServer().addRecipe(headApple);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void craftGoldenHead(PrepareItemCraftEvent event) {
+        if (event.getRecipe().getResult() == null)
+            return;
+        Material type = event.getRecipe().getResult().getType();
+        if (type != Material.GOLDEN_APPLE)
+            return;
+        if (event.getInventory() == null)
+            return;
+        CraftingInventory inv = event.getInventory();
+        for (ItemStack item : inv.getMatrix()) {
+            if (item != null && item.getType() != Material.AIR) {
+                if (item.getType() == Material.SKULL_ITEM || item.getType() == Material.SKULL) {
+                    if (item.getItemMeta() == null)
+                        continue;
+                    ItemStack apple = new ItemStack(Material.GOLDEN_APPLE, 1);
+                    ItemMeta meta = apple.getItemMeta();
+                    meta.setDisplayName(ChatColor.AQUA + "Head Apple");
+                    apple.setItemMeta(meta);
+                    apple.addEnchantment(new NullEnchantment(), 1);
+//                    apple.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
+                    inv.setResult(apple);
+                    return;
+                }
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void itemPickup(PlayerPickupItemEvent event) {
+        if (event.getItem().getItemStack().getType() == Material.SKULL_ITEM && event.getItem().getItemStack().getDurability() == 3) {
+            Player player = event.getPlayer();
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 0.5F);
+            player.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "=============================================");
+            player.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "You've picked up a player head!");
+            player.sendMessage(ChatColor.WHITE + "You can use this head to craft a Golden Head for healing");
+            player.sendMessage(ChatColor.WHITE + "A golden head will give you 2x the effects of a golden apple!");
+            player.sendRawMessage(ChatColor.GREEN + "To Craft: " + ChatColor.WHITE + "Use the recipie for a Golden Apple, but replace the apple with the head");
+            player.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "=============================================");
+        }
+    }
+
+    @EventHandler
+    public void consumeHeadApple(PlayerItemConsumeEvent event) {
+        if (event.getItem().getItemMeta().getDisplayName() == null)
+            return;
+        if (!event.getItem().getItemMeta().getDisplayName().contains("Head"))
+            return;
+        event.getPlayer().sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + "You ate a head apple!");
+        event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 300, 1));
+        event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -1003,8 +1058,8 @@ public class UHCArena implements Runnable, Listener {
 
     public void addPlayer(Player player) {
         Iterator<Player> p = players.iterator();
-        while(p.hasNext()){
-            if(p.next().getUniqueId().equals(player.getUniqueId()))
+        while (p.hasNext()) {
+            if (p.next().getUniqueId().equals(player.getUniqueId()))
                 p.remove(); // Remove old player object
         }
         this.players.add(player);
