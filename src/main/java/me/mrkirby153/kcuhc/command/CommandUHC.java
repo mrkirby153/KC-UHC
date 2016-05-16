@@ -86,6 +86,7 @@ public class CommandUHC extends BaseCommand {
                     sender.sendMessage(chosenColor + "Created team " + p.getName());
                     UHC.arena.newTeam(p.getName(), chosenColor);
                     teams.put(p, TeamHandler.getTeamByName(p.getName()));
+                    TeamHandler.leaveTeam(p);
                 }
                 for(Map.Entry<Player, UHCTeam> e : teams.entrySet()){
                     TeamHandler.joinTeam(e.getValue(), e.getKey());
