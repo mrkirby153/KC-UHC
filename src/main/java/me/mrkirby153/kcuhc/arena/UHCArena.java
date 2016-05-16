@@ -671,16 +671,10 @@ public class UHCArena implements Runnable, Listener {
                 }
                 break;
             case HUNGER_III:
-                if (nextEndgamePhase != EndgamePhase.POISON) {
-                    nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.POISON.getDuration();
-                    nextEndgamePhase = EndgamePhase.POISON;
+                if (nextEndgamePhase != EndgamePhase.SHRINKING_WORLDBORDER) {
+                    nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.SHRINKING_WORLDBORDER.getDuration();
+                    nextEndgamePhase = EndgamePhase.SHRINKING_WORLDBORDER;
                     firstAnnounce = true;
-                }
-                break;
-            case POISON:
-                if (nextEndgamePhase != SHRINKING_WORLDBORDER) {
-                    nextEndgamePhase = SHRINKING_WORLDBORDER;
-                    nextEndgamePhaseIn = System.currentTimeMillis() + SHRINKING_WORLDBORDER.getDuration();
                 }
                 break;
             case SHRINKING_WORLDBORDER:
@@ -705,14 +699,6 @@ public class UHCArena implements Runnable, Listener {
             return;
         switch (currentEndgamePhase) {
             case SHRINKING_WORLDBORDER:
-            case POISON:
-                for (Player p : players()) {
-                    if (TeamHandler.isSpectator(p))
-                        continue;
-                    if (!p.hasPotionEffect(PotionEffectType.POISON)) {
-                        p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, Integer.MAX_VALUE, 0, false, true));
-                    }
-                }
             case HUNGER_III:
                 for (Player p : players()) {
                     if (TeamHandler.isSpectator(p))
@@ -820,7 +806,7 @@ public class UHCArena implements Runnable, Listener {
                         return team1.getName().compareToIgnoreCase(team2.getName());
                     }
                 });
-                int spacesNeeded = players.size() + this.logoutTimes.size();
+                int spacesNeeded = players.size();
                 if (spacesNeeded < ((nextEndgamePhaseIn == -1) ? 9 : 8)) {
                     for (UUID u : players) {
                         OfflinePlayer op = Bukkit.getOfflinePlayer(u);
@@ -1207,8 +1193,7 @@ public class UHCArena implements Runnable, Listener {
     public enum EndgamePhase {
         NORMALGAME("Normal Game", -1),
         HUNGER_III("Hunger III", 300000),
-        POISON("Poison", 300000),
-        SHRINKING_WORLDBORDER("Shrinking Worldborder", 600000);
+        SHRINKING_WORLDBORDER("Shrinking Worldborder", 900000);
 /*
         NORMALGAME("Normal Game", -1),
         HUNGER_III("Hunger III", 30000),
