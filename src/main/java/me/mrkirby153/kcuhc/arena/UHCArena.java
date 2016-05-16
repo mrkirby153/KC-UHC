@@ -818,14 +818,7 @@ public class UHCArena implements Runnable, Listener {
                         return 1;
                     }
                     if (team1.getName().equalsIgnoreCase(team2.getName())) {
-                        if (p1.getHealth() > p2.getHealth()) {
-                            return -1;
-                        } else if (p1.getHealth() < p2.getHealth()) {
-                            return 1;
-                        } else {
-                            // Healths are equal
-                            return 0;
-                        }
+                        return (int) Math.floor(p2.getHealth() - p1.getHealth());
                     } else {
                         return team1.getName().compareToIgnoreCase(team2.getName());
                     }

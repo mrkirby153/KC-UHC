@@ -58,13 +58,7 @@ public class CompassInventory extends Shop<UHC> implements Runnable {
             endIndex = teams.size();
         List<UHCTeam> uhcTeams = teams.subList(startIndex, endIndex);
         uhcTeams.sort((o1, o2) -> {
-            if (o1.getPlayers().size() > o2.getPlayers().size()) {
-                return -1;
-            } else if (o1.getPlayers().size() < o2.getPlayers().size()) {
-                return 1;
-            } else {
-                return 0;
-            }
+            return o2.getPlayers().size() - o1.getPlayers().size();
         });
         for (UHCTeam team : uhcTeams) {
             if (team == TeamHandler.spectatorsTeam())
