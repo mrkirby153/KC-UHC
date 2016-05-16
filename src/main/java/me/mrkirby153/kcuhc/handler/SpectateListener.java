@@ -47,8 +47,10 @@ public class SpectateListener implements Listener {
         if(event.getEntity() instanceof Player){
             if(event.getCause() == EntityDamageEvent.DamageCause.VOID)
                 return;
-            if(TeamHandler.isSpectator((Player) event.getEntity()))
+            if(TeamHandler.isSpectator((Player) event.getEntity())) {
+                event.getEntity().setFireTicks(0);
                 event.setCancelled(true);
+            }
         }
     }
 
