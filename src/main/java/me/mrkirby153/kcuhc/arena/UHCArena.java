@@ -1240,14 +1240,27 @@ public class UHCArena implements Runnable, Listener {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     if (TeamHandler.isSpectator(p))
                         continue;
-                    Location l = p.getLocation();
-                    TextComponent bc = (TextComponent) UtilChat.generateFormattedChat("Current Position: ", net.md_5.bungee.api.ChatColor.GOLD, 0);
-                    bc.addExtra(UtilChat.generateFormattedChat("X: ", net.md_5.bungee.api.ChatColor.RED, 0));
-                    bc.addExtra(UtilChat.generateFormattedChat(String.format("%.2f", l.getX()), net.md_5.bungee.api.ChatColor.GREEN, 0));
-                    bc.addExtra(UtilChat.generateFormattedChat(" Y: ", net.md_5.bungee.api.ChatColor.RED, 0));
-                    bc.addExtra(UtilChat.generateFormattedChat(String.format("%.2f", l.getY()), net.md_5.bungee.api.ChatColor.GREEN, 0));
-                    bc.addExtra(UtilChat.generateFormattedChat(" Z: ", net.md_5.bungee.api.ChatColor.RED, 0));
-                    bc.addExtra(UtilChat.generateFormattedChat(String.format("%.2f", l.getZ()), net.md_5.bungee.api.ChatColor.GREEN, 0));
+                    TextComponent bc;
+                    if (p.getInventory().getItemInMainHand().getType() == Material.COMPASS) {
+                        double distance = UHC.playerTracker.distanceToTarget(p.getUniqueId());
+                        if (Double.isInfinite(distance)) {
+                            bc = (TextComponent) UtilChat.generateFormattedChat("Right click to find the closest target!", net.md_5.bungee.api.ChatColor.GOLD, 8);
+                        } else {
+                            bc = (TextComponent) UtilChat.generateBoldChat(UHC.playerTracker.getTarget(p.getUniqueId()).getName(), net.md_5.bungee.api.ChatColor.GOLD);
+                            bc.addExtra(UtilChat.generateBoldChat(" is ", net.md_5.bungee.api.ChatColor.DARK_GREEN));
+                            bc.addExtra(UtilChat.generateBoldChat(Double.toString(distance), net.md_5.bungee.api.ChatColor.GOLD));
+                            bc.addExtra(UtilChat.generateBoldChat(" blocks away!", net.md_5.bungee.api.ChatColor.DARK_GREEN));
+                        }
+                    } else {
+                        Location l = p.getLocation();
+                        bc = (TextComponent) UtilChat.generateFormattedChat("Current Position: ", net.md_5.bungee.api.ChatColor.GOLD, 0);
+                        bc.addExtra(UtilChat.generateFormattedChat("X: ", net.md_5.bungee.api.ChatColor.RED, 0));
+                        bc.addExtra(UtilChat.generateFormattedChat(String.format("%.2f", l.getX()), net.md_5.bungee.api.ChatColor.GREEN, 0));
+                        bc.addExtra(UtilChat.generateFormattedChat(" Y: ", net.md_5.bungee.api.ChatColor.RED, 0));
+                        bc.addExtra(UtilChat.generateFormattedChat(String.format("%.2f", l.getY()), net.md_5.bungee.api.ChatColor.GREEN, 0));
+                        bc.addExtra(UtilChat.generateFormattedChat(" Z: ", net.md_5.bungee.api.ChatColor.RED, 0));
+                        bc.addExtra(UtilChat.generateFormattedChat(String.format("%.2f", l.getZ()), net.md_5.bungee.api.ChatColor.GREEN, 0));
+                    }
                     PacketPlayOutChat chat = new PacketPlayOutChat(IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + bc.toLegacyText() + "\"}"), (byte) 2);
                     ((CraftPlayer) p).getHandle().playerConnection.sendPacket(chat);
                 }

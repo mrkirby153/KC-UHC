@@ -5,10 +5,7 @@ import me.mrkirby153.kcuhc.arena.TeamSpectator;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.discord.DiscordBotConnection;
-import me.mrkirby153.kcuhc.handler.MOTDHandler;
-import me.mrkirby153.kcuhc.handler.RegenTicket;
-import me.mrkirby153.kcuhc.handler.SpectateListener;
-import me.mrkirby153.kcuhc.handler.SpectatorTask;
+import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import me.mrkirby153.kcuhc.scoreboard.ScoreboardManager;
 import org.bukkit.entity.Player;
@@ -31,6 +28,8 @@ public class UHC extends JavaPlugin {
 
 
     public static DiscordBotConnection discordHandler;
+
+    public static PlayerTrackerHandler playerTracker;
 
     @Override
     public void onEnable() {
@@ -68,6 +67,7 @@ public class UHC extends JavaPlugin {
             }
         }
         new SpectatorTask(this);
+        playerTracker = new PlayerTrackerHandler(this);
         getServer().getPluginManager().registerEvents(new MOTDHandler(), this);
         getServer().getPluginManager().registerEvents(spectateListener = new SpectateListener(), this);
         getServer().getPluginManager().registerEvents(new JukeboxHandler(), this);
@@ -87,7 +87,7 @@ public class UHC extends JavaPlugin {
     public void onDisable() {
         TeamHandler.unregisterAll();
         JukeboxHandler.shutdown();
-        if(discordHandler != null)
+        if (discordHandler != null)
             discordHandler.shutdown();
     }
 
