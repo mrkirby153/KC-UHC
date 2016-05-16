@@ -830,7 +830,8 @@ public class UHCArena implements Runnable, Listener {
                     }
                 });
                 int spacesNeeded = players.size() + this.logoutTimes.size();
-                if (spacesNeeded <= ((nextEndgamePhaseIn == -1) ? 9 : 5)) {
+                if (spacesNeeded < ((nextEndgamePhaseIn == -1) ? 9 : 8)) {
+                    scoreboard.add(ChatColor.AQUA + "Teams Alive:");
                     for (UUID u : players) {
                         OfflinePlayer op = Bukkit.getOfflinePlayer(u);
                         Player onlinePlayer = null;
@@ -845,14 +846,14 @@ public class UHCArena implements Runnable, Listener {
                         } else {
                             if (team instanceof TeamSpectator)
                                 continue;
-                            scoreboard.add((int) onlinePlayer.getHealth() + " " + team.getColor() + op.getName());
+                            scoreboard.add(ChatColor.RED + "" + (int) onlinePlayer.getHealth() + " " + team.getColor() + op.getName());
                         }
                     }
                 } else {
                     List<UHCTeam> teams = TeamHandler.teams().stream().filter(t -> t != TeamHandler.spectatorsTeam()).collect(Collectors.toList());
                     int teamsIngame = 0;
-                    for(UHCTeam t : teams){
-                        if(t instanceof TeamSpectator)
+                    for (UHCTeam t : teams) {
+                        if (t instanceof TeamSpectator)
                             continue;
                         if(t.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count() > 0)
                             teamsIngame++;
