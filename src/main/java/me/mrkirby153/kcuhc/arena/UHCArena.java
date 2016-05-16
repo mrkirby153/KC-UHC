@@ -7,10 +7,7 @@ import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.UtilTime;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
-import me.mrkirby153.kcuhc.handler.GameListener;
-import me.mrkirby153.kcuhc.handler.MOTDHandler;
-import me.mrkirby153.kcuhc.handler.PregameListener;
-import me.mrkirby153.kcuhc.handler.RegenTicket;
+import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
 import me.mrkirby153.kcuhc.shop.item.NullEnchantment;
@@ -118,6 +115,10 @@ public class UHCArena implements Runnable, Listener {
     private long nextEndgamePhaseIn = -1;
     private EndgamePhase currentEndgamePhase = EndgamePhase.NORMALGAME;
     private EndgamePhase nextEndgamePhase;
+
+    private int secondsRemaining;
+    private double overworldWorldborderSize;
+    private double netherWorldborderSize;
 
 
     public UHCArena(World world, int startSize, int endSize, int duration, Location center) {
@@ -780,6 +781,9 @@ public class UHCArena implements Runnable, Listener {
                 scoreboard.add("Players: " + Bukkit.getOnlinePlayers().size() + "/" + Bukkit.getMaxPlayers());
                 scoreboard.add(" ");
                 break;
+            case FROZEN:
+                scoreboard.add(ChatColor.RED + "" + ChatColor.GOLD + "The game is frozen!");
+                break;
             case RUNNING:
                 List<UUID> players = this.players.stream().map(Entity::getUniqueId).collect(Collectors.toList());
                 players.removeAll(TeamHandler.spectatorsTeam().getPlayers());
@@ -1181,12 +1185,56 @@ public class UHCArena implements Runnable, Listener {
         this.currentEndgamePhase = endgamePhase;
     }
 
+    public void freeze() {
+        int secondsPassed = Math.toIntExact((System.currentTimeMillis() - startTime) / 1000);
+        System.out.println("Seconds passed: " + secondsPassed);
+        this.secondsRemaining = this.duration - secondsPassed;
+        System.out.println("Seconds remaining: " + secondsRemaining);
+        overworldWorldborderSize = world.getWorldBorder().getSize();
+        world.getWorldBorder().setSize(overworldWorldborderSize);
+        System.out.println("Worldborder size: " + overworldWorldborderSize);
+        if (nether != null) {
+            netherWorldborderSize = nether.getWorldBorder().getSize();
+            nether.getWorldBorder().setSize(netherWorldborderSize);
+        }
+        this.state = FROZEN;
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (!TeamHandler.isSpectator(p)) {
+                FreezeHandler.freezePlayer(p);
+            }
+        }
+        FreezeHandler.pvpEnabled = false;
+        Bukkit.broadcastMessage(ChatColor.GOLD + "The game has been frozen!");
+    }
+
+    public void unfreeze() {
+        world.getWorldBorder().setSize(overworldWorldborderSize);
+        world.getWorldBorder().setSize(endSize, secondsRemaining);
+        if (nether != null) {
+            nether.getWorldBorder().setSize(netherWorldborderSize);
+            nether.getWorldBorder().setSize(endSize * 2, secondsRemaining);
+        }
+        this.state = RUNNING;
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (!TeamHandler.isSpectator(p)) {
+                FreezeHandler.unfreeze(p);
+            }
+        }
+        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, ()->{
+            FreezeHandler.restoreBlocks();
+            FreezeHandler.pvpEnabled = true;
+        }, 100);
+        Bukkit.broadcastMessage(ChatColor.GOLD + "The game has been unfrozen!");
+        Bukkit.broadcastMessage(ChatColor.GOLD + "Damage will be re-enabled in 5 seconds...");
+    }
+
     public enum State {
         INITIALIZED,
         GENERATING_WORLD,
         WAITING,
         COUNTDOWN,
         RUNNING,
+        FROZEN,
         ENDGAME
     }
 

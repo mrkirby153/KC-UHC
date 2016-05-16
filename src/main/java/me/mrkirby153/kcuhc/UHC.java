@@ -67,6 +67,7 @@ public class UHC extends JavaPlugin {
             }
         }
         new SpectatorTask(this);
+        new FreezeHandler(this);
         playerTracker = new PlayerTrackerHandler(this);
         getServer().getPluginManager().registerEvents(new MOTDHandler(), this);
         getServer().getPluginManager().registerEvents(spectateListener = new SpectateListener(), this);

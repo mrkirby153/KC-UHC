@@ -5,6 +5,7 @@ import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
+import me.mrkirby153.kcuhc.handler.FreezeHandler;
 import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -65,6 +66,19 @@ public class CommandUHC extends BaseCommand {
             }
             if(args[0].equalsIgnoreCase("togglespread")){
                 UHC.arena.toggleSpreadingPlayers();
+                return true;
+            }
+            if(args[0].equalsIgnoreCase("freeze")){
+                UHC.arena.freeze();
+                return true;
+            }
+            if(args[0].equalsIgnoreCase("unfreeze")){
+                UHC.arena.unfreeze();
+                return true;
+            }
+            if(args[0].equalsIgnoreCase("freezebypass")){
+                Player player = (Player) sender;
+                FreezeHandler.freezebypass(player);
                 return true;
             }
             if (args[0].equalsIgnoreCase("singlepersonteams")) {
@@ -154,6 +168,22 @@ public class CommandUHC extends BaseCommand {
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
+            }
+            if(args[0].equalsIgnoreCase("unfreeze")){
+                Player p = Bukkit.getPlayer(args[1]);
+                if(p == null){
+                    sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
+                    return true;
+                }
+                FreezeHandler.unfreeze(p);
+            }
+            if(args[0].equalsIgnoreCase("freeze")){
+                Player p = Bukkit.getPlayer(args[1]);
+                if(p == null){
+                    sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
+                    return true;
+                }
+                FreezeHandler.freezePlayer(p);
             }
         }
         //      /uhc create x z world size endSize duration
