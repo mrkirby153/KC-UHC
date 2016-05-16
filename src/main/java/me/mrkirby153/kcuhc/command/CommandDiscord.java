@@ -7,13 +7,15 @@ import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.security.SecureRandom;
 
-public class CommandDiscord extends BaseCommand{
+public class CommandDiscord extends BaseCommand {
     private final String validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     @Override
@@ -36,12 +38,12 @@ public class CommandDiscord extends BaseCommand{
             player.sendMessage(ChatColor.AQUA + "!uhcbot link " + code);
             return true;
         }
-        if(!restrictAdmin(sender))
+        if (restrictAdmin(sender))
             return true;
-        if(args[0].equalsIgnoreCase("reconnect")){
+        if (args[0].equalsIgnoreCase("reconnect")) {
             UHC.discordHandler.connect();
         }
-        if(args[0].equalsIgnoreCase("join")){
+        if (args[0].equalsIgnoreCase("join")) {
             BaseComponent component = UtilChat.generateFormattedChat("To add the discord bot to your server, click ", ChatColor.GREEN);
             component.addExtra(UtilChat.generateHyperlink(UtilChat.generateBoldChat("[HERE]", ChatColor.BLUE),
                     "https://discordapp.com/oauth2/authorize?&client_id=169671604131856384&scope=bot&permissions=66202682", new BaseComponent[]{
@@ -49,7 +51,7 @@ public class CommandDiscord extends BaseCommand{
                     }));
             player.spigot().sendMessage(component);
         }
-        if(args[0].equalsIgnoreCase("serverlink")){
+        if (args[0].equalsIgnoreCase("serverlink")) {
             String guildId = args[1];
             String serverId = UHC.plugin.getConfig().getString("discord.serverId");
             ByteArrayDataOutput out = ByteStreams.newDataOutput();
@@ -60,24 +62,43 @@ public class CommandDiscord extends BaseCommand{
             UHC.discordHandler.sendMessage(out.toByteArray());
             ((Player) sender).spigot().sendMessage(UtilChat.generateFormattedChat("Linked this minecraft server to the discord server!", ChatColor.GREEN, 12));
         }
-        if(args[0].equalsIgnoreCase("cinit")){
+        if (args[0].equalsIgnoreCase("cinit")) {
 //            UHC.handler.initChannels();
             sender.sendMessage(UtilChat.generateFormattedChat("Generating discord channels", ChatColor.GOLD, 0).toLegacyText());
-            UHC.discordHandler.createAllTeamChannels(()-> player.spigot().sendMessage(UtilChat.generateFormattedChat("Channels generated!", ChatColor.GREEN, 0)));
+            UHC.discordHandler.createAllTeamChannels(() -> player.spigot().sendMessage(UtilChat.generateFormattedChat("Channels generated!", ChatColor.GREEN, 0)));
         }
-        if(args[0].equalsIgnoreCase("shutdown")){
+        if (args[0].equalsIgnoreCase("shutdown")) {
 //            UHC.handler.shutdown();
             sender.sendMessage(UtilChat.generateFormattedChat("Deleting discord channels", ChatColor.GOLD, 0).toLegacyText());
-            UHC.discordHandler.deleteAllTeamChannels(()->player.spigot().sendMessage(UtilChat.generateFormattedChat("Done!", ChatColor.GRAY, 0)));
+            UHC.discordHandler.deleteAllTeamChannels(() -> player.spigot().sendMessage(UtilChat.generateFormattedChat("Done!", ChatColor.GRAY, 0)));
         }
-        if(args[0].equalsIgnoreCase("disperse")){
+        if (args[0].equalsIgnoreCase("disperse")) {
 //            UHC.handler.sendEveryoneToChannels();
             player.spigot().sendMessage(UtilChat.generateFormattedChat("Sending everyone to their channels", ChatColor.GREEN, 0));
             UHC.arena.sendEveryoneToTeamChannels();
         }
-        if(args[0].equalsIgnoreCase("bringtolobby")){
+        if (args[0].equalsIgnoreCase("bringtolobby")) {
             UHC.arena.bringEveryoneToLobby();
             player.spigot().sendMessage(UtilChat.generateFormattedChat("Sending everyone to the lobby", ChatColor.GREEN, 4));
+        }
+        if (args[0].equalsIgnoreCase("linked")) {
+            player.sendMessage(ChatColor.GRAY + "" + ChatColor.ITALIC + "Looking up all online player's discord link status");
+            UHC.discordHandler.getAllLinkedPlayers(data -> {
+                data.entrySet().forEach(e -> {
+                    OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(e.getKey());
+                    if (offlinePlayer == null)
+                        return;
+                    String value = e.getValue();
+                    player.sendMessage(ChatColor.WHITE + offlinePlayer.getName());
+                    if (value == null) {
+                        player.sendMessage("  + " + ChatColor.RED + ChatColor.BOLD + "Unlinked!");
+                    } else {
+                        String discordName = value.split("::")[1].replace("\\:\\:", "::");
+                        String discordId = value.split("::")[0].replace("\\:\\:", "::");
+                        player.sendMessage("  + " + ChatColor.DARK_GREEN + discordName + " (" + discordId + ")");
+                    }
+                });
+            });
         }
         return true;
     }

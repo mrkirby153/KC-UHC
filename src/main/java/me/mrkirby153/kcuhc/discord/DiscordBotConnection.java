@@ -6,6 +6,8 @@ import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -19,6 +21,8 @@ import java.nio.ByteOrder;
 import java.security.*;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.HashMap;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -150,6 +154,25 @@ public class DiscordBotConnection {
         }, callback);
     }
 
+    public void getAllLinkedPlayers(ValueCallback<HashMap<UUID, String>> callback){
+        processAsync(()->{
+            HashMap<UUID, String> results = new HashMap<>();
+            Bukkit.getOnlinePlayers().stream().map(Player::getUniqueId).forEach(u ->{
+                ByteArrayDataOutput out = ByteStreams.newDataOutput();
+                out.writeUTF(UHC.plugin.serverId());
+                out.writeUTF("isLinked");
+                out.writeUTF(u.toString());
+                ByteArrayDataInput response = sendMessage(out.toByteArray());
+                if(response.readBoolean()){
+                    results.put(u, response.readUTF().replace("::", "\\:\\:")+"::"+response.readUTF().replace("::", "\\:\\:"));
+                } else {
+                    results.put(u, null);
+                }
+            });
+            callback.call(results);
+        });
+    }
+
     public void processAsync(Runnable runnable){
         processAsync(runnable, null);
     }
@@ -233,5 +256,9 @@ public class DiscordBotConnection {
 
     public interface Callback{
         void call();
+    }
+
+    public interface ValueCallback<V>{
+        void call(V data);
     }
 }
