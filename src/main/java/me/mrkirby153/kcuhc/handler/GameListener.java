@@ -49,7 +49,9 @@ public class GameListener implements Listener {
             return;
         }
         double oldDamage = event.getDamage();
-        double newDamage = oldDamage / 2;
+        double newDamage = Math.floor(oldDamage / 2);
+        if(newDamage < 1)
+            newDamage = 1;
         event.setDamage(newDamage);
         System.out.println(String.format("[DMG] OLD: [%.2f] NEW: [%.2f]", oldDamage, newDamage));
     }
