@@ -68,6 +68,7 @@ public class UHCArena implements Runnable, Listener {
     private int deathmatch = -1;
     private boolean dmStarted = false;
     private boolean shouldEndCheck = true;
+    private boolean shouldSpreadPlayers = true;
     public UHCScoreboard scoreboard;
 
     private String winner;
@@ -273,7 +274,8 @@ public class UHCArena implements Runnable, Listener {
 /*        // TODO: 5/13/2016 Write spreadplayers algorithm, as args no longer work :(
         String format = String.format("spreadplayers %d %d %d %d true @a[team=!%s]", center.getBlockX(), center.getBlockZ(), 50, startSize / 2, TeamHandler.SPECTATORS_TEAM);
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), format);*/
-        new SpreadPlayersHandler().execute(world.getName(), center.getBlockX(), center.getBlockZ(), 50, startSize / 2);
+        if (shouldSpreadPlayers)
+            new SpreadPlayersHandler().execute(world.getName(), center.getBlockX(), center.getBlockZ(), 50, startSize / 2);
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "xp -3000l @a");
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "achievement take * @a");
         for (Entity e : world.getEntities()) {
@@ -1021,6 +1023,15 @@ public class UHCArena implements Runnable, Listener {
             Bukkit.broadcastMessage("Checking if we should end");
         else
             Bukkit.broadcastMessage("No longer checking if we should end");
+    }
+
+    public void toggleSpreadingPlayers() {
+        this.shouldSpreadPlayers = !this.shouldSpreadPlayers;
+        if (shouldSpreadPlayers) {
+            Bukkit.broadcastMessage("Spreading players when the game starts");
+        } else {
+            Bukkit.broadcastMessage("No longer spreading players");
+        }
     }
 
     public void setPercentToGlow(int percent) {

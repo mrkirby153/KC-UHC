@@ -63,6 +63,10 @@ public class CommandUHC extends BaseCommand {
                 UHC.arena.toggleShouldEndCheck();
                 return true;
             }
+            if(args[0].equalsIgnoreCase("togglespread")){
+                UHC.arena.toggleSpreadingPlayers();
+                return true;
+            }
             if (args[0].equalsIgnoreCase("singlepersonteams")) {
                 if(UHC.discordHandler != null)
                     UHC.discordHandler.shutdown();
