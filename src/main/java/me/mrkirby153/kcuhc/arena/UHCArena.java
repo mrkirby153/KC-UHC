@@ -799,6 +799,7 @@ public class UHCArena implements Runnable, Listener {
                 break;
             case RUNNING:
                 List<UUID> players = this.players.stream().map(Entity::getUniqueId).collect(Collectors.toList());
+                players.removeAll(TeamHandler.spectatorsTeam().getPlayers());
                 players.sort((o1, o2) -> {
                     Player p1 = Bukkit.getPlayer(o1);
                     Player p2 = Bukkit.getPlayer(o2);
