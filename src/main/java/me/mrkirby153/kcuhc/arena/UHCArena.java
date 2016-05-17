@@ -121,6 +121,26 @@ public class UHCArena implements Runnable, Listener {
     private double netherWorldborderSize;
 
 
+    private String[] tips = new String[]{
+            ChatColor.GOLD + "Craft a Head Apple by surrounding a player head in gold!",
+            ChatColor.YELLOW + "Use a player tracker (Compass) to find enemies!",
+            ChatColor.GOLD + "5 Minutes after the worldborder stops, everyone gets Hunger III",
+            ChatColor.YELLOW + "Watch out for the worldborder! It can sneak up on you quickly!",
+            ChatColor.GOLD + "%NAME% is going to win!",
+            ChatColor.YELLOW + "This tip message format was NOT stolen from Mineplex",
+            ChatColor.GOLD + "Message'); DROP TABLE `tips`; --",
+            ChatColor.GOLD + "It may or may not be a good idea to not die",
+            ChatColor.YELLOW + "This is not the tip you are looking for",
+            ChatColor.BLUE + "Hey! Isn't this tip supposed to be yellow or gold?",
+            ChatColor.GOLD+"Was I supposed to write legitimate tips? Oops.",
+            ChatColor.YELLOW+"You mean whatever I write here will show up as a tip? HI MOM"
+
+    };
+
+    private long nextTipIn = -1;
+    private static final int TIP_TIME = 30000;
+
+
     public UHCArena(World world, int startSize, int endSize, int duration, Location center) {
         this.world = world;
         this.nether = Bukkit.getWorld(world.getName() + "_nether");
@@ -536,9 +556,13 @@ public class UHCArena implements Runnable, Listener {
     @Override
     public void run() {
         switch (state) {
+            case WAITING:
             case INITIALIZED:
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     p.setAllowFlight(true);
+                }
+                if (System.currentTimeMillis() > nextTipIn) {
+                    displayTip();
                 }
                 break;
             case COUNTDOWN:
@@ -1010,6 +1034,22 @@ public class UHCArena implements Runnable, Listener {
         return false;
     }
 
+    private void displayTip() {
+        String tip = tips[new Random().nextInt(tips.length)];
+        if (tip.contains("%NAME%")) {
+            tip = tip.replace("%NAME%", randomPlayer());
+        }
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            p.sendMessage(ChatColor.WHITE + "" + ChatColor.BOLD + "Tip> " + ChatColor.RESET + tip);
+            p.playSound(p.getLocation(), Sound.ENTITY_CHICKEN_EGG, 1F, 1F);
+        }
+        nextTipIn = System.currentTimeMillis() + TIP_TIME;
+    }
+
+    private String randomPlayer() {
+        return new ArrayList<>(Bukkit.getOnlinePlayers()).get(new Random().nextInt(Bukkit.getOnlinePlayers().size())).getName();
+    }
+
     private void deathmatch() {
         deathmatch = -1;
         // Teleport all players to the surface
@@ -1220,7 +1260,7 @@ public class UHCArena implements Runnable, Listener {
                 FreezeHandler.unfreeze(p);
             }
         }
-        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, ()->{
+        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> {
             FreezeHandler.restoreBlocks();
             FreezeHandler.pvpEnabled = true;
         }, 100);
