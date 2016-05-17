@@ -119,6 +119,10 @@ public class UHCArena implements Runnable, Listener {
     private int secondsRemaining;
     private double overworldWorldborderSize;
     private double netherWorldborderSize;
+    private long freezeStartTime;
+    private EndgamePhase frozen_endgamePhase;
+    private EndgamePhase frozen_nextEndgamePhase;
+    private long frozen_nextEndgamePhaseIn;
 
 
     private String[] tips = new String[]{
@@ -132,8 +136,8 @@ public class UHCArena implements Runnable, Listener {
             ChatColor.GOLD + "It may or may not be a good idea to not die",
             ChatColor.YELLOW + "This is not the tip you are looking for",
             ChatColor.BLUE + "Hey! Isn't this tip supposed to be yellow or gold?",
-            ChatColor.GOLD+"Was I supposed to write legitimate tips? Oops.",
-            ChatColor.YELLOW+"You mean whatever I write here will show up as a tip? HI MOM"
+            ChatColor.GOLD + "Was I supposed to write legitimate tips? Oops.",
+            ChatColor.YELLOW + "You mean whatever I write here will show up as a tip? HI MOM"
 
     };
 
@@ -1227,12 +1231,20 @@ public class UHCArena implements Runnable, Listener {
 
     public void freeze() {
         int secondsPassed = Math.toIntExact((System.currentTimeMillis() - startTime) / 1000);
+        System.out.println("Duration: " + duration);
         System.out.println("Seconds passed: " + secondsPassed);
         this.secondsRemaining = this.duration - secondsPassed;
         System.out.println("Seconds remaining: " + secondsRemaining);
         overworldWorldborderSize = world.getWorldBorder().getSize();
         world.getWorldBorder().setSize(overworldWorldborderSize);
         System.out.println("Worldborder size: " + overworldWorldborderSize);
+        frozen_nextEndgamePhase = nextEndgamePhase;
+        frozen_nextEndgamePhaseIn = nextEndgamePhaseIn;
+        nextEndgamePhase = null;
+        nextEndgamePhaseIn = -1;
+        frozen_endgamePhase = currentEndgamePhase;
+        currentEndgamePhase = NORMALGAME;
+        freezeStartTime = System.currentTimeMillis();
         if (nether != null) {
             netherWorldborderSize = nether.getWorldBorder().getSize();
             nether.getWorldBorder().setSize(netherWorldborderSize);
@@ -1248,11 +1260,13 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void unfreeze() {
-        world.getWorldBorder().setSize(overworldWorldborderSize);
-        world.getWorldBorder().setSize(endSize, secondsRemaining);
-        if (nether != null) {
-            nether.getWorldBorder().setSize(netherWorldborderSize);
-            nether.getWorldBorder().setSize(endSize * 2, secondsRemaining);
+        if(secondsRemaining > 0) {
+            world.getWorldBorder().setSize(overworldWorldborderSize);
+            world.getWorldBorder().setSize(endSize, secondsRemaining);
+            if (nether != null) {
+                nether.getWorldBorder().setSize(netherWorldborderSize);
+                nether.getWorldBorder().setSize(endSize * 2, secondsRemaining);
+            }
         }
         this.state = RUNNING;
         for (Player p : Bukkit.getOnlinePlayers()) {
@@ -1260,12 +1274,27 @@ public class UHCArena implements Runnable, Listener {
                 FreezeHandler.unfreeze(p);
             }
         }
+        long frozenFor = System.currentTimeMillis() - freezeStartTime;
+        System.out.println("Frozen for: "+frozenFor);
+        this.startTime -= frozenFor;
+        this.nextEndgamePhase = frozen_nextEndgamePhase;
+        this.currentEndgamePhase = frozen_endgamePhase;
+
+        if (frozen_nextEndgamePhaseIn != -1) {
+            long timeRemainingOnEndgamePhase = Math.abs(freezeStartTime - frozen_nextEndgamePhaseIn);
+            System.out.println("Freeze started on "+freezeStartTime);
+            System.out.println("Frozen phase on "+frozen_nextEndgamePhaseIn);
+            System.out.println("Time remaining on EG phase: " + timeRemainingOnEndgamePhase);
+            nextEndgamePhaseIn = System.currentTimeMillis() + timeRemainingOnEndgamePhase;
+        }
         Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> {
             FreezeHandler.restoreBlocks();
             FreezeHandler.pvpEnabled = true;
+            Bukkit.broadcastMessage("Damage now enabled!");
         }, 100);
         Bukkit.broadcastMessage(ChatColor.GOLD + "The game has been unfrozen!");
         Bukkit.broadcastMessage(ChatColor.GOLD + "Damage will be re-enabled in 5 seconds...");
+        Bukkit.broadcastMessage(ChatColor.BLUE + "The game was frozen for " + UtilTime.format(2, frozenFor, UtilTime.TimeUnit.FIT));
     }
 
     public enum State {

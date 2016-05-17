@@ -3,7 +3,7 @@ package me.mrkirby153.kcuhc.handler;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -18,6 +18,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -34,6 +35,10 @@ public class FreezeHandler implements Listener {
 
     private static ArrayList<Location> placedBlocks = new ArrayList<>();
 
+    private static HashMap<UUID, ItemStack[]> savedInventories = new HashMap<>();
+
+    private static ArrayList<UUID> bypassedPlayers = new ArrayList<>();
+
     public static boolean pvpEnabled = true;
 
     public static boolean isFrozen() {
@@ -42,16 +47,19 @@ public class FreezeHandler implements Listener {
 
     public static void freezePlayer(Player player) {
         frozenPlayers.add(player.getUniqueId());
+        System.out.println("Saving "+player.getName()+" velocity to "+player.getVelocity());
         player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "You have been frozen!");
         player.sendMessage("   PVP has been disabled and you may no longer interact with the world!");
         player.playSound(player.getLocation(), Sound.ENTITY_WITHER_HURT, 1F, 1F);
-        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, Integer.MAX_VALUE, 1, false, true));
         ArrayList<PotionEffect> effects = new ArrayList<>();
         effects.addAll(player.getActivePotionEffects());
+        for(PotionEffect e : player.getActivePotionEffects()){
+            player.removePotionEffect(e.getType());
+        }
+        player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, Integer.MAX_VALUE, 1, false, true));
         Iterator<PotionEffect> i = effects.iterator();
-        while(i.hasNext()){
-            if(i.next().getType() == PotionEffectType.BLINDNESS){
-                System.out.println("removing blindness");
+        while (i.hasNext()) {
+            if (i.next().getType() == PotionEffectType.BLINDNESS) {
                 i.remove();
             }
         }
@@ -62,27 +70,38 @@ public class FreezeHandler implements Listener {
         frozenPlayers.remove(player.getUniqueId());
         player.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "You have been unfrozen!");
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F);
-        player.removePotionEffect(PotionEffectType.BLINDNESS);
+        for(PotionEffect e : player.getActivePotionEffects()){
+            player.removePotionEffect(e.getType());
+        }
         ArrayList<PotionEffect> effects = potions.remove(player.getUniqueId());
         if (effects != null) {
             for (PotionEffect e : effects) {
+                if (e.getType() == PotionEffectType.BLINDNESS) {
+                    continue;
+                }
                 if (player.hasPotionEffect(e.getType()))
                     player.removePotionEffect(e.getType());
                 player.addPotionEffect(e);
             }
         }
+        restoreBlocks();
+        bypassedPlayers.remove(player.getUniqueId());
         player.setOp(false);
-        player.setAllowFlight(false);
+        if (player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR)
+            player.setAllowFlight(false);
         player.setFlying(false);
+        restoreInventory(player);
     }
 
     public static void freezebypass(Player player) {
         frozenPlayers.remove(player.getUniqueId());
+        bypassedPlayers.add(player.getUniqueId());
         player.removePotionEffect(PotionEffectType.BLINDNESS);
         player.setOp(true);
         player.setAllowFlight(true);
         player.setFlying(true);
-        player.sendMessage(ChatColor.GOLD + "Unfrozen!");
+        player.sendMessage(ChatColor.GOLD + "Bypassed!");
+        saveInventory(player);
     }
 
     public static void restoreBlocks() {
@@ -90,7 +109,27 @@ public class FreezeHandler implements Listener {
             l.getBlock().setType(Material.AIR);
         }
         placedBlocks = new ArrayList<>();
-        Bukkit.broadcastMessage(ChatColor.GOLD + "Damage has been re-enabled!");
+    }
+
+
+    private static void saveInventory(Player player) {
+        ItemStack[] items = new ItemStack[player.getInventory().getSize()];
+        for (int i = 0; i < player.getInventory().getSize(); i++) {
+            items[i] = player.getInventory().getItem(i);
+        }
+        savedInventories.put(player.getUniqueId(), items);
+        player.getInventory().clear();
+        player.updateInventory();
+    }
+
+    private static void restoreInventory(Player player) {
+        if (!savedInventories.containsKey(player.getUniqueId()))
+            return;
+        ItemStack[] items = savedInventories.remove(player.getUniqueId());
+        for (int i = 0; i < player.getInventory().getSize(); i++) {
+            player.getInventory().setItem(i, items[i]);
+        }
+        player.updateInventory();
     }
 
     public FreezeHandler(UHC plugin) {
@@ -105,13 +144,9 @@ public class FreezeHandler implements Listener {
             return;
         Block relative = event.getPlayer().getLocation().getBlock().getRelative(BlockFace.DOWN);
         Material below = relative.getType();
-        if (below == Material.AIR || below == Material.LAVA || below == Material.STATIONARY_LAVA || below == Material.WATER || below == Material.STATIONARY_WATER) {
-            placedBlocks.add(relative.getLocation());
-            relative.setType(Material.BARRIER);
-        }
         Location from = event.getFrom();
         Location to = event.getTo();
-        if (to.getX() != from.getX() || to.getZ() != from.getZ())
+        if (to.getX() != from.getX() || to.getY() != from.getY() || to.getZ() != from.getZ())
             event.setCancelled(true);
     }
 
