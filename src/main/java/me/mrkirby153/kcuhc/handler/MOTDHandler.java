@@ -8,6 +8,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Sound;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
@@ -35,35 +36,50 @@ public class MOTDHandler implements Listener {
             if (UHC.arena.currentState() == UHCArena.State.GENERATING_WORLD) {
                 event.disallow(PlayerLoginEvent.Result.KICK_OTHER, ChatColor.RED + "We're not quite ready for you yet\n" + ChatColor.GOLD + "Check back in a few");
             }
-            if (UHC.arena.currentState() != UHCArena.State.RUNNING && UHC.plugin.getConfig().getBoolean("discord.useDiscord"))
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if(UHC.arena.currentState() != UHCArena.State.RUNNING && UHC.arena.currentState() != UHCArena.State.FROZEN) {
                         if (!event.getPlayer().getWorld().getName().equalsIgnoreCase(UHC.arena.getCenter().getWorld().getName()))
                             event.getPlayer().teleport(UHC.arena.getCenter().add(0, 2, 0));
                         else if (event.getPlayer().getLocation().distanceSquared(UHC.arena.getCenter()) > Math.pow(50, 2))
                             event.getPlayer().teleport(UHC.arena.getCenter().add(0, 2, 0));
-                        BaseComponent greeting = UtilChat.generateFormattedChat("Welcome to KC-UHC ", ChatColor.YELLOW);
-                        greeting.addExtra(UtilChat.generateFormattedChat(event.getPlayer().getName(), ChatColor.GREEN));
+                        event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 1F);
+                        BaseComponent line = UtilChat.generateFormattedChat("=============================================", ChatColor.GREEN, 10);
+                        BaseComponent padding = new TextComponent(" ");
 
-                        BaseComponent discord = UtilChat.generateFormattedChat("If you have not done so already, please join the discord server by clicking ", ChatColor.YELLOW);
-                        discord.addExtra(UtilChat.generateHyperlink(UtilChat.generateFormattedChat("[HERE]", ChatColor.BLUE, 8), UHC.plugin.getConfig().getString("discord.inviteUrl"),
-                                UtilChat.generateFormattedChat("Join the discord server", ChatColor.WHITE)));
+                        BaseComponent greeting = UtilChat.generateFormattedChat("Welcome to KC-UHC ", ChatColor.WHITE, 8);
+                        greeting.addExtra(UtilChat.generateFormattedChat(event.getPlayer().getName(), ChatColor.GOLD, 8));
+                        UtilChat.sendMultiple(event.getPlayer(), line, greeting);
 
-                        BaseComponent browserWarning = UtilChat.generateBoldChat("Please note that voice chat is only supported on the offical discord client, Firefox, Chrome, and Opera", ChatColor.DARK_RED);
+                        BaseComponent notStarted = UtilChat.generateFormattedChat("   The game hasn't started yet so hold tight!", ChatColor.WHITE, 0);
+                        if(UHC.plugin.getConfig().getBoolean("discord.useDiscord")){
+                            event.getPlayer().spigot().sendMessage(notStarted);
+                            event.getPlayer().spigot().sendMessage(padding);
+                            BaseComponent usingDiscord = UtilChat.generateFormattedChat("   This server is using ", ChatColor.WHITE, 0);
+                            usingDiscord.addExtra(UtilChat.generateFormattedChat("Discord", ChatColor.BLUE, 0));
+                            usingDiscord.addExtra(UtilChat.generateFormattedChat(" to manage team chat.", ChatColor.WHITE, 0));
+                            event.getPlayer().spigot().sendMessage(usingDiscord);
 
-                        BaseComponent linkCommand = UtilChat.generateFormattedChat("Once you have joined the discord server, click ", ChatColor.YELLOW);
-                        TextComponent cmd = new TextComponent("[HERE]");
-                        cmd.setColor(ChatColor.BLUE);
-                        cmd.setBold(true);
-                        cmd.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{UtilChat.generateFormattedChat("Click to get your link code!", ChatColor.WHITE)}));
-                        cmd.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/discord link"));
-                        linkCommand.addExtra(cmd);
-                        linkCommand.addExtra(UtilChat.generateFormattedChat(" to link your account with discord!", ChatColor.YELLOW));
+                            BaseComponent discordInvite = UtilChat.generateFormattedChat("   Please join the discord server by clicking ", ChatColor.WHITE, 0);
+                            discordInvite.addExtra(UtilChat.generateHyperlink(UtilChat.generateFormattedChat("[HERE]", ChatColor.BLUE, 0), UHC.plugin.getConfig().getString("discord.inviteUrl")));
 
-                        UtilChat.sendMultiple(event.getPlayer(), greeting, discord, browserWarning, linkCommand);
+                            BaseComponent linkCommand = UtilChat.generateFormattedChat("   Once you have joined the discord server, type ", ChatColor.WHITE, 0);
+                            TextComponent cmd = new TextComponent("/discord link");
+                            cmd.setColor(ChatColor.AQUA);
+                            cmd.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{new TextComponent("Click here to get your discord link code!")}));
+                            cmd.setClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/discord link"));
+                            linkCommand.addExtra(cmd);
+                            BaseComponent linkCmdCont = UtilChat.generateFormattedChat("   to generate your link code!", ChatColor.WHITE, 0);
+
+                            UtilChat.sendMultiple(event.getPlayer(), discordInvite, padding, linkCommand, linkCmdCont);
+                        } else {
+                            UtilChat.sendMultiple(event.getPlayer(), padding, padding, padding, notStarted, padding, padding, padding);
+                        }
+                        event.getPlayer().spigot().sendMessage(line);
                     }
-                }.runTaskLater(UHC.plugin, 10L);
+                }
+            }.runTaskLater(UHC.plugin, 10L);
         }
     }
 }

@@ -7,8 +7,10 @@ import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -34,8 +36,14 @@ public class CommandDiscord extends BaseCommand {
             ByteArrayDataInput response = UHC.discordHandler.sendMessage(out.toByteArray());
             int responseCode = response.readInt();
             String code = response.readUTF();
-            player.sendMessage(ChatColor.GREEN + "Please log into handler and in the uhc-link channel, enter the following command: ");
-            player.sendMessage(ChatColor.AQUA + "!uhcbot link " + code);
+            BaseComponent line = UtilChat.generateFormattedChat("=============================================", ChatColor.GREEN, 10);
+            BaseComponent padding = new TextComponent(" ");
+            BaseComponent info = UtilChat.generateFormattedChat("   Your link code is ", ChatColor.WHITE, 0);
+            info.addExtra(UtilChat.generateFormattedChat(code, ChatColor.BLUE));
+            BaseComponent onServer = UtilChat.generateFormattedChat("   On the discord server, type ", ChatColor.WHITE, 0);
+            onServer.addExtra(UtilChat.generateFormattedChat("!uhcbot link " + code, ChatColor.BLUE, 0));
+            UtilChat.sendMultiple(player, line, padding, padding, padding, info, onServer, padding, padding, padding, line);
+            player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1F, 1F);
             return true;
         }
         if (restrictAdmin(sender))

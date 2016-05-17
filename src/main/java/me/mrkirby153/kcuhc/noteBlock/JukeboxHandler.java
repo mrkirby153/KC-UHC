@@ -1,7 +1,6 @@
 package me.mrkirby153.kcuhc.noteBlock;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -124,7 +123,6 @@ public class JukeboxHandler implements Listener {
             if (currentSong != null) {
                 if (!playersNotListening.contains(event.getPlayer().getUniqueId())) {
                     currentSong.addPlayer(event.getPlayer());
-                    event.getPlayer().spigot().sendMessage(UtilChat.generateFormattedChat("You can disable music by typing /music off", net.md_5.bungee.api.ChatColor.GOLD, 0));
                 }
                 if (!nowPlayingBar.getPlayers().contains(event.getPlayer())) {
                     nowPlayingBar.addPlayer(event.getPlayer());
