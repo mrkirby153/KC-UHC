@@ -21,6 +21,7 @@ import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,6 +40,8 @@ public class FreezeHandler implements Listener {
 
     private static ArrayList<UUID> bypassedPlayers = new ArrayList<>();
 
+    private static HashMap<UUID, Vector> velocity = new HashMap<>();
+
     public static boolean pvpEnabled = true;
 
     public static boolean isFrozen() {
@@ -47,13 +50,15 @@ public class FreezeHandler implements Listener {
 
     public static void freezePlayer(Player player) {
         frozenPlayers.add(player.getUniqueId());
-        System.out.println("Saving "+player.getName()+" velocity to "+player.getVelocity());
+        Vector velocity = UHC.velocityTracker.getVelocity(player);
+        System.out.println("Saving velocity for " + player.getName() + " to " + velocity);
+        FreezeHandler.velocity.put(player.getUniqueId(), velocity);
         player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "You have been frozen!");
         player.sendMessage("   PVP has been disabled and you may no longer interact with the world!");
         player.playSound(player.getLocation(), Sound.ENTITY_WITHER_HURT, 1F, 1F);
         ArrayList<PotionEffect> effects = new ArrayList<>();
         effects.addAll(player.getActivePotionEffects());
-        for(PotionEffect e : player.getActivePotionEffects()){
+        for (PotionEffect e : player.getActivePotionEffects()) {
             player.removePotionEffect(e.getType());
         }
         player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, Integer.MAX_VALUE, 1, false, true));
@@ -70,7 +75,7 @@ public class FreezeHandler implements Listener {
         frozenPlayers.remove(player.getUniqueId());
         player.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "You have been unfrozen!");
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F);
-        for(PotionEffect e : player.getActivePotionEffects()){
+        for (PotionEffect e : player.getActivePotionEffects()) {
             player.removePotionEffect(e.getType());
         }
         ArrayList<PotionEffect> effects = potions.remove(player.getUniqueId());
@@ -84,7 +89,9 @@ public class FreezeHandler implements Listener {
                 player.addPotionEffect(e);
             }
         }
-        restoreBlocks();
+        Vector vector = velocity.get(player.getUniqueId());
+        System.out.println("\tLoading velocity of "+player.getName()+" : "+vector);
+        player.setVelocity(vector);
         bypassedPlayers.remove(player.getUniqueId());
         player.setOp(false);
         if (player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR)
