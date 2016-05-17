@@ -181,7 +181,7 @@ public class UHCArena implements Runnable, Listener {
         countdownBar = Bukkit.createBossBar(ChatColor.RED + "Starting in ", BarColor.PINK, BarStyle.SOLID);
         UHC.plugin.getServer().getPluginManager().registerEvents(this, UHC.plugin);
         this.scoreboard = new UHCScoreboard();
-        craftingRecipies();
+        craftingRecipes();
     }
 
     public void generate() {
@@ -936,7 +936,7 @@ public class UHCArena implements Runnable, Listener {
         updateEntityDamageName((LivingEntity) event.getEntity(), ((LivingEntity) event.getEntity()).getHealth() - event.getFinalDamage());
     }
 
-    private void craftingRecipies() {
+    private void craftingRecipes() {
         ShapedRecipe headApple = new ShapedRecipe(new ItemStack(Material.GOLDEN_APPLE, 1));
         headApple.shape("GGG", "GHG", "GGG");
         headApple.setIngredient('G', Material.GOLD_INGOT);
@@ -981,7 +981,7 @@ public class UHCArena implements Runnable, Listener {
             player.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "You've picked up a player head!");
             player.sendMessage(ChatColor.WHITE + "You can use this head to craft a Golden Head for healing");
             player.sendMessage(ChatColor.WHITE + "A golden head will give you 2x the effects of a golden apple!");
-            player.sendRawMessage(ChatColor.GREEN + "To Craft: " + ChatColor.WHITE + "Use the recipie for a Golden Apple, but replace the apple with the head");
+            player.sendRawMessage(ChatColor.GREEN + "To Craft: " + ChatColor.WHITE + "Use the recipe for a Golden Apple, but replace the apple with the head");
             player.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "=============================================");
         }
     }
