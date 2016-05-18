@@ -137,7 +137,8 @@ public class UHCArena implements Runnable, Listener {
             ChatColor.YELLOW + "This is not the tip you are looking for",
             ChatColor.BLUE + "Hey! Isn't this tip supposed to be yellow or gold?",
             ChatColor.GOLD + "Was I supposed to write legitimate tips? Oops.",
-            ChatColor.YELLOW + "You mean whatever I write here will show up as a tip? HI MOM"
+            ChatColor.YELLOW + "You mean whatever I write here will show up as a tip? HI MOM",
+            ChatColor.GOLD + "In the event of an emergency, do not panic! Use /a <message> to contact an admin!"
 
     };
 

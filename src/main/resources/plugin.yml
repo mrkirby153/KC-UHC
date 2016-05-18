@@ -19,3 +19,7 @@ commands:
     aliases: ['song']
     usage: /<command>
     description: Music commands
+  admin:
+    aliases: ['a']
+    usage: /a <message>
+    description: Contact an admin
