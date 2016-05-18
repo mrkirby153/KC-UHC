@@ -1141,8 +1141,9 @@ public class UHCArena implements Runnable, Listener {
         uuidToStringMap.put(player.getUniqueId(), player.getName());
 //        players.remove(player);
         logoutTimes.put(player.getUniqueId(), System.currentTimeMillis() + (300000));
-        Bukkit.broadcastMessage(generateBoldChat(player.getName() + " has disconnected! They have 5 minutes to log back in before they are" +
-                " eliminated!", net.md_5.bungee.api.ChatColor.WHITE).toLegacyText());
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + player.getName() + " has disconnected! 5.0 minutes to rejoin!");
+        }
     }
 
     public void updateDisconnect() {
@@ -1154,18 +1155,30 @@ public class UHCArena implements Runnable, Listener {
                 Bukkit.broadcastMessage(generateBoldChat(playerName + " has been eliminated because they logged off 5 minutes ago!", net.md_5.bungee.api.ChatColor.WHITE).toLegacyText());
                 queuedTeamRemovals.add(entry.getKey());
                 iterator.remove();
+                Iterator<Player> uhcPlayerIterator = players.iterator();
+                while (uhcPlayerIterator.hasNext()) {
+                    Player next = uhcPlayerIterator.next();
+                    if (next.getUniqueId().equals(entry.getKey())) {
+                        uhcPlayerIterator.remove();
+                    }
+                }
                 uuidToStringMap.remove(entry.getKey());
             }
         }
     }
 
     public void playerJoin(Player player) {
-        this.logoutTimes.remove(player.getUniqueId());
+        if (logoutTimes.containsKey(player.getUniqueId())) {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                p.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + player.getName() + " has reconnected!");
+            }
+            this.logoutTimes.remove(player.getUniqueId());
+        }
         if (queuedTeamRemovals.contains(player.getUniqueId())) {
             queuedTeamRemovals.remove(player.getUniqueId());
             TeamHandler.leaveTeam(player);
-            spectate(player);
             players.remove(player);
+            spectate(player);
             player.spigot().sendMessage(UtilChat.generateFormattedChat("Due to you being logged off for more than 5 minutes, you have been removed from the game",
                     net.md_5.bungee.api.ChatColor.GOLD, 8));
         }
@@ -1260,7 +1273,7 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void unfreeze() {
-        if(secondsRemaining > 0) {
+        if (secondsRemaining > 0) {
             world.getWorldBorder().setSize(overworldWorldborderSize);
             world.getWorldBorder().setSize(endSize, secondsRemaining);
             if (nether != null) {
@@ -1275,15 +1288,15 @@ public class UHCArena implements Runnable, Listener {
             }
         }
         long frozenFor = System.currentTimeMillis() - freezeStartTime;
-        System.out.println("Frozen for: "+frozenFor);
+        System.out.println("Frozen for: " + frozenFor);
         this.startTime -= frozenFor;
         this.nextEndgamePhase = frozen_nextEndgamePhase;
         this.currentEndgamePhase = frozen_endgamePhase;
 
         if (frozen_nextEndgamePhaseIn != -1) {
             long timeRemainingOnEndgamePhase = Math.abs(freezeStartTime - frozen_nextEndgamePhaseIn);
-            System.out.println("Freeze started on "+freezeStartTime);
-            System.out.println("Frozen phase on "+frozen_nextEndgamePhaseIn);
+            System.out.println("Freeze started on " + freezeStartTime);
+            System.out.println("Frozen phase on " + frozen_nextEndgamePhaseIn);
             System.out.println("Time remaining on EG phase: " + timeRemainingOnEndgamePhase);
             nextEndgamePhaseIn = System.currentTimeMillis() + timeRemainingOnEndgamePhase;
         }
