@@ -712,7 +712,7 @@ public class UHCArena implements Runnable, Listener {
                     runCount = 0;
                     WorldBorder wb = world.getWorldBorder();
                     if (wb.getSize() > 1)
-                        wb.setSize(wb.getSize() - 1, 1);
+                        wb.setSize(wb.getSize() - 2, 1);
                 }
                 nextEndgamePhase = null;
                 break;
