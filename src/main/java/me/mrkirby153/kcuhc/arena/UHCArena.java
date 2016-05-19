@@ -327,6 +327,7 @@ public class UHCArena implements Runnable, Listener {
         startingPlayers = players.size() - getSpectatorCount();
         state = State.RUNNING;
         startTime = System.currentTimeMillis();
+        UHC.markerHandler.startTracking();
     }
 
     public void spectate(Player player) {
@@ -405,6 +406,7 @@ public class UHCArena implements Runnable, Listener {
         bringEveryoneToLobby();
         MOTDHandler.setMotd(ChatColor.RESET + "" + ChatColor.RED + ChatColor.MAGIC + "|..|" + ChatColor.RESET + "  " + ChatColor.GOLD + winner + ChatColor.RED + " has won the game!  " + ChatColor.RED + ChatColor.MAGIC + "|..|");
         launchedFw = 0;
+        UHC.markerHandler.stopTracking();
         state = ENDGAME;
     }
 

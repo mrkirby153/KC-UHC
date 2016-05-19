@@ -33,6 +33,8 @@ public class UHC extends JavaPlugin {
 
     public static VelocityTracker velocityTracker;
 
+    public static EpisodeMarkerHandler markerHandler;
+
     @Override
     public void onEnable() {
         saveDefaultConfig();
@@ -72,6 +74,7 @@ public class UHC extends JavaPlugin {
         new FreezeHandler(this);
         playerTracker = new PlayerTrackerHandler(this);
         velocityTracker = new VelocityTracker(this);
+        markerHandler = new EpisodeMarkerHandler(this);
         getServer().getPluginManager().registerEvents(new MOTDHandler(), this);
         getServer().getPluginManager().registerEvents(spectateListener = new SpectateListener(), this);
         getServer().getPluginManager().registerEvents(new JukeboxHandler(), this);

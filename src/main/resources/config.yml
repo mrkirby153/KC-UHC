@@ -14,3 +14,8 @@ discord:
   botHost: 'localhost'
   botPort: 6969
   inviteUrl: ''
+episodes:
+  # Enable episode markers
+  use: true
+  # The duration in minutes of each episode
+  duration: 20
