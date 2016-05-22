@@ -62,6 +62,20 @@ public class CommandTeam extends BaseCommand {
                 sender.sendMessage("Saved");
                 return true;
             }
+            if (args[0].equalsIgnoreCase("delAll")) {
+                if (restrictAdmin(sender))
+                    return true;
+                TeamHandler.unregisterAll();
+                TeamHandler.loadFromFile();
+                sender.sendMessage("Removed all teams");
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("spread")) {
+                if (restrictAdmin(sender))
+                    return true;
+                UHC.arena.distributeTeams(50);
+                return true;
+            }
             if (args[0].equalsIgnoreCase("load")) {
                 if (restrictAdmin(sender))
                     return true;
@@ -107,7 +121,7 @@ public class CommandTeam extends BaseCommand {
                 p.spigot().sendMessage(UtilChat.generateError("You cannot assign your team. Please wait for it to be assigned for you"));
                 return true;
             }
-            if(args[0].equalsIgnoreCase("leave")){
+            if (args[0].equalsIgnoreCase("leave")) {
                 TeamHandler.leaveTeam(p);
             }
             if (teamToJoin.equalsIgnoreCase("spectators")) {
