@@ -1002,7 +1002,7 @@ public class UHCArena implements Runnable, Listener {
             return;
         }
         event.getPlayer().sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + "You ate a head apple!");
-        event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 300, 1));
+        event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
         event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
     }
 
