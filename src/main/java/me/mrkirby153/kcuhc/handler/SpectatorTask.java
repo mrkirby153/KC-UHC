@@ -27,7 +27,7 @@ public class SpectatorTask implements Runnable, Listener {
 
     public SpectatorTask(JavaPlugin plugin) {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
-        plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 1L);
+        plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 10L);
     }
 
     @Override
