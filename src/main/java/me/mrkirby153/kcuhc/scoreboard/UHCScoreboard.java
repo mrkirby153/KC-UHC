@@ -43,10 +43,13 @@ public class UHCScoreboard {
         System.out.println("Creating scoreboard teams...");
         for (UHCTeam t : TeamHandler.teams()) {
             System.out.println("Creating team " + t.getName());
+            Team sbTeam = null;
             if (scoreboard.getTeam(parseTeam(t.getName())) != null) {
-                scoreboard.getTeam(parseTeam(t.getName())).unregister();
+                System.out.println("Team " + t.getName() + " already exists updating information!");
+                sbTeam = scoreboard.getTeam(parseTeam(t.getName()));
             }
-            Team sbTeam = scoreboard.registerNewTeam(parseTeam(t.getName()));
+            if (sbTeam == null)
+                sbTeam = scoreboard.registerNewTeam(parseTeam(t.getName()));
             sbTeam.setPrefix(t.getColor() + "");
             sbTeam.setSuffix(ChatColor.RESET + "");
             sbTeam.setCanSeeFriendlyInvisibles(true);
@@ -92,8 +95,8 @@ public class UHCScoreboard {
     }
 
     public void add(String text) {
-        if(text.length() < 16){
-            for(int i = 0; i < 15 - text.length(); i++){
+        if (text.length() < 16) {
+            for (int i = 0; i < 15 - text.length(); i++) {
                 text += " ";
             }
         }
