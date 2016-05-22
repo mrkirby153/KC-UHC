@@ -10,7 +10,6 @@ import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
-import me.mrkirby153.kcuhc.shop.item.NullEnchantment;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_9_R2.IChatBaseComponent;
@@ -24,6 +23,7 @@ import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -967,8 +967,8 @@ public class UHCArena implements Runnable, Listener {
                     ItemMeta meta = apple.getItemMeta();
                     meta.setDisplayName(ChatColor.AQUA + "Head Apple");
                     apple.setItemMeta(meta);
-                    apple.addEnchantment(new NullEnchantment(), 1);
-//                    apple.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
+//                    apple.addEnchantment(new NullEnchantment(), 1);
+                    apple.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
                     inv.setResult(apple);
                     return;
                 }
@@ -996,6 +996,11 @@ public class UHCArena implements Runnable, Listener {
             return;
         if (!event.getItem().getItemMeta().getDisplayName().contains("Head"))
             return;
+        if(!event.getItem().getEnchantments().containsKey(Enchantment.ARROW_DAMAGE))
+            return;
+        if(event.getItem().getType() != Material.GOLDEN_APPLE){
+            return;
+        }
         event.getPlayer().sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + "You ate a head apple!");
         event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 300, 1));
         event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
