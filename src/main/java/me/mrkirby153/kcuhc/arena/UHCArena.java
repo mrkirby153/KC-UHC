@@ -309,7 +309,8 @@ public class UHCArena implements Runnable, Listener {
         String format = String.format("spreadplayers %d %d %d %d true @a[team=!%s]", center.getBlockX(), center.getBlockZ(), 50, startSize / 2, TeamHandler.SPECTATORS_TEAM);
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), format);*/
         if (shouldSpreadPlayers)
-            new SpreadPlayersHandler().execute(world.getName(), center.getBlockX(), center.getBlockZ(), 50, startSize / 2);
+//            new SpreadPlayersHandler().execute(world.getName(), center.getBlockX(), center.getBlockZ(), 50, startSize / 2);
+            distributeTeams(50);
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "xp -3000l @a");
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "achievement take * @a");
         for (Entity e : world.getEntities()) {
@@ -1054,6 +1055,9 @@ public class UHCArena implements Runnable, Listener {
     }
 
     private String randomPlayer() {
+        if (Bukkit.getOnlinePlayers().size() < 1) {
+            return "PLAYERNOTFOUND";
+        }
         return new ArrayList<>(Bukkit.getOnlinePlayers()).get(new Random().nextInt(Bukkit.getOnlinePlayers().size())).getName();
     }
 
@@ -1243,6 +1247,42 @@ public class UHCArena implements Runnable, Listener {
 
     public void setEndgamePhase(EndgamePhase endgamePhase) {
         this.currentEndgamePhase = endgamePhase;
+    }
+
+
+    public void distributeTeams(int minRadius) {
+        System.out.println("Worldborder location: +-" + world.getWorldBorder().getSize() / 2);
+        System.out.println("Spreading teams...");
+        Map<UHCTeam, Location> locations = new HashMap<>();
+        for (UHCTeam team : TeamHandler.teams().stream().filter(t -> !(t instanceof TeamSpectator)).collect(Collectors.toList())) {
+            Location randomSpawn = SpawnUtils.getRandomSpawn(world, startSize);
+            locations.put(team, randomSpawn);
+        }
+        // Verify that the teams are spread far enough apart
+        for (UHCTeam team : locations.keySet()) {
+            Location spawnLoc = locations.get(team);
+            // Attempt 1,000 tries
+            for (int i = 0; i < 1000; i++) {
+                boolean clash = false;
+                for (Location oL : locations.values()) {
+                    if (oL.distanceSquared(spawnLoc) < Math.pow(minRadius, 2) && !oL.equals(spawnLoc)) {
+                        System.out.println("CLASH! " + spawnLoc.toString() + " is too close to " + oL.toString());
+                        clash = true;
+                    }
+                    if (!clash)
+                        break;
+                    spawnLoc = SpawnUtils.getRandomSpawn(world, startSize);
+                }
+            }
+            // Teleport everyone on the team to that location
+            System.out.println(String.format("Teleporting players on team around %s to %.2f, %.2f, %.2f", team.getName(), spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ()));
+            for (Player p : team.getPlayers().stream().map(Bukkit::getPlayer).filter(pl -> pl != null).collect(Collectors.toList())) {
+                Location spawnAround = SpawnUtils.getSpawnAround(spawnLoc, 2);
+                System.out.println(String.format("\tTeleporting %s to %.2f, %.2f, %.2f", p.getName(), spawnAround.getX(), spawnAround.getY(), spawnAround.getZ()));
+                p.teleport(spawnAround);
+            }
+        }
+        System.out.println("Spread teams!");
     }
 
     public void freeze() {
