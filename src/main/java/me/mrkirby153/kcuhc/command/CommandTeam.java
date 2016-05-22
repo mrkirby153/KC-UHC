@@ -39,7 +39,17 @@ public class CommandTeam extends BaseCommand {
                 for (UHCTeam t : TeamHandler.teams()) {
                     if (t.getName().equalsIgnoreCase(TeamHandler.SPECTATORS_TEAM))
                         continue;
-                    sender.sendMessage(t.getName());
+                    String teamMembers = "";
+                    for (UUID u : t.getPlayers()) {
+                        boolean online = Bukkit.getPlayer(u) != null;
+                        String name = Bukkit.getOfflinePlayer(u).getName();
+                        teamMembers += (online ? ChatColor.GREEN : ChatColor.RED) + name + ChatColor.RESET + ", ";
+                    }
+                    if (teamMembers.length() > 2)
+                        teamMembers = teamMembers.substring(0, teamMembers.length() - 2);
+                    else
+                        teamMembers = ChatColor.RED + "Nobody on team";
+                    sender.sendMessage(t.getColor() + " + " + t.getName() + " (" + t.getPlayers().size() + "): " + teamMembers);
                 }
                 return true;
             }
