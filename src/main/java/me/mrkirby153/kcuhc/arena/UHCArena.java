@@ -1353,6 +1353,14 @@ public class UHCArena implements Runnable, Listener {
         Bukkit.broadcastMessage(ChatColor.BLUE + "The game was frozen for " + UtilTime.format(2, frozenFor, UtilTime.TimeUnit.FIT));
     }
 
+    public void removePlayer(Player player) {
+        Iterator<Player> players = this.players.iterator();
+        while(players.hasNext()){
+            if(players.next().getUniqueId().equals(player.getUniqueId()))
+                players.remove();
+        }
+    }
+
     public enum State {
         INITIALIZED,
         GENERATING_WORLD,

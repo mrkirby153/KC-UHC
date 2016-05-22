@@ -12,10 +12,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.event.weather.WeatherChangeEvent;
 
 import java.io.File;
@@ -50,6 +47,14 @@ public class PregameListener implements Listener {
                         UHC.plugin.getLogger().warning("Could not delete " + event.getName() + "'s data for world " + w.getName());
                     }
             }
+        }
+    }
+
+    @EventHandler
+    public void onLogout(PlayerQuitEvent event){
+        if(UHC.arena.currentState() != UHCArena.State.RUNNING){
+            // Remove the player from the arena
+            UHC.arena.removePlayer(event.getPlayer());
         }
     }
 
