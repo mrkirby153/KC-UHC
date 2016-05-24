@@ -91,7 +91,6 @@ public class UHCArena implements Runnable, Listener {
     private int startingPlayers;
 
     private BossBar closeToBorder;
-    private BossBar countdownBar;
 
     private double barProgress = 1;
     private static final double BAR_PROGRESS_DEC = 0.1;
@@ -179,7 +178,6 @@ public class UHCArena implements Runnable, Listener {
         endgameThread.setDaemon(true);
         endgameThread.start();
         closeToBorder = Bukkit.createBossBar(ChatColor.RED + "You are close to the worldborder!", BarColor.PINK, BarStyle.SOLID);
-        countdownBar = Bukkit.createBossBar(ChatColor.RED + "Starting in ", BarColor.PINK, BarStyle.SOLID);
         UHC.plugin.getServer().getPluginManager().registerEvents(this, UHC.plugin);
         this.scoreboard = new UHCScoreboard();
         craftingRecipes();
@@ -273,7 +271,6 @@ public class UHCArena implements Runnable, Listener {
         world.setGameRuleValue("doMobSpawning", "true");
         world.setGameRuleValue("doMobLoot", "true");
         world.setGameRuleValue("doDaylightCycle", "true");
-        countdownBar.removeAll();
         PotionEffect resist = new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 6, true, false);
         PotionEffect regen = new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 10, true, false);
         PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 30 * 20, 20, true, false);
@@ -412,6 +409,8 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void startCountdown() {
+        CountdownBarTask runnable = new CountdownBarTask(System.currentTimeMillis() + 11000, 11000);
+        runnable.setTaskId(UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, runnable, 0L, 1L));
         JukeboxHandler.shutdown();
         countdown = 10;
         barProgress = 1;
@@ -430,7 +429,6 @@ public class UHCArena implements Runnable, Listener {
         HandlerList.unregisterAll(UHC.plugin);
         Bukkit.getServer().getScheduler().cancelTasks(UHC.plugin);
         setWorldborder(world.getWorldBorder().getSize() + 150, 0);
-        countdownBar.removeAll();
         Objective healthObj = board.getObjective("health");
         if (healthObj != null)
             healthObj.unregister();
@@ -576,9 +574,6 @@ public class UHCArena implements Runnable, Listener {
             case COUNTDOWN:
                 if (countdown > 0) {
                     for (Player p : players) {
-                        if (!countdownBar.getPlayers().contains(p)) {
-                            countdownBar.addPlayer(p);
-                        }
                         p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1, 1);
                         PacketPlayOutTitle timings = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TIMES, null, 0, 21, 0);
                         PacketPlayOutTitle title = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE,
@@ -590,14 +585,6 @@ public class UHCArena implements Runnable, Listener {
                         ((CraftPlayer) p).getHandle().playerConnection.sendPacket(subtitle);
                     }
                     MOTDHandler.setMotd(ChatColor.YELLOW + "Starting in " + countdown);
-                    if (countdown > 5)
-                        countdownBar.setColor(BarColor.GREEN);
-                    else if (countdown <= 5 && countdown > 3)
-                        countdownBar.setColor(BarColor.YELLOW);
-                    else
-                        countdownBar.setColor(BarColor.RED);
-                    countdownBar.setProgress(barProgress);
-                    countdownBar.setTitle((((countdown % 2) == 0) ? ChatColor.BOLD + "" + ChatColor.RED : ChatColor.BOLD + "" + ChatColor.GREEN) + "Starting in " + countdown + " seconds");
                     countdown--;
                     barProgress -= BAR_PROGRESS_DEC;
                 } else {
