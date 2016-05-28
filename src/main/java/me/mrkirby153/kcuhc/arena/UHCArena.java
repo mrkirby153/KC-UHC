@@ -607,7 +607,7 @@ public class UHCArena implements Runnable, Listener {
                     if (teamsLeft().size() > 0) {
                         UHCPlayerTeam team = teamsLeft().get(0);
                         this.winningTeamColor = team.toColor();
-                        stop(team.getName());
+                        stop(team.getFriendlyName());
                     }
                     state = ENDGAME;
                 }

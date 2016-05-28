@@ -1,7 +1,7 @@
 package me.mrkirby153.kcuhc.arena;
 
 import net.md_5.bungee.api.ChatColor;
-import net.md_5.bungee.api.chat.TextComponent;
+import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.Color;
 import org.bukkit.entity.Player;
 
@@ -13,22 +13,25 @@ public abstract class UHCTeam {
     private String name;
     private ChatColor color;
 
+    private String friendlyName;
+
     private ArrayList<UUID> players = new ArrayList<>();
 
     public UHCTeam(String name, ChatColor color) {
         this.name = name;
+        this.friendlyName = WordUtils.capitalize(name.replace("_", " "));
         this.color = color;
     }
 
     public void addPlayer(Player player) {
         if (!players.contains(player.getUniqueId()))
             players.add(player.getUniqueId());
-        TextComponent message = new TextComponent("You are now on team ");
+/*        TextComponent message = new TextComponent("You are now on team ");
         message.setColor(ChatColor.GREEN);
-        TextComponent team = new TextComponent(name);
+        TextComponent team = new TextComponent(friendlyName);
         team.setColor(color);
-        message.addExtra(team);
-        player.spigot().sendMessage(message);
+        message.addExtra(team);*/
+        player.sendMessage(ChatColor.GREEN + "You are now on team " + color + friendlyName);
         onJoin(player);
     }
 
@@ -52,6 +55,14 @@ public abstract class UHCTeam {
         return this.name;
     }
 
+    public String getFriendlyName() {
+        return friendlyName;
+    }
+
+    public void setFriendlyName(String name) {
+        this.friendlyName = name;
+    }
+
     public String getScoreboardName() {
         if (this.name.length() >= 16) {
             return this.name.substring(0, 16);
@@ -68,8 +79,8 @@ public abstract class UHCTeam {
         this.players.add(uuid);
     }
 
-    public Color toColor(){
-        switch(getColor()){
+    public Color toColor() {
+        switch (getColor()) {
             case WHITE:
                 return Color.WHITE;
             case GRAY:

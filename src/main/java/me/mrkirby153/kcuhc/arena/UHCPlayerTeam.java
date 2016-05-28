@@ -20,7 +20,7 @@ public class UHCPlayerTeam extends UHCTeam implements ConfigurationSerializable 
     public void onJoin(Player player) {
         UHC.arena.addPlayer(player);
         player.setGameMode(GameMode.SURVIVAL);
-        player.setDisplayName(getColor()+player.getName()+ ChatColor.RESET);
+        player.setDisplayName(getColor() + player.getName() + ChatColor.RESET);
     }
 
     @Override
@@ -36,12 +36,13 @@ public class UHCPlayerTeam extends UHCTeam implements ConfigurationSerializable 
             uuids.add(u.toString());
         }
         data.put("name", getName());
+        data.put("displayName", getFriendlyName());
         data.put("color", getColor().getName().toUpperCase());
         data.put("players", uuids);
         return data;
     }
 
-     @SuppressWarnings("unchecked,deprecation")
+    @SuppressWarnings("unchecked,deprecation")
     public static UHCPlayerTeam deserialize(Map<String, Object> data) {
         ChatColor co;
         try {
@@ -50,11 +51,12 @@ public class UHCPlayerTeam extends UHCTeam implements ConfigurationSerializable 
             throw new IllegalArgumentException("Unknown color!");
         }
         UHCPlayerTeam upt = new UHCPlayerTeam((String) data.get("name"), co);
+        upt.setFriendlyName((String) data.get("displayName"));
         TeamHandler.registerTeam((String) data.get("name"), upt);
         for (String u : (ArrayList<String>) data.get("players")) {
             Pattern uuidPattern = Pattern.compile("[A-Za-z0-9]{8}(\\-?[A-Za-z0-9]{4}\\-?){3}[A-Za-z0-9]{12}");
             UUID uuid;
-            if(uuidPattern.matcher(u).find()){
+            if (uuidPattern.matcher(u).find()) {
                 uuid = UUID.fromString(u);
             } else {
                 uuid = Bukkit.getOfflinePlayer(u).getUniqueId();

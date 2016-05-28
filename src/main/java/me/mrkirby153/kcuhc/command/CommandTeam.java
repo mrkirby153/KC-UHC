@@ -49,7 +49,7 @@ public class CommandTeam extends BaseCommand {
                         teamMembers = teamMembers.substring(0, teamMembers.length() - 2);
                     else
                         teamMembers = ChatColor.RED + "Nobody on team";
-                    sender.sendMessage(t.getColor() + " + " + t.getName() + " (" + t.getPlayers().size() + "): " + teamMembers);
+                    sender.sendMessage(t.getColor() + " + " + t.getName() + " [" + t.getFriendlyName() + "] (" + t.getPlayers().size() + "): " + teamMembers);
                 }
                 return true;
             }
@@ -178,6 +178,25 @@ public class CommandTeam extends BaseCommand {
             }
             TeamHandler.joinTeam(team, toAdd);
             return true;
+        }
+        if (args.length > 2) {
+            if (args[0].equalsIgnoreCase("teamname")) {
+                String team = args[1];
+                String name = "";
+                for (int i = 2; i < args.length; i++) {
+                    name += args[i] + " ";
+                }
+                name = name.trim();
+                UHCTeam teamByName = TeamHandler.getTeamByName(team);
+                if (teamByName == null) {
+                    sender.sendMessage(UtilChat.generateLegacyError("That team does not exist!"));
+                    return true;
+                }
+                teamByName.setFriendlyName(name);
+                TeamHandler.saveToFile();
+                sender.sendMessage(UtilChat.generateFormattedChat("Set team name to '" + name + "'", ChatColor.GRAY, 0).toLegacyText());
+                return true;
+            }
         }
         if (args.length == 3) {
             if (args[0].equalsIgnoreCase("add")) {
