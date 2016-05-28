@@ -66,7 +66,7 @@ public class CommandAdmin extends BaseCommand {
         msg = commandSender.getName() + ": " + ChatColor.RESET + msg.trim();
         UHCTeam team = TeamHandler.getTeamForPlayer((Player) commandSender);
         if (team != null) {
-            msg = team.getColor() + "(" + team.getName() + ") " + msg;
+            msg = team.getColor() + "(" + team.getFriendlyName() + ") " + msg;
         }
         commandSender.sendMessage(ChatColor.LIGHT_PURPLE + "< " + msg);
         sendToAdmin(msg);
