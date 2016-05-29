@@ -1305,6 +1305,7 @@ public class UHCArena implements Runnable, Listener {
                 FreezeHandler.freezePlayer(p);
             }
         }
+        world.setGameRuleValue("doDaylightCycle", "false");
         FreezeHandler.pvpEnabled = false;
         Bukkit.broadcastMessage(ChatColor.GOLD + "The game has been frozen!");
     }
@@ -1342,6 +1343,7 @@ public class UHCArena implements Runnable, Listener {
             FreezeHandler.pvpEnabled = true;
             Bukkit.broadcastMessage("Damage now enabled!");
         }, 100);
+        world.setGameRuleValue("doDaylightCycle", "true");
         Bukkit.broadcastMessage(ChatColor.GOLD + "The game has been unfrozen!");
         Bukkit.broadcastMessage(ChatColor.GOLD + "Damage will be re-enabled in 5 seconds...");
         Bukkit.broadcastMessage(ChatColor.BLUE + "The game was frozen for " + UtilTime.format(2, frozenFor, UtilTime.TimeUnit.FIT));

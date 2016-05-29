@@ -175,7 +175,7 @@ public class CommandUHC extends BaseCommand {
                     sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
                     return true;
                 }
-                FreezeHandler.unfreeze(p);
+                FreezeHandler.playerUnfreeze(p);
             }
             if(args[0].equalsIgnoreCase("freeze")){
                 Player p = Bukkit.getPlayer(args[1]);

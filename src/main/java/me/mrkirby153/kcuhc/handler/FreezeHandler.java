@@ -90,14 +90,20 @@ public class FreezeHandler implements Listener {
             }
         }
         Vector vector = velocity.get(player.getUniqueId());
-        System.out.println("\tLoading velocity of "+player.getName()+" : "+vector);
-        player.setVelocity(vector);
+        System.out.println("\tLoading velocity of " + player.getName() + " : " + vector);
+        if (vector != null)
+            player.setVelocity(vector);
         bypassedPlayers.remove(player.getUniqueId());
         player.setOp(false);
         if (player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR)
             player.setAllowFlight(false);
         player.setFlying(false);
         restoreInventory(player);
+    }
+
+    public static void playerUnfreeze(Player player) {
+        frozenPlayers.remove(player.getUniqueId());
+        player.removePotionEffect(PotionEffectType.BLINDNESS);
     }
 
     public static void freezebypass(Player player) {
