@@ -293,6 +293,7 @@ public class UHCArena implements Runnable, Listener {
                 for (PotionEffect e : p.getActivePotionEffects()) {
                     p.removePotionEffect(e.getType());
                 }
+                UHC.playerTracker.giveTracker(p);
             } else
                 new SpecInventory(UHC.plugin, p);
             p.setBedSpawnLocation(center, true);
@@ -325,7 +326,8 @@ public class UHCArena implements Runnable, Listener {
         startingPlayers = players.size() - getSpectatorCount();
         state = State.RUNNING;
         startTime = System.currentTimeMillis();
-        UHC.markerHandler.startTracking();
+        if (UHC.plugin.getConfig().getBoolean("episodes.use"))
+            UHC.markerHandler.startTracking();
     }
 
     public void spectate(Player player) {
@@ -983,9 +985,9 @@ public class UHCArena implements Runnable, Listener {
             return;
         if (!event.getItem().getItemMeta().getDisplayName().contains("Head"))
             return;
-        if(!event.getItem().getEnchantments().containsKey(Enchantment.ARROW_DAMAGE))
+        if (!event.getItem().getEnchantments().containsKey(Enchantment.ARROW_DAMAGE))
             return;
-        if(event.getItem().getType() != Material.GOLDEN_APPLE){
+        if (event.getItem().getType() != Material.GOLDEN_APPLE) {
             return;
         }
         event.getPlayer().sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + "You ate a head apple!");
@@ -1347,8 +1349,8 @@ public class UHCArena implements Runnable, Listener {
 
     public void removePlayer(Player player) {
         Iterator<Player> players = this.players.iterator();
-        while(players.hasNext()){
-            if(players.next().getUniqueId().equals(player.getUniqueId()))
+        while (players.hasNext()) {
+            if (players.next().getUniqueId().equals(player.getUniqueId()))
                 players.remove();
         }
     }

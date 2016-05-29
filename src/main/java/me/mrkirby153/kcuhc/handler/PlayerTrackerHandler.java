@@ -25,6 +25,8 @@ public class PlayerTrackerHandler implements Listener, Runnable {
 
     private UHC plugin;
 
+    public static final double DIST_IN_OTHER_DIMENSION = -16.2538964;
+
     private HashMap<UUID, UUID> targets = new HashMap<>();
 
     public PlayerTrackerHandler(UHC plugin) {
@@ -70,7 +72,7 @@ public class PlayerTrackerHandler implements Listener, Runnable {
         List<UUID> toExclude = new ArrayList<>();
         UHCTeam currentTeam = TeamHandler.getTeamForPlayer(event.getPlayer());
         if (currentTeam != null) {
-            if(currentTeam instanceof TeamSpectator)
+            if (currentTeam instanceof TeamSpectator)
                 return;
             toExclude.addAll(currentTeam.getPlayers());
         }
@@ -149,6 +151,15 @@ public class PlayerTrackerHandler implements Listener, Runnable {
                 ChatColor.BOLD + "Right click to select target" + ChatColor.RESET + ChatColor.AQUA + ")");
         playerTracker.setItemMeta(meta);
         event.getInventory().setResult(playerTracker);
+    }
+
+    public void giveTracker(Player player) {
+        ItemStack playerTracker = new ItemStack(Material.COMPASS);
+        ItemMeta meta = playerTracker.getItemMeta();
+        meta.setDisplayName(ChatColor.AQUA + "Player Tracker (" + ChatColor.GREEN +
+                ChatColor.BOLD + "Right click to select target" + ChatColor.RESET + ChatColor.AQUA + ")");
+        playerTracker.setItemMeta(meta);
+        player.getInventory().addItem(playerTracker);
     }
 
     public double distanceToTarget(UUID tracker) {
