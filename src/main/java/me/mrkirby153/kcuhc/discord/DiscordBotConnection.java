@@ -15,6 +15,7 @@ import javax.crypto.Cipher;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -51,7 +52,7 @@ public class DiscordBotConnection {
 
     public void connect() {
         try {
-            if(connected)
+            if (connected)
                 return;
             socket = new Socket(host, port);
             inputStream = socket.getInputStream();
@@ -65,11 +66,14 @@ public class DiscordBotConnection {
             inputStream.read(theirKey);
             this.theirKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(theirKey));
             connected = true;
+        } catch (ConnectException e) {
+            UHC.plugin.getLogger().severe("Could not connect to the discord bot!");
+            connected = false;
         } catch (Exception e) {
             e.printStackTrace();
             UHC.plugin.getLogger().severe("An error occurred from the socket! Disconnecting");
             connected = false;
-            try{
+            try {
                 socket.close();
             } catch (IOException e1) {
                 UHC.plugin.getLogger().severe("An error occurred when closing the socket because of an error.");
@@ -78,8 +82,19 @@ public class DiscordBotConnection {
     }
 
     public ByteArrayDataInput sendMessage(byte[] message) {
-        if(!connected)
-            throw new IllegalStateException("Not connected to the discord bot!");
+        return sendMessage(message, 1);
+    }
+
+    public ByteArrayDataInput sendMessage(byte[] message, int attempt) {
+        if (!connected) {
+            if (attempt > 5) {
+                UHC.plugin.getLogger().info("Failed to connect to the robot! Giving up");
+                return null;
+            }
+            UHC.plugin.getLogger().info("Attempting reconnect to discord bot (Attempt " + (attempt++) + ")");
+            connect();
+            sendMessage(message, attempt);
+        }
         try {
             ByteBuffer buff = ByteBuffer.allocate(4);
             buff.order(ByteOrder.LITTLE_ENDIAN);
@@ -112,9 +127,9 @@ public class DiscordBotConnection {
             e.printStackTrace();
             connected = false;
             UHC.plugin.getLogger().warning("Disconnected from robot!");
-            try{
+            try {
                 socket.close();
-            } catch (Exception e1){
+            } catch (Exception e1) {
                 e.printStackTrace();
             }
         }
@@ -122,16 +137,16 @@ public class DiscordBotConnection {
     }
 
 
-    public void processAsync(Runnable runnable, Callback callback){
-        executor.execute(()->{
+    public void processAsync(Runnable runnable, Callback callback) {
+        executor.execute(() -> {
             runnable.run();
-            if(callback != null)
-            callback.call();
+            if (callback != null)
+                callback.call();
         });
     }
 
-    public void deleteAllTeamChannels(Callback callback){
-        processAsync(()->{
+    public void deleteAllTeamChannels(Callback callback) {
+        processAsync(() -> {
             for (UHCTeam team : TeamHandler.teams()) {
                 ByteArrayDataOutput out = ByteStreams.newDataOutput();
                 out.writeUTF(UHC.plugin.serverId());
@@ -142,8 +157,8 @@ public class DiscordBotConnection {
         }, callback);
     }
 
-    public void createAllTeamChannels(Callback callback){
-        processAsync(()->{
+    public void createAllTeamChannels(Callback callback) {
+        processAsync(() -> {
             for (UHCTeam team : TeamHandler.teams()) {
                 ByteArrayDataOutput out = ByteStreams.newDataOutput();
                 out.writeUTF(UHC.plugin.serverId());
@@ -154,17 +169,17 @@ public class DiscordBotConnection {
         }, callback);
     }
 
-    public void getAllLinkedPlayers(ValueCallback<HashMap<UUID, String>> callback){
-        processAsync(()->{
+    public void getAllLinkedPlayers(ValueCallback<HashMap<UUID, String>> callback) {
+        processAsync(() -> {
             HashMap<UUID, String> results = new HashMap<>();
-            Bukkit.getOnlinePlayers().stream().map(Player::getUniqueId).forEach(u ->{
+            Bukkit.getOnlinePlayers().stream().map(Player::getUniqueId).forEach(u -> {
                 ByteArrayDataOutput out = ByteStreams.newDataOutput();
                 out.writeUTF(UHC.plugin.serverId());
                 out.writeUTF("isLinked");
                 out.writeUTF(u.toString());
                 ByteArrayDataInput response = sendMessage(out.toByteArray());
-                if(response.readBoolean()){
-                    results.put(u, response.readUTF().replace("::", "\\:\\:")+"::"+response.readUTF().replace("::", "\\:\\:"));
+                if (response.readBoolean()) {
+                    results.put(u, response.readUTF().replace("::", "\\:\\:") + "::" + response.readUTF().replace("::", "\\:\\:"));
                 } else {
                     results.put(u, null);
                 }
@@ -173,11 +188,11 @@ public class DiscordBotConnection {
         });
     }
 
-    public void processAsync(Runnable runnable){
+    public void processAsync(Runnable runnable) {
         processAsync(runnable, null);
     }
 
-    public void shutdown(){
+    public void shutdown() {
         try {
             socket.close();
         } catch (IOException e) {
@@ -254,11 +269,11 @@ public class DiscordBotConnection {
         }
     }
 
-    public interface Callback{
+    public interface Callback {
         void call();
     }
 
-    public interface ValueCallback<V>{
+    public interface ValueCallback<V> {
         void call(V data);
     }
 }
