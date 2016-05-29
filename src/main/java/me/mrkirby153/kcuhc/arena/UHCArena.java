@@ -1405,6 +1405,8 @@ public class UHCArena implements Runnable, Listener {
                         double distance = UHC.playerTracker.distanceToTarget(p.getUniqueId());
                         if (Double.isInfinite(distance)) {
                             bc = (TextComponent) UtilChat.generateFormattedChat("Right click to find the closest target!", net.md_5.bungee.api.ChatColor.GOLD, 8);
+                        } else if(distance == PlayerTrackerHandler.DIST_IN_OTHER_DIMENSION) {
+                            bc = (TextComponent) UtilChat.generateFormattedChat("The player you are tracking is in another dimension!", net.md_5.bungee.api.ChatColor.RED, 8);
                         } else {
                             bc = (TextComponent) UtilChat.generateBoldChat(UHC.playerTracker.getTarget(p.getUniqueId()).getName(), net.md_5.bungee.api.ChatColor.GOLD);
                             bc.addExtra(UtilChat.generateBoldChat(" is ", net.md_5.bungee.api.ChatColor.DARK_GREEN));

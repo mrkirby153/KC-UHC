@@ -170,6 +170,9 @@ public class PlayerTrackerHandler implements Listener, Runnable {
         if (target == null) {
             return Double.NEGATIVE_INFINITY;
         }
+        if(target.getLocation().getWorld() != player.getLocation().getWorld()){
+            return DIST_IN_OTHER_DIMENSION;
+        }
         return UtilTime.trim(1, target.getLocation().distance(player.getLocation()));
     }
 
