@@ -32,7 +32,6 @@ public class BorderBumper implements Runnable {
                 Vector wbCenter = player.getWorld().getWorldBorder().getCenter().toVector();
 
                 double distanceTo = wbCenter.clone().setY(0).subtract(playerVector.clone().setY(0)).length();
-                System.out.println(distanceTo);
                 if(distanceTo < 10)
                     return;
 
