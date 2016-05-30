@@ -80,6 +80,7 @@ public class UHC extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new JukeboxHandler(), this);
         getServer().getPluginManager().registerEvents(new ScoreboardManager(), this);
         getServer().getPluginManager().registerEvents(new RegenTicket(), this);
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, new BorderBumper(),0, 1);
         TeamHandler.registerTeam(TeamHandler.SPECTATORS_TEAM, new TeamSpectator());
         TeamHandler.loadFromFile();
         getCommand("uhc").setExecutor(new CommandUHC());
