@@ -882,7 +882,7 @@ public class UHCArena implements Runnable, Listener {
                             }
                         }
                         for (String t : onlineCount.keySet()) {
-                            scoreboard.add(onlineCount.get(t) + " " + TeamHandler.getTeamByName(t).getColor() + WordUtils.capitalizeFully(t.replace('_', ' ')));
+                            scoreboard.add(onlineCount.get(t) + " " + TeamHandler.getTeamByName(t).getColor() + TeamHandler.getTeamByName(t).getFriendlyName());
                         }
                         if (offlineCount > 0)
                             scoreboard.add(offlineCount + "" + ChatColor.GRAY + " Offline");
@@ -1407,7 +1407,7 @@ public class UHCArena implements Runnable, Listener {
                         double distance = UHC.playerTracker.distanceToTarget(p.getUniqueId());
                         if (Double.isInfinite(distance)) {
                             bc = (TextComponent) UtilChat.generateFormattedChat("Right click to find the closest target!", net.md_5.bungee.api.ChatColor.GOLD, 8);
-                        } else if(distance == PlayerTrackerHandler.DIST_IN_OTHER_DIMENSION) {
+                        } else if (distance == PlayerTrackerHandler.DIST_IN_OTHER_DIMENSION) {
                             bc = (TextComponent) UtilChat.generateFormattedChat("The player you are tracking is in another dimension!", net.md_5.bungee.api.ChatColor.RED, 8);
                         } else {
                             bc = (TextComponent) UtilChat.generateBoldChat(UHC.playerTracker.getTarget(p.getUniqueId()).getName(), net.md_5.bungee.api.ChatColor.GOLD);
