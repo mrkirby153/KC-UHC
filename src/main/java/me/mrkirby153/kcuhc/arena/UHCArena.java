@@ -22,6 +22,8 @@ import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.craftbukkit.v1_9_R2.CraftWorld;
+import org.bukkit.craftbukkit.v1_9_R2.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -646,13 +648,13 @@ public class UHCArena implements Runnable, Listener {
                     p.getInventory().clear();
                     TeamHandler.leaveTeam(p);
                 }
-                if (this.launchedFw++ < this.FIREWORKS_TO_LAUNCH) {
+                if (this.launchedFw++ < 8) {
                     int distFromWB = 16;
                     double worldborderRadius = world.getWorldBorder().getSize() / 2d;
-                    Location pZX = center.clone().add(worldborderRadius - distFromWB, 6, worldborderRadius - distFromWB);
-                    Location pXnZ = center.clone().add(worldborderRadius - distFromWB, 6, -(worldborderRadius - distFromWB));
-                    Location pZnX = center.clone().add(-(worldborderRadius - distFromWB), 6, worldborderRadius - distFromWB);
-                    Location nXZ = center.clone().add(-(worldborderRadius - distFromWB), 6, -(worldborderRadius - distFromWB));
+                    Location pZX = center.clone().add(worldborderRadius - distFromWB + (5 * Math.random()), 20, worldborderRadius - distFromWB + (5 * Math.random()));
+                    Location pXnZ = center.clone().add(worldborderRadius - distFromWB + (5 * Math.random()), 20, -(worldborderRadius - distFromWB + (5 * Math.random())));
+                    Location pZnX = center.clone().add(-(worldborderRadius - distFromWB) + (5 * Math.random()), 20, worldborderRadius - distFromWB + (5 * Math.random()));
+                    Location nXZ = center.clone().add(-(worldborderRadius - distFromWB) + (5 * Math.random()), 20, -(worldborderRadius - distFromWB + (5 * Math.random())));
 
                     Firework fw_pZX = (Firework) world.spawnEntity(pZX, EntityType.FIREWORK);
                     Firework fw_pXnZ = (Firework) world.spawnEntity(pXnZ, EntityType.FIREWORK);
@@ -668,6 +670,10 @@ public class UHCArena implements Runnable, Listener {
                     fw_pXnZ.setFireworkMeta(meta);
                     fw_pZnX.setFireworkMeta(meta);
                     fw_nXZ.setFireworkMeta(meta);
+                    detonateFirework(fw_pZX);
+                    detonateFirework(fw_pXnZ);
+                    detonateFirework(fw_pZnX);
+                    detonateFirework(fw_nXZ);
                 }
                 for (Player p : Bukkit.getOnlinePlayers())
                     p.setGlowing(false);
@@ -675,6 +681,11 @@ public class UHCArena implements Runnable, Listener {
         }
         updateDisconnect();
         drawScoreboard();
+    }
+
+    private void detonateFirework(Firework firework) {
+        ((CraftWorld) firework.getWorld()).getHandle().broadcastEntityEffect(((CraftEntity) firework).getHandle(), (byte) 17);
+        firework.remove();
     }
 
     private int runCount = 0;
