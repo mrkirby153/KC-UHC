@@ -35,6 +35,8 @@ public class UHC extends JavaPlugin {
 
     public static EpisodeMarkerHandler markerHandler;
 
+    public static ExtraHealthHandler extraHealthHelper;
+
     @Override
     public void onEnable() {
         saveDefaultConfig();
@@ -75,6 +77,7 @@ public class UHC extends JavaPlugin {
         playerTracker = new PlayerTrackerHandler(this);
         velocityTracker = new VelocityTracker(this);
         markerHandler = new EpisodeMarkerHandler(this);
+        extraHealthHelper = new ExtraHealthHandler(this);
         getServer().getPluginManager().registerEvents(new MOTDHandler(), this);
         getServer().getPluginManager().registerEvents(spectateListener = new SpectateListener(), this);
         getServer().getPluginManager().registerEvents(new JukeboxHandler(), this);

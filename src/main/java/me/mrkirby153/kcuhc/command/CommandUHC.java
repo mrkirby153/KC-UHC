@@ -6,6 +6,7 @@ import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
 import me.mrkirby153.kcuhc.handler.FreezeHandler;
+import me.mrkirby153.kcuhc.handler.RegenTicket;
 import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -184,6 +185,29 @@ public class CommandUHC extends BaseCommand {
                     return true;
                 }
                 FreezeHandler.freezePlayer(p);
+            }
+            if(args[0].equalsIgnoreCase("addHeartRow")){
+                Player p = Bukkit.getPlayer(args[1]);
+                if(p == null){
+                    sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
+                }
+                UHC.extraHealthHelper.addHeartRow(p);
+                return true;
+            }
+            if(args[0].equalsIgnoreCase("removeHeartRow")){
+                Player p = Bukkit.getPlayer(args[1]);
+                if(p == null){
+                    sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
+                }
+                UHC.extraHealthHelper.removeHealthRow(p);
+                return true;
+            }
+            if(args[0].equalsIgnoreCase("rticket")){
+                Player p = Bukkit.getPlayer(args[1]);
+                if(p == null){
+                    sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
+                }
+                RegenTicket.give(p);
             }
         }
         //      /uhc create x z world size endSize duration
