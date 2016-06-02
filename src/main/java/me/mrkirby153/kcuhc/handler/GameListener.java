@@ -23,6 +23,7 @@ public class GameListener implements Listener {
         event.getEntity().setGlowing(false);
         TeamHandler.leaveTeam(event.getEntity());
         UHC.arena.handleDeathMessage(event.getEntity(), event.getDeathMessage());
+        event.getEntity().getWorld().strikeLightningEffect(event.getEntity().getLocation());
     }
 
     @EventHandler
