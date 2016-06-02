@@ -8,7 +8,6 @@ import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.UtilTime;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.handler.*;
-import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -243,7 +242,6 @@ public class UHCArena implements Runnable, Listener {
         Bukkit.broadcastMessage(ChatColor.GOLD + "Initialized and ready!");
         MOTDHandler.setMotd(ChatColor.GREEN + "Ready");
         players = new ArrayList<>();
-        JukeboxHandler.startJukebox();
         dmStarted = false;
         launchedFw = 0;
         winningTeamColor = Color.WHITE;
@@ -356,7 +354,6 @@ public class UHCArena implements Runnable, Listener {
         this.nextEndgamePhase = null;
         RegenTicket.clearRegenTickets();
         winner = WordUtils.capitalizeFully(winner.replace('_', ' '));
-        JukeboxHandler.nextSong();
         WorldBorder border = world.getWorldBorder();
         border.setSize(60);
         border.setWarningDistance(0);
@@ -415,7 +412,6 @@ public class UHCArena implements Runnable, Listener {
     public void startCountdown() {
         CountdownBarTask runnable = new CountdownBarTask(System.currentTimeMillis() + 11000, 11000);
         runnable.setTaskId(UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, runnable, 0L, 1L));
-        JukeboxHandler.shutdown();
         countdown = 10;
         barProgress = 1;
         state = COUNTDOWN;
@@ -429,7 +425,6 @@ public class UHCArena implements Runnable, Listener {
             p.setGameMode(GameMode.SURVIVAL);
             p.teleport(p.getLocation().add(0, 10, 0));
         }
-        JukeboxHandler.shutdown();
         HandlerList.unregisterAll(UHC.plugin);
         Bukkit.getServer().getScheduler().cancelTasks(UHC.plugin);
         setWorldborder(world.getWorldBorder().getSize() + 150, 0);

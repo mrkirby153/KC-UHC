@@ -7,7 +7,6 @@ import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
 import me.mrkirby153.kcuhc.handler.FreezeHandler;
 import me.mrkirby153.kcuhc.handler.RegenTicket;
-import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -48,7 +47,6 @@ public class CommandUHC extends BaseCommand {
                 return true;
             }
             if (args[0].equalsIgnoreCase("generate")) {
-                JukeboxHandler.shutdown();
                 UHC.arena.generate();
                 return true;
             }

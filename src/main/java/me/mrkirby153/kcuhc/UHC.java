@@ -6,7 +6,6 @@ import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.discord.DiscordBotConnection;
 import me.mrkirby153.kcuhc.handler.*;
-import me.mrkirby153.kcuhc.noteBlock.JukeboxHandler;
 import me.mrkirby153.kcuhc.scoreboard.ScoreboardManager;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -41,7 +40,6 @@ public class UHC extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         plugin = this;
-        JukeboxHandler.initJukebox(new File(getDataFolder(), "songs"));
         admins = (ArrayList<String>) getConfig().getStringList("admins");
         if (new File(getDataFolder(), "arena.yml").exists()) {
             arena = UHCArena.loadFromFile();
@@ -80,7 +78,6 @@ public class UHC extends JavaPlugin {
         extraHealthHelper = new ExtraHealthHandler(this);
         getServer().getPluginManager().registerEvents(new MOTDHandler(), this);
         getServer().getPluginManager().registerEvents(spectateListener = new SpectateListener(), this);
-        getServer().getPluginManager().registerEvents(new JukeboxHandler(), this);
         getServer().getPluginManager().registerEvents(new ScoreboardManager(), this);
         getServer().getPluginManager().registerEvents(new RegenTicket(), this);
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new BorderBumper(),0, 1);
@@ -89,7 +86,6 @@ public class UHC extends JavaPlugin {
         getCommand("uhc").setExecutor(new CommandUHC());
         getCommand("team").setExecutor(new CommandTeam());
         getCommand("spectate").setExecutor(new CommandSpectate());
-        getCommand("music").setExecutor(new CommandMusic());
         getCommand("admin").setExecutor(new CommandAdmin());
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new UHCArena.PlayerActionBarUpdater(), 0, 1);
     }
@@ -98,7 +94,6 @@ public class UHC extends JavaPlugin {
     @Override
     public void onDisable() {
         TeamHandler.unregisterAll();
-        JukeboxHandler.shutdown();
         if (discordHandler != null)
             discordHandler.shutdown();
     }
