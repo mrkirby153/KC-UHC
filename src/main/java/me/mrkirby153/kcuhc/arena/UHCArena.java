@@ -6,6 +6,8 @@ import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.UtilTime;
+import me.mrkirby153.kcuhc.discord.commands.AssignTeams;
+import me.mrkirby153.kcuhc.discord.commands.ToLobby;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
@@ -1236,7 +1238,7 @@ public class UHCArena implements Runnable, Listener {
         Bukkit.broadcastMessage(ChatColor.GOLD + "Creating discord channels...");
         UHC.discordHandler.createAllTeamChannels(() -> UHC.discordHandler.processAsync(() -> {
             Bukkit.broadcastMessage(ChatColor.GOLD + "Assigning teams and moving everyone...");
-            ByteArrayDataOutput out = ByteStreams.newDataOutput();
+/*            ByteArrayDataOutput out = ByteStreams.newDataOutput();
             out.writeUTF(UHC.plugin.serverId());
             out.writeUTF("assignTeams");
             out.writeInt((int) players.stream().filter(p -> TeamHandler.getTeamForPlayer(p) != null).count());
@@ -1244,17 +1246,15 @@ public class UHCArena implements Runnable, Listener {
                 out.writeUTF(p.getUniqueId().toString());
                 out.writeUTF(TeamHandler.getTeamForPlayer(p).getName());
             });
-            UHC.discordHandler.sendMessage(out.toByteArray());
+            UHC.discordHandler.sendMessage(out.toByteArray());*/
+            new AssignTeams(TeamHandler.teams()).send();
         }, () -> Bukkit.broadcastMessage(ChatColor.GOLD + "Everyone should now be in their discord channels")));
     }
 
     public void bringEveryoneToLobby() {
         if (discordHandler == null)
             return;
-        ByteArrayDataOutput out = ByteStreams.newDataOutput();
-        out.writeUTF(UHC.plugin.serverId());
-        out.writeUTF("toLobby");
-        UHC.discordHandler.sendMessage(out.toByteArray());
+        new ToLobby().send();
         UHC.discordHandler.deleteAllTeamChannels(null);
     }
 

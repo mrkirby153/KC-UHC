@@ -1,10 +1,10 @@
 package me.mrkirby153.kcuhc.command;
 
 import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
+import me.mrkirby153.kcuhc.discord.commands.Link;
+import me.mrkirby153.kcuhc.discord.commands.LinkCode;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -28,12 +28,7 @@ public class CommandDiscord extends BaseCommand {
         }
         Player player = (Player) sender;
         if (args[0].equalsIgnoreCase("link")) {
-            ByteArrayDataOutput out = ByteStreams.newDataOutput();
-            out.writeUTF(UHC.plugin.serverId());
-            out.writeUTF("linkCode");
-            out.writeUTF(player.getUniqueId().toString());
-            out.writeUTF(player.getName());
-            ByteArrayDataInput response = UHC.discordHandler.sendMessage(out.toByteArray());
+            ByteArrayDataInput response = new LinkCode(player).send();
             int responseCode = response.readInt();
             String code = response.readUTF();
             BaseComponent line = UtilChat.generateFormattedChat("=============================================", ChatColor.GREEN, 10);
@@ -62,26 +57,18 @@ public class CommandDiscord extends BaseCommand {
         if (args[0].equalsIgnoreCase("serverlink")) {
             String guildId = args[1];
             String serverId = UHC.plugin.getConfig().getString("discord.serverId");
-            ByteArrayDataOutput out = ByteStreams.newDataOutput();
-            out.writeUTF(serverId);
-            out.writeUTF("link");
-            out.writeUTF(serverId);
-            out.writeUTF(guildId);
-            UHC.discordHandler.sendMessage(out.toByteArray());
+            new Link(serverId, guildId).send();
             ((Player) sender).spigot().sendMessage(UtilChat.generateFormattedChat("Linked this minecraft server to the discord server!", ChatColor.GREEN, 12));
         }
         if (args[0].equalsIgnoreCase("cinit")) {
-//            UHC.handler.initChannels();
             sender.sendMessage(UtilChat.generateFormattedChat("Generating discord channels", ChatColor.GOLD, 0).toLegacyText());
             UHC.discordHandler.createAllTeamChannels(() -> player.spigot().sendMessage(UtilChat.generateFormattedChat("Channels generated!", ChatColor.GREEN, 0)));
         }
         if (args[0].equalsIgnoreCase("shutdown")) {
-//            UHC.handler.shutdown();
             sender.sendMessage(UtilChat.generateFormattedChat("Deleting discord channels", ChatColor.GOLD, 0).toLegacyText());
             UHC.discordHandler.deleteAllTeamChannels(() -> player.spigot().sendMessage(UtilChat.generateFormattedChat("Done!", ChatColor.GRAY, 0)));
         }
         if (args[0].equalsIgnoreCase("disperse")) {
-//            UHC.handler.sendEveryoneToChannels();
             player.spigot().sendMessage(UtilChat.generateFormattedChat("Sending everyone to their channels", ChatColor.GREEN, 0));
             UHC.arena.sendEveryoneToTeamChannels();
         }

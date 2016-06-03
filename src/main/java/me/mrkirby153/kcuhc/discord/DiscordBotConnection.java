@@ -1,17 +1,16 @@
 package me.mrkirby153.kcuhc.discord;
 
 import com.google.common.io.ByteArrayDataInput;
-import com.google.common.io.ByteArrayDataOutput;
 import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
+import me.mrkirby153.kcuhc.discord.commands.IsLinked;
+import me.mrkirby153.kcuhc.discord.commands.NewTeam;
+import me.mrkirby153.kcuhc.discord.commands.RemoveTeam;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
 
-import javax.crypto.Cipher;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,9 +18,6 @@ import java.net.ConnectException;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.security.*;
-import java.security.spec.RSAKeyGenParameterSpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.HashMap;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -36,17 +32,19 @@ public class DiscordBotConnection {
     private OutputStream outputStream;
     private Socket socket;
 
-    private KeyPair ourKey;
-    private PublicKey theirKey;
     private ExecutorService executor;
 
     private boolean connected = false;
 
+    private long lastFailure = -1;
+
+    public static DiscordBotConnection instance;
+
     public DiscordBotConnection(String host, int port) {
         this.host = host;
         this.port = port;
-        ourKey = Cryptography.generateKeypair(2048);
         executor = Executors.newCachedThreadPool();
+        instance = this;
     }
 
 
@@ -57,14 +55,6 @@ public class DiscordBotConnection {
             socket = new Socket(host, port);
             inputStream = socket.getInputStream();
             outputStream = socket.getOutputStream();
-            // Perform the handshake
-            // Write our key
-            outputStream.write(ourKey.getPublic().getEncoded());
-            outputStream.flush();
-            // Wait for thiers
-            byte[] theirKey = new byte[2048];
-            inputStream.read(theirKey);
-            this.theirKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(theirKey));
             connected = true;
         } catch (ConnectException e) {
             UHC.plugin.getLogger().severe("Could not connect to the discord bot!");
@@ -88,49 +78,47 @@ public class DiscordBotConnection {
     public ByteArrayDataInput sendMessage(byte[] message, int attempt) {
         if (!connected) {
             if (attempt > 5) {
-                UHC.plugin.getLogger().info("Failed to connect to the robot! Giving up");
+                lastFailure = System.currentTimeMillis();
+                UHC.plugin.getLogger().info("Failed to connect to the robot! Giving up!");
                 return null;
             }
-            UHC.plugin.getLogger().info("Attempting reconnect to discord bot (Attempt " + (attempt++) + ")");
-            connect();
-            sendMessage(message, attempt);
+            if (System.currentTimeMillis() > lastFailure + 120000) {
+                UHC.plugin.getLogger().info("Attempting to reconnect to the discord bot (Attempt " + (attempt++) + ")");
+                connect();
+                sendMessage(message, attempt);
+            } else {
+                UHC.plugin.getLogger().info("Not attempting reconnect because the last failure was less than two minutes ago!");
+                return null;
+            }
         }
-        try {
+        try{
             ByteBuffer buff = ByteBuffer.allocate(4);
             buff.order(ByteOrder.LITTLE_ENDIAN);
-            byte[] encrypted = Cryptography.encrypt(theirKey, message);
-            buff.putInt(encrypted.length);
+            buff.putInt(message.length);
             buff.rewind();
             outputStream.write(buff.array());
-            outputStream.write(encrypted);
+            outputStream.write(message);
             outputStream.flush();
-            if (inputStream == null)
+            if(inputStream == null)
                 return null;
             byte[] messageSizeBytes = new byte[4];
             if (inputStream.read(messageSizeBytes) <= 0) return null;
             ByteBuffer msgLenBuff = ByteBuffer.wrap(messageSizeBytes);
             msgLenBuff.order(ByteOrder.LITTLE_ENDIAN);
             msgLenBuff.rewind();
-            byte[] encodedMessage = new byte[msgLenBuff.getInt()];
-            inputStream.read(encodedMessage);
-            ByteBuffer msgBuff = ByteBuffer.wrap(encodedMessage);
-            msgBuff.rewind();
-            byte[] rawDecrypted = Cryptography.decrypt(ourKey.getPrivate(), encodedMessage);
-            if (rawDecrypted == null) {
-                UHC.plugin.getLogger().info("Decryption failed!");
-                return null;
-            }
-            ByteArrayDataInput in = ByteStreams.newDataInput(rawDecrypted);
+            byte[] response = new byte[msgLenBuff.getInt()];
+            inputStream.read(response);
+            ByteArrayDataInput in = ByteStreams.newDataInput(response);
             String command = in.readUTF();
             return in;
-        } catch (Exception e) {
+        } catch (Exception e){
             e.printStackTrace();
             connected = false;
-            UHC.plugin.getLogger().warning("Disconnected from robot!");
+            UHC.plugin.getLogger().severe("There was an error sending that message and we have disconnected from the robot!");
             try {
                 socket.close();
-            } catch (Exception e1) {
-                e.printStackTrace();
+            } catch (IOException e1) {
+                UHC.plugin.getLogger().severe("There was an error closing the socket due to an error");
             }
         }
         return null;
@@ -148,11 +136,7 @@ public class DiscordBotConnection {
     public void deleteAllTeamChannels(Callback callback) {
         processAsync(() -> {
             for (UHCTeam team : TeamHandler.teams()) {
-                ByteArrayDataOutput out = ByteStreams.newDataOutput();
-                out.writeUTF(UHC.plugin.serverId());
-                out.writeUTF("removeTeam");
-                out.writeUTF(team.getName());
-                UHC.discordHandler.sendMessage(out.toByteArray());
+                new RemoveTeam(team.getName()).send();
             }
         }, callback);
     }
@@ -160,11 +144,7 @@ public class DiscordBotConnection {
     public void createAllTeamChannels(Callback callback) {
         processAsync(() -> {
             for (UHCTeam team : TeamHandler.teams()) {
-                ByteArrayDataOutput out = ByteStreams.newDataOutput();
-                out.writeUTF(UHC.plugin.serverId());
-                out.writeUTF("newTeam");
-                out.writeUTF(team.getName());
-                UHC.discordHandler.sendMessage(out.toByteArray());
+                new NewTeam(team.getName());
             }
         }, callback);
     }
@@ -173,11 +153,7 @@ public class DiscordBotConnection {
         processAsync(() -> {
             HashMap<UUID, String> results = new HashMap<>();
             Bukkit.getOnlinePlayers().stream().map(Player::getUniqueId).forEach(u -> {
-                ByteArrayDataOutput out = ByteStreams.newDataOutput();
-                out.writeUTF(UHC.plugin.serverId());
-                out.writeUTF("isLinked");
-                out.writeUTF(u.toString());
-                ByteArrayDataInput response = sendMessage(out.toByteArray());
+                ByteArrayDataInput response = new IsLinked(u).send();
                 if (response.readBoolean()) {
                     results.put(u, response.readUTF().replace("::", "\\:\\:") + "::" + response.readUTF().replace("::", "\\:\\:"));
                 } else {
@@ -202,72 +178,6 @@ public class DiscordBotConnection {
         UHC.discordHandler = null;
     }
 
-
-    public static class DiscordBotResponseEvent extends Event {
-        private static final HandlerList handlers = new HandlerList();
-
-        private final String command;
-        private final ByteArrayDataInput response;
-
-        public DiscordBotResponseEvent(String command, ByteArrayDataInput response) {
-            this.command = command;
-            this.response = response;
-        }
-
-        public String getCommand() {
-            return command;
-        }
-
-        public ByteArrayDataInput getResponse() {
-            return response;
-        }
-
-        public static HandlerList getHandlerList() {
-            return handlers;
-        }
-
-        @Override
-        public HandlerList getHandlers() {
-            return handlers;
-        }
-    }
-
-    private static class Cryptography {
-
-        public static KeyPair generateKeypair(int bits) {
-            try {
-                KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
-                RSAKeyGenParameterSpec spec = new RSAKeyGenParameterSpec(bits, RSAKeyGenParameterSpec.F4);
-                kpg.initialize(spec);
-                return kpg.generateKeyPair();
-            } catch (NoSuchAlgorithmException | InvalidAlgorithmParameterException e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        public static byte[] decrypt(PrivateKey privateKey, byte[] message) {
-            try {
-                Cipher cipher = Cipher.getInstance("RSA");
-                cipher.init(Cipher.DECRYPT_MODE, privateKey);
-                return cipher.doFinal(message);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-
-        public static byte[] encrypt(PublicKey publicKey, byte[] message) {
-            try {
-                Cipher cipher = Cipher.getInstance("RSA");
-                cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-                return cipher.doFinal(message);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return null;
-        }
-    }
 
     public interface Callback {
         void call();
