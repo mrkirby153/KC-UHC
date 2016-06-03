@@ -63,25 +63,25 @@ public class CommandUHC extends BaseCommand {
                 UHC.arena.toggleShouldEndCheck();
                 return true;
             }
-            if(args[0].equalsIgnoreCase("togglespread")){
+            if (args[0].equalsIgnoreCase("togglespread")) {
                 UHC.arena.toggleSpreadingPlayers();
                 return true;
             }
-            if(args[0].equalsIgnoreCase("freeze")){
+            if (args[0].equalsIgnoreCase("freeze")) {
                 UHC.arena.freeze();
                 return true;
             }
-            if(args[0].equalsIgnoreCase("unfreeze")){
+            if (args[0].equalsIgnoreCase("unfreeze")) {
                 UHC.arena.unfreeze();
                 return true;
             }
-            if(args[0].equalsIgnoreCase("freezebypass")){
+            if (args[0].equalsIgnoreCase("freezebypass")) {
                 Player player = (Player) sender;
                 FreezeHandler.freezebypass(player);
                 return true;
             }
             if (args[0].equalsIgnoreCase("singlepersonteams")) {
-                if(UHC.discordHandler != null)
+                if (UHC.discordHandler != null)
                     UHC.discordHandler.shutdown();
                 List<ChatColor> usedColors = new ArrayList<>();
                 List<ChatColor> blacklistedColors = Arrays.asList(ChatColor.BOLD, ChatColor.STRIKETHROUGH, ChatColor.RESET, ChatColor.MAGIC, ChatColor.UNDERLINE);
@@ -101,7 +101,7 @@ public class CommandUHC extends BaseCommand {
                     teams.put(p, TeamHandler.getTeamByName(p.getName()));
                     TeamHandler.leaveTeam(p);
                 }
-                for(Map.Entry<Player, UHCTeam> e : teams.entrySet()){
+                for (Map.Entry<Player, UHCTeam> e : teams.entrySet()) {
                     TeamHandler.joinTeam(e.getValue(), e.getKey());
                 }
                 sender.sendMessage(UtilChat.generateFormattedChat("Created teams and assigned teams!", ChatColor.GREEN, 0).toLegacyText());
@@ -136,7 +136,7 @@ public class CommandUHC extends BaseCommand {
                     return true;
                 }
             }
-            if(args[0].equalsIgnoreCase("endgamestate")){
+            if (args[0].equalsIgnoreCase("endgamestate")) {
                 try {
                     UHCArena.EndgamePhase p = UHCArena.EndgamePhase.valueOf(args[1].toUpperCase());
                     UHC.arena.setEndgamePhase(p);
@@ -146,9 +146,9 @@ public class CommandUHC extends BaseCommand {
                     return true;
                 }
             }
-            if(args[0].equalsIgnoreCase("endgametime")){
+            if (args[0].equalsIgnoreCase("endgametime")) {
                 long newTime = Long.parseLong(args[1]) + System.currentTimeMillis();
-                try{
+                try {
                     Field f = UHCArena.class.getDeclaredField("nextEndgamePhaseIn");
                     f.setAccessible(true);
                     f.set(UHC.arena, newTime);
@@ -168,41 +168,41 @@ public class CommandUHC extends BaseCommand {
                     e.printStackTrace();
                 }
             }
-            if(args[0].equalsIgnoreCase("unfreeze")){
+            if (args[0].equalsIgnoreCase("unfreeze")) {
                 Player p = Bukkit.getPlayer(args[1]);
-                if(p == null){
+                if (p == null) {
                     sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
                     return true;
                 }
                 FreezeHandler.playerUnfreeze(p);
             }
-            if(args[0].equalsIgnoreCase("freeze")){
+            if (args[0].equalsIgnoreCase("freeze")) {
                 Player p = Bukkit.getPlayer(args[1]);
-                if(p == null){
+                if (p == null) {
                     sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
                     return true;
                 }
                 FreezeHandler.freezePlayer(p);
             }
-            if(args[0].equalsIgnoreCase("addHeartRow")){
+            if (args[0].equalsIgnoreCase("addHeartRow")) {
                 Player p = Bukkit.getPlayer(args[1]);
-                if(p == null){
+                if (p == null) {
                     sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
                 }
                 UHC.extraHealthHelper.addHeartRow(p);
                 return true;
             }
-            if(args[0].equalsIgnoreCase("removeHeartRow")){
+            if (args[0].equalsIgnoreCase("removeHeartRow")) {
                 Player p = Bukkit.getPlayer(args[1]);
-                if(p == null){
+                if (p == null) {
                     sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
                 }
                 UHC.extraHealthHelper.removeHealthRow(p);
                 return true;
             }
-            if(args[0].equalsIgnoreCase("rticket")){
+            if (args[0].equalsIgnoreCase("rticket")) {
                 Player p = Bukkit.getPlayer(args[1]);
-                if(p == null){
+                if (p == null) {
                     sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
                 }
                 RegenTicket.give(p);

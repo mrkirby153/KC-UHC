@@ -997,8 +997,21 @@ public class UHCArena implements Runnable, Listener {
             return;
         }
         event.getPlayer().sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + "You ate a head apple!");
-        event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
-        event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
+        UHCTeam team = TeamHandler.getTeamForPlayer(event.getPlayer());
+        if (team != null) {
+            for (UUID u : team.getPlayers()) {
+                Player p = Bukkit.getPlayer(u);
+                if (p != null) {
+                    p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
+                    p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
+                    if (p.getUniqueId().equals(event.getPlayer().getUniqueId())) {
+                        p.sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + "You have given your team Regeneration II and Absorption!");
+                    } else {
+                        p.sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + event.getPlayer().getName() + " ate a head apple, giving you Regeneration II and Absorption!");
+                    }
+                }
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
