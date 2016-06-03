@@ -43,7 +43,8 @@ public class SpectatorTask implements Runnable, Listener {
             if (currentTarget == null || !currentTarget.getUniqueId().equals(target)) {
                 p.setGameMode(GameMode.SURVIVAL);
                 p.setAllowFlight(true);
-                p.teleport(Bukkit.getPlayer(target));
+                if (Bukkit.getPlayer(target) != null)
+                    p.teleport(Bukkit.getPlayer(target));
                 spectatorTargets.remove(p.getUniqueId());
             }
             if (Bukkit.getPlayer(target) == null) {
@@ -69,7 +70,7 @@ public class SpectatorTask implements Runnable, Listener {
             return;
         }
         Player toSpectate = (Player) rightClicked;
-        if(TeamHandler.isSpectator(toSpectate))
+        if (TeamHandler.isSpectator(toSpectate))
             return;
         event.getPlayer().setGameMode(GameMode.SPECTATOR);
         event.getPlayer().setSpectatorTarget(toSpectate);

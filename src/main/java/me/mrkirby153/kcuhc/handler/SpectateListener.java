@@ -12,6 +12,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
@@ -40,6 +41,12 @@ public class SpectateListener implements Listener {
             if(TeamHandler.isSpectator((Player) event.getDamager()))
                 event.setCancelled(true);
         }
+    }
+
+    @EventHandler
+    public void onInteract(PlayerInteractEvent event){
+        if(TeamHandler.isSpectator(event.getPlayer()))
+            event.setCancelled(true);
     }
 
     @EventHandler
