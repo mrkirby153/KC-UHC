@@ -162,8 +162,6 @@ public class UHCArena implements Runnable, Listener {
         UHC.plugin.getServer().getPluginManager().registerEvents(pregameListener, UHC.plugin);
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this, 0, 20);
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this::drawScoreboard, 0, 1L);
-//        UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this::updateEndgame, 0L, 2L);
-        UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this::endgameEffect, 0L, 1L);
         Thread endgameThread = new Thread() {
             @Override
             public void run() {
@@ -695,18 +693,11 @@ public class UHCArena implements Runnable, Listener {
         switch (currentEndgamePhase) {
             case NORMALGAME:
                 if (world.getWorldBorder().getSize() <= endSize) {
-                    if (nextEndgamePhase != EndgamePhase.HUNGER_III) {
-                        nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.HUNGER_III.getDuration();
-                        nextEndgamePhase = EndgamePhase.HUNGER_III;
+                    if (nextEndgamePhase != EndgamePhase.SHRINKING_WORLDBORDER) {
+                        nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.SHRINKING_WORLDBORDER.getDuration();
+                        nextEndgamePhase = EndgamePhase.SHRINKING_WORLDBORDER;
                         firstAnnounce = true;
                     }
-                }
-                break;
-            case HUNGER_III:
-                if (nextEndgamePhase != EndgamePhase.SHRINKING_WORLDBORDER) {
-                    nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.SHRINKING_WORLDBORDER.getDuration();
-                    nextEndgamePhase = EndgamePhase.SHRINKING_WORLDBORDER;
-                    firstAnnounce = true;
                 }
                 break;
             case SHRINKING_WORLDBORDER:
@@ -724,23 +715,6 @@ public class UHCArena implements Runnable, Listener {
             announcePhase(nextEndgamePhase);
         if (currentEndgamePhase != SHRINKING_WORLDBORDER)
             activatePhase();
-    }
-
-    private void endgameEffect() {
-        if (state != RUNNING)
-            return;
-        switch (currentEndgamePhase) {
-            case SHRINKING_WORLDBORDER:
-            case HUNGER_III:
-                for (Player p : players()) {
-                    if (TeamHandler.isSpectator(p))
-                        continue;
-                    if (!p.hasPotionEffect(PotionEffectType.HUNGER)) {
-                        p.addPotionEffect(new PotionEffect(PotionEffectType.HUNGER, Integer.MAX_VALUE, 2, false, true));
-                    }
-                }
-                break;
-        }
     }
 
 
@@ -1390,8 +1364,7 @@ public class UHCArena implements Runnable, Listener {
 
     public enum EndgamePhase {
         NORMALGAME("Normal Game", -1),
-        HUNGER_III("Hunger III", 300000),
-        SHRINKING_WORLDBORDER("Shrinking Worldborder", 900000);
+        SHRINKING_WORLDBORDER("Shrinking Worldborder", 600000);
 /*
         NORMALGAME("Normal Game", -1),
         HUNGER_III("Hunger III", 30000),
