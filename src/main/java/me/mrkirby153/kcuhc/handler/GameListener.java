@@ -3,7 +3,6 @@ package me.mrkirby153.kcuhc.handler;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -15,13 +14,18 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.Random;
+
 public class GameListener implements Listener {
+
+    private static final Random random = new Random();
 
     @EventHandler
     public void death(PlayerDeathEvent event) {
@@ -66,7 +70,7 @@ public class GameListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void entityDamage(EntityDamageByEntityEvent event) {
-        if (event.getDamager().getType() == EntityType.PLAYER) {
+        if (event.getDamager().getType() == EntityType.PLAYER || event.getEntity().getType() != EntityType.PLAYER) {
             return;
         }
         double oldDamage = event.getDamage();
@@ -159,6 +163,19 @@ public class GameListener implements Listener {
             System.out.println(String.format("New Location: %s - %.2f, %.2f, %.2f", toTeleport.getWorld().getName(), toTeleport.getX(), toTeleport.getY(), toTeleport.getZ()));
             event.getPlayer().teleport(toTeleport);
             event.getPlayer().sendMessage(UtilChat.message("You have been moved inside the world border"));
+        }
+    }
+
+
+    @EventHandler
+    public void spawnEvent(CreatureSpawnEvent event) {
+        if (event.getSpawnReason() != CreatureSpawnEvent.SpawnReason.NATURAL)
+            return;
+        if (UHC.arena.endSize() <= UHC.arena.getWorld().getWorldBorder().getSize()) {
+            int num = random.nextInt(100);
+            if (num < 75) {
+                event.setCancelled(true);
+            }
         }
     }
 }

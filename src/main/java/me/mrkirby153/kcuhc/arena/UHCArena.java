@@ -125,6 +125,8 @@ public class UHCArena implements Runnable, Listener {
     private EndgamePhase frozen_nextEndgamePhase;
     private long frozen_nextEndgamePhaseIn;
 
+    private boolean notifiedDisabledSpawn = false;
+
 
     private String[] tips = new String[]{
             ChatColor.GOLD + "Craft a Head Apple by surrounding a player head in gold!",
@@ -610,6 +612,14 @@ public class UHCArena implements Runnable, Listener {
                     state = ENDGAME;
                 }
                 if (world.getWorldBorder().getSize() == endSize) {
+                    if(!notifiedDisabledSpawn){
+                        for(Player p : Bukkit.getOnlinePlayers()){
+                            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
+                            p.sendMessage(UtilChat.message("Natural mob spawning has been cut by 75%"));
+                        }
+
+                        notifiedDisabledSpawn = true;
+                    }
                     world.getWorldBorder().setWarningDistance(0);
                 }
                 if (nether != null)
