@@ -2,6 +2,9 @@ package me.mrkirby153.kcuhc.handler;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -9,7 +12,7 @@ import org.bukkit.potion.PotionEffectType;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class ExtraHealthHandler implements Runnable {
+public class ExtraHealthHandler implements Runnable, Listener{
 
     private HashMap<UUID, Integer> health = new HashMap<>();
     private HashMap<UUID, Double> savedHealth = new HashMap<>();
@@ -33,6 +36,12 @@ public class ExtraHealthHandler implements Runnable {
             return;
         }
         health.put(player.getUniqueId(), newRows);
+    }
+
+    @EventHandler
+    public void death(PlayerDeathEvent event){
+        health.remove(event.getEntity().getUniqueId());
+        savedHealth.remove(event.getEntity().getUniqueId());
     }
 
     @Override
