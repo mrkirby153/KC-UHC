@@ -1,5 +1,6 @@
 package me.mrkirby153.kcuhc.handler;
 
+import me.mrkirby153.kcuhc.UtilChat;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -76,7 +77,7 @@ public class BorderBumper implements Runnable {
         bumpVector.multiply(0.75);
         bumpVector.setY(0.1879);
         player.setVelocity(bumpVector);
-        player.sendMessage(ChatColor.BOLD + "Stay inside the world border!".toUpperCase());
+        player.sendMessage(UtilChat.message(ChatColor.BOLD + "Stay inside the world border!".toUpperCase()));
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BASS, 1F, 1F);
     }
 

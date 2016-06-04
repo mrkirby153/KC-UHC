@@ -1,5 +1,6 @@
 package me.mrkirby153.kcuhc.arena;
 
+import me.mrkirby153.kcuhc.UtilChat;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.Color;
@@ -31,7 +32,7 @@ public abstract class UHCTeam {
         TextComponent team = new TextComponent(friendlyName);
         team.setColor(color);
         message.addExtra(team);*/
-        player.sendMessage(ChatColor.GREEN + "You are now on team " + color + friendlyName);
+        player.sendMessage(UtilChat.message("You are now on team " + color + friendlyName));
         onJoin(player);
     }
 

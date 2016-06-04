@@ -1,6 +1,7 @@
 package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -105,7 +106,7 @@ public class GameListener implements Listener {
                     if (newDist < 0.7225)
                         toAdd += 0.5;
                     loc.setY(loc.getY() + toAdd);
-                    p.sendMessage(ChatColor.BLUE + "> " + ChatColor.GRAY + "You are in the way of a player and have been moved");
+                    p.sendMessage(UtilChat.message("You are in the way of a player and have been moved"));
                     p.teleport(loc);
                 }
             }
@@ -157,7 +158,7 @@ public class GameListener implements Listener {
             toTeleport = event.getPlayer().getWorld().getHighestBlockAt(toTeleport).getLocation().add(0.5, 0.5, 0.5);
             System.out.println(String.format("New Location: %s - %.2f, %.2f, %.2f", toTeleport.getWorld().getName(), toTeleport.getX(), toTeleport.getY(), toTeleport.getZ()));
             event.getPlayer().teleport(toTeleport);
-            event.getPlayer().sendMessage(ChatColor.GOLD + "You would've spawned outside of the world border, so we moved you back in");
+            event.getPlayer().sendMessage(UtilChat.message("You have been moved inside the world border"));
         }
     }
 }

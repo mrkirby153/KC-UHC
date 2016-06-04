@@ -76,7 +76,7 @@ public class RegenTicket implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onDamage(EntityDamageByEntityEvent event) {
-        if(event.isCancelled())
+        if (event.isCancelled())
             return;
         if (!(event.getDamager() instanceof Player) || !(event.getEntity() instanceof Player)) {
             return; // Not involving a player
@@ -115,7 +115,7 @@ public class RegenTicket implements Listener {
             tag = new NBTTagCompound();
         else
             tag = nmsStack.getTag();
-        if(tag == null)
+        if (tag == null)
             tag = new NBTTagCompound();
         NBTTagList ench = nmsStack.getEnchantments() == null ? new NBTTagList() : null;
         UUID playerUUID = player.getUniqueId();
@@ -128,7 +128,7 @@ public class RegenTicket implements Listener {
     }
 
     public static void give(Player player) {
-        if(TeamHandler.isSpectator(player))
+        if (TeamHandler.isSpectator(player))
             return;
         player.spigot().sendMessage(UtilChat.generateFormattedChat("You have been given a regen ticket. This ticket will restore " +
                 "you to full health. However, once PvP damage is given or delt, it is removed!", net.md_5.bungee.api.ChatColor.DARK_GREEN, 8));
@@ -144,7 +144,7 @@ public class RegenTicket implements Listener {
         return u.equals(player.getUniqueId());
     }
 
-    public static void clearRegenTickets(){
+    public static void clearRegenTickets() {
         regenTickets.clear();
     }
 
@@ -170,8 +170,7 @@ public class RegenTicket implements Listener {
             player.setFoodLevel(20);
             player.setExhaustion(3.8F);
             player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1, 1);
-            player.spigot().sendMessage(UtilChat.generateFormattedChat("You have restored " + (int) healAmount + " health!", net.md_5.bungee.api.ChatColor.GREEN, 8));
-            player.spigot().sendMessage(UtilChat.generateFormattedChat("You have restored " + healed + " hunger!", net.md_5.bungee.api.ChatColor.DARK_GREEN, 8));
+            player.sendMessage(UtilChat.message("You have restored " + ChatColor.GOLD + (int) healAmount + ChatColor.GRAY + " health and " + ChatColor.GOLD + healed + ChatColor.GRAY + " hunger"));
             player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 300);
         }
     }

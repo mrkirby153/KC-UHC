@@ -10,15 +10,15 @@ import org.bukkit.entity.Player;
 public class UtilChat {
 
     public static BaseComponent generateError(String message) {
-        TextComponent err = new TextComponent("ERROR> ");
-        err.setColor(ChatColor.GRAY);
+        TextComponent err = new TextComponent("Error> ");
+        err.setColor(ChatColor.BLUE);
         TextComponent component = new TextComponent(message);
-        component.setColor(ChatColor.RED);
+        component.setColor(ChatColor.GRAY);
         err.addExtra(component);
         return err;
     }
 
-    public static String generateLegacyError(String message){
+    public static String generateLegacyError(String message) {
         return generateError(message).toLegacyText();
     }
 
@@ -47,7 +47,20 @@ public class UtilChat {
         return tc;
     }
 
-    public static BaseComponent generateFormattedChat(String message, ChatColor color){
+    public static String message(String message) {
+        return ChatColor.BLUE + "> " + ChatColor.GRAY +  message;
+    }
+
+    public static BaseComponent messageComponent(String message) {
+        BaseComponent bc = new TextComponent("> ");
+        bc.setColor(ChatColor.BLUE);
+        TextComponent component = new TextComponent(message);
+        component.setColor(ChatColor.GRAY);
+        bc.addExtra(component);
+        return bc;
+    }
+
+    public static BaseComponent generateFormattedChat(String message, ChatColor color) {
         return generateFormattedChat(message, color, 0);
     }
 
@@ -68,12 +81,12 @@ public class UtilChat {
         return textComponent;
     }
 
-    public static BaseComponent generateHyperlink(String toDisplay, String hyperlink, BaseComponent... hoverText){
+    public static BaseComponent generateHyperlink(String toDisplay, String hyperlink, BaseComponent... hoverText) {
         return generateHyperlink(new TextComponent(toDisplay), hyperlink, hoverText);
     }
 
     public static void sendMultiple(Player player, BaseComponent... components) {
-        for(BaseComponent component : components){
+        for (BaseComponent component : components) {
             player.spigot().sendMessage(component);
         }
     }

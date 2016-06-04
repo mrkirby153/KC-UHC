@@ -20,11 +20,12 @@ public class CommandSpectate extends BaseCommand {
             if (TeamHandler.getTeamForPlayer(player) != TeamHandler.getTeamByName(TeamHandler.SPECTATORS_TEAM)) {
                 TeamHandler.leaveTeam(player);
                 TeamHandler.joinTeam(TeamHandler.spectatorsTeam(), player);
-                player.spigot().sendMessage(UtilChat.generateFormattedChat("You are now a spectator. Type /spectate to leave", ChatColor.RED, 0));
+//                player.spigot().sendMessage(UtilChat.generateFormattedChat("You are now a spectator. Type /spectate to leave", ChatColor.RED, 0));
+                player.sendMessage(UtilChat.message("You are now a spectator. Type " + ChatColor.GOLD + "/spectate " + ChatColor.GRAY + " to leave"));
             } else {
                 TeamHandler.leaveTeam(player);
                 player.teleport(UHC.arena.getCenter().add(0, 2, 0));
-                player.spigot().sendMessage(UtilChat.generateFormattedChat("You are no longer a spectator", ChatColor.RED, 0));
+                player.sendMessage(UtilChat.message("You are no longer a spectator"));
             }
         else
             player.spigot().sendMessage(UtilChat.generateError("You cannot join/leave the spectators team because the game has already started!"));

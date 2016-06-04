@@ -196,7 +196,7 @@ public class UHCArena implements Runnable, Listener {
     public void generationComplete() {
         state = State.WAITING;
         MOTDHandler.setMotd(ChatColor.GRAY + "Pending initialization");
-        Bukkit.broadcastMessage(ChatColor.GOLD + "World pregeneration complete!");
+        Bukkit.broadcastMessage(UtilChat.message("World generation complete"));
         UHC.plugin.getServer().getScheduler().cancelTask(generationTaskId);
         initialize();
     }
@@ -238,7 +238,7 @@ public class UHCArena implements Runnable, Listener {
         world.setGameRuleValue("doMobSpawning", "false");
         world.setGameRuleValue("doMobLoot", "false");
         world.setTime(1200);
-        Bukkit.broadcastMessage(ChatColor.GOLD + "Initialized and ready!");
+        Bukkit.broadcastMessage(UtilChat.message("Initialized"));
         MOTDHandler.setMotd(ChatColor.GREEN + "Ready");
         players = new ArrayList<>();
         dmStarted = false;
@@ -278,6 +278,7 @@ public class UHCArena implements Runnable, Listener {
             PacketPlayOutTitle title = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, IChatBaseComponent.ChatSerializer.a("{\"text\":\"\"}"));
             PacketPlayOutTitle subtitle = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE,
                     IChatBaseComponent.ChatSerializer.a(String.format("{\"text\":\"%s\"}", ChatColor.GOLD + "The game has begun!")));
+            p.sendMessage(UtilChat.message("The game has begun"));
             ((CraftPlayer) p).getHandle().playerConnection.sendPacket(timings);
             ((CraftPlayer) p).getHandle().playerConnection.sendPacket(subtitle);
             ((CraftPlayer) p).getHandle().playerConnection.sendPacket(title);
@@ -303,11 +304,7 @@ public class UHCArena implements Runnable, Listener {
             p.getInventory().clear();
             p.closeInventory();
         }
-/*        // TODO: 5/13/2016 Write spreadplayers algorithm, as args no longer work :(
-        String format = String.format("spreadplayers %d %d %d %d true @a[team=!%s]", center.getBlockX(), center.getBlockZ(), 50, startSize / 2, TeamHandler.SPECTATORS_TEAM);
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), format);*/
         if (shouldSpreadPlayers)
-//            new SpreadPlayersHandler().execute(world.getName(), center.getBlockX(), center.getBlockZ(), 50, startSize / 2);
             distributeTeams(50);
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "xp -3000l @a");
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "achievement take * @a");
@@ -488,7 +485,7 @@ public class UHCArena implements Runnable, Listener {
         playerLoc.getWorld().dropItemNaturally(playerLoc, head);
         closeToBorder.removePlayer(dead);
         players.remove(dead);
-        dead.spigot().sendMessage(generateBoldChat("You have died and are now a spectator", net.md_5.bungee.api.ChatColor.RED));
+        dead.sendMessage(UtilChat.message("You have died and are now a spectator"));
     }
 
     public void saveToFile() {
@@ -583,6 +580,7 @@ public class UHCArena implements Runnable, Listener {
                         ((CraftPlayer) p).getHandle().playerConnection.sendPacket(timings);
                         ((CraftPlayer) p).getHandle().playerConnection.sendPacket(title);
                         ((CraftPlayer) p).getHandle().playerConnection.sendPacket(subtitle);
+                        p.sendMessage(UtilChat.message("Starting in " + ChatColor.GOLD + countdown));
                     }
                     MOTDHandler.setMotd(ChatColor.YELLOW + "Starting in " + countdown);
                     countdown--;
@@ -970,16 +968,16 @@ public class UHCArena implements Runnable, Listener {
                             p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 1));
                             p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 0));
                             if (p.getUniqueId().equals(event.getPlayer().getUniqueId())) {
-                                p.sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + "You have given your team Regeneration and Absorption!");
+                                p.sendMessage(UtilChat.message("You have given your team Regeneration and Absorption"));
                             } else {
-                                p.sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + event.getPlayer().getName() + " ate a player head, giving you Regeneration and Absorption");
+                                p.sendMessage(UtilChat.message(event.getPlayer().getName() + " ate a player head, giving you Regeneration and Absorption"));
                             }
                         }
                     }
                 } else {
                     event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 1));
                     event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 0));
-                    event.getPlayer().sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + "You are not on a team so only you get Regeneration and Absorption");
+                    event.getPlayer().sendMessage(UtilChat.message("You are not on a team so only you get Regeneration and Absorption"));
                 }
             }
     }
@@ -995,7 +993,7 @@ public class UHCArena implements Runnable, Listener {
         if (event.getItem().getType() != Material.GOLDEN_APPLE) {
             return;
         }
-        event.getPlayer().sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + "You ate a head apple!");
+        event.getPlayer().sendMessage(UtilChat.message("You ate a head apple"));
         UHCTeam team = TeamHandler.getTeamForPlayer(event.getPlayer());
         if (team != null) {
             for (UUID u : team.getPlayers()) {
@@ -1004,9 +1002,9 @@ public class UHCArena implements Runnable, Listener {
                     p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
                     p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
                     if (p.getUniqueId().equals(event.getPlayer().getUniqueId())) {
-                        p.sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + "You have given your team Regeneration II and Absorption!");
+                        p.sendMessage(UtilChat.message("You have given your team Regeneration II and Absorption!"));
                     } else {
-                        p.sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + event.getPlayer().getName() + " ate a head apple, giving you Regeneration II and Absorption!");
+                        p.sendMessage(UtilChat.message(event.getPlayer().getName() + " ate a head apple, giving you Regeneration II and Absorption!"));
                     }
                 }
             }
@@ -1094,17 +1092,17 @@ public class UHCArena implements Runnable, Listener {
     public void toggleShouldEndCheck() {
         this.shouldEndCheck = !this.shouldEndCheck;
         if (shouldEndCheck)
-            Bukkit.broadcastMessage("Checking if we should end");
+            Bukkit.broadcastMessage(UtilChat.message("Checking if the game should end"));
         else
-            Bukkit.broadcastMessage("No longer checking if we should end");
+            Bukkit.broadcastMessage(UtilChat.message("No longer checking if the game should end"));
     }
 
     public void toggleSpreadingPlayers() {
         this.shouldSpreadPlayers = !this.shouldSpreadPlayers;
         if (shouldSpreadPlayers) {
-            Bukkit.broadcastMessage("Spreading players when the game starts");
+            Bukkit.broadcastMessage(UtilChat.message("Spreading players once the game starts"));
         } else {
-            Bukkit.broadcastMessage("No longer spreading players");
+            Bukkit.broadcastMessage(UtilChat.message("No longer spreading players"));
         }
     }
 
@@ -1167,8 +1165,7 @@ public class UHCArena implements Runnable, Listener {
             TeamHandler.leaveTeam(player);
             players.remove(player);
             spectate(player);
-            player.spigot().sendMessage(UtilChat.generateFormattedChat("Due to you being logged off for more than 5 minutes, you have been removed from the game",
-                    net.md_5.bungee.api.ChatColor.GOLD, 8));
+            player.sendMessage(UtilChat.message("You have disconnected more than five minutes ago and have been removed from the game"));
         }
     }
 
@@ -1201,9 +1198,9 @@ public class UHCArena implements Runnable, Listener {
     public void sendEveryoneToTeamChannels() {
         if (discordHandler == null)
             return;
-        Bukkit.broadcastMessage(ChatColor.GOLD + "Creating discord channels...");
+        Bukkit.broadcastMessage(UtilChat.message("Creating discord channels..."));
         UHC.discordHandler.createAllTeamChannels(() -> UHC.discordHandler.processAsync(() -> {
-            Bukkit.broadcastMessage(ChatColor.GOLD + "Assigning teams and moving everyone...");
+            Bukkit.broadcastMessage(UtilChat.message("Moving everyone to their discord channel"));
 /*            ByteArrayDataOutput out = ByteStreams.newDataOutput();
             out.writeUTF(UHC.plugin.serverId());
             out.writeUTF("assignTeams");
@@ -1214,7 +1211,7 @@ public class UHCArena implements Runnable, Listener {
             });
             UHC.discordHandler.sendMessage(out.toByteArray());*/
             new AssignTeams(TeamHandler.teams()).send();
-        }, () -> Bukkit.broadcastMessage(ChatColor.GOLD + "Everyone should now be in their discord channels")));
+        }, () -> Bukkit.broadcastMessage(UtilChat.message("Everyone should be moved"))));
     }
 
     public void bringEveryoneToLobby() {
@@ -1312,7 +1309,7 @@ public class UHCArena implements Runnable, Listener {
         }
         world.setGameRuleValue("doDaylightCycle", "false");
         FreezeHandler.pvpEnabled = false;
-        Bukkit.broadcastMessage(ChatColor.GOLD + "The game has been frozen!");
+        Bukkit.broadcastMessage(UtilChat.message("The game is now frozen"));
     }
 
     public void unfreeze() {
@@ -1346,12 +1343,11 @@ public class UHCArena implements Runnable, Listener {
         Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> {
             FreezeHandler.restoreBlocks();
             FreezeHandler.pvpEnabled = true;
-            Bukkit.broadcastMessage("Damage now enabled!");
+            Bukkit.broadcastMessage(UtilChat.message("Damage enabled"));
         }, 100);
         world.setGameRuleValue("doDaylightCycle", "true");
-        Bukkit.broadcastMessage(ChatColor.GOLD + "The game has been unfrozen!");
-        Bukkit.broadcastMessage(ChatColor.GOLD + "Damage will be re-enabled in 5 seconds...");
-        Bukkit.broadcastMessage(ChatColor.BLUE + "The game was frozen for " + UtilTime.format(2, frozenFor, UtilTime.TimeUnit.FIT));
+        Bukkit.broadcastMessage(UtilChat.message("The game was frozen for "+ChatColor.GOLD+UtilTime.format(1, frozenFor, UtilTime.TimeUnit.FIT)));
+        Bukkit.broadcastMessage(UtilChat.message("PvP will be enabled in 5 seconds"));
     }
 
     public void removePlayer(Player player) {

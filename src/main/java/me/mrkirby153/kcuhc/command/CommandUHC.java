@@ -2,6 +2,7 @@ package me.mrkirby153.kcuhc.command;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
+import me.mrkirby153.kcuhc.UtilTime;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
@@ -35,18 +36,21 @@ public class CommandUHC extends BaseCommand {
                 return true;
             }
             if (args[0].equalsIgnoreCase("start")) {
+                sender.sendMessage(UtilChat.message("Started countdown"));
                 UHC.arena.startCountdown();
                 return true;
             }
             if (args[0].equalsIgnoreCase("stop")) {
+                sender.sendMessage(UtilChat.message("Stopped game"));
                 UHC.arena.stop("Nobody");
                 return true;
             }
             if (args[0].equalsIgnoreCase("state")) {
-                sender.sendMessage(UHC.arena.currentState().toString());
+                sender.sendMessage(UtilChat.message("UHC is in state: " + ChatColor.GOLD + UHC.arena.currentState().toString()));
                 return true;
             }
             if (args[0].equalsIgnoreCase("generate")) {
+                sender.sendMessage(UtilChat.message("Started generation of map"));
                 UHC.arena.generate();
                 return true;
             }
@@ -56,7 +60,7 @@ public class CommandUHC extends BaseCommand {
             }
             if (args[0].equalsIgnoreCase("disable")) {
                 UHC.arena.essentiallyDisable();
-                Bukkit.broadcastMessage("Disabling UHC plugin!");
+                Bukkit.broadcastMessage(UtilChat.message("Disabling UHC plugin!"));
                 return true;
             }
             if (args[0].equalsIgnoreCase("toggleending")) {
@@ -96,7 +100,7 @@ public class CommandUHC extends BaseCommand {
                     while (usedColors.contains(chosenColor) && !blacklistedColors.contains(chosenColor))
                         chosenColor = colors[r.nextInt(colors.length)];
                     usedColors.add(chosenColor);
-                    sender.sendMessage(chosenColor + "Created team " + p.getName());
+                    sender.sendMessage(UtilChat.message(chosenColor + "Created team " + p.getName()));
                     UHC.arena.newTeam(p.getName(), chosenColor);
                     teams.put(p, TeamHandler.getTeamByName(p.getName()));
                     TeamHandler.leaveTeam(p);
@@ -104,20 +108,7 @@ public class CommandUHC extends BaseCommand {
                 for (Map.Entry<Player, UHCTeam> e : teams.entrySet()) {
                     TeamHandler.joinTeam(e.getValue(), e.getKey());
                 }
-                sender.sendMessage(UtilChat.generateFormattedChat("Created teams and assigned teams!", ChatColor.GREEN, 0).toLegacyText());
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("deathmatch") || args[0].equalsIgnoreCase("dm")) {
-                if (UHC.arena.currentState() != UHCArena.State.RUNNING) {
-                    sender.sendMessage(UtilChat.generateLegacyError("You cannot start a deathmatch if the game isn't running!"));
-                    return true;
-                }
-                if (UHC.arena.getWorld().getWorldBorder().getSize() != UHC.arena.endSize()) {
-                    sender.sendMessage(UtilChat.generateLegacyError("The worldborder must finish its travel before you can being DM!"));
-                    return true;
-                }
-                UHC.arena.startDeathmatch();
-                sender.sendMessage("Deathmatch started!");
+                sender.sendMessage(UtilChat.message("Created and assigned teams"));
                 return true;
             }
         }
@@ -129,7 +120,7 @@ public class CommandUHC extends BaseCommand {
                 try {
                     UHCArena.State s = UHCArena.State.valueOf(args[1].toUpperCase());
                     UHC.arena.setState(s);
-                    sender.sendMessage("Set state to " + s.toString());
+                    sender.sendMessage(UtilChat.message("Set state to " + ChatColor.GOLD + s.toString()));
                     return true;
                 } catch (IllegalArgumentException e) {
                     sender.sendMessage(UtilChat.generateLegacyError("Invalid state!"));
@@ -140,7 +131,8 @@ public class CommandUHC extends BaseCommand {
                 try {
                     UHCArena.EndgamePhase p = UHCArena.EndgamePhase.valueOf(args[1].toUpperCase());
                     UHC.arena.setEndgamePhase(p);
-                    sender.sendMessage("Set state to " + p.toString());
+                    sender.sendMessage(UtilChat.message("Set endgame state to " + ChatColor.GOLD + p.toString()));
+                    return true;
                 } catch (IllegalArgumentException e) {
                     sender.sendMessage(UtilChat.generateLegacyError("Invalid state!"));
                     return true;
@@ -152,14 +144,17 @@ public class CommandUHC extends BaseCommand {
                     Field f = UHCArena.class.getDeclaredField("nextEndgamePhaseIn");
                     f.setAccessible(true);
                     f.set(UHC.arena, newTime);
+                    sender.sendMessage(UtilChat.message("Next endgame phase in " + ChatColor.GOLD + UtilTime.format(1, newTime, UtilTime.TimeUnit.FIT)));
+                    return true;
                 } catch (NoSuchFieldException | IllegalAccessException e) {
-                    e.printStackTrace();
+                    sender.sendMessage(UtilChat.generateLegacyError("Could not set the endgame time!"));
                 }
             }
             if (args[0].equalsIgnoreCase("winner")) {
                 try {
                     Field f = Color.class.getDeclaredField(args[1].toUpperCase());
                     UHC.arena.temp_FireworkLaunch((Color) f.get(null));
+                    sender.sendMessage(UtilChat.message("Launching fireworks with color " + ChatColor.GOLD + args[1].toUpperCase()));
                     return true;
                 } catch (NoSuchFieldException e) {
                     sender.sendMessage(UtilChat.generateLegacyError("Invalid color!"));
@@ -189,6 +184,7 @@ public class CommandUHC extends BaseCommand {
                 if (p == null) {
                     sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
                 }
+                sender.sendMessage(UtilChat.message("Added heart row to " + ChatColor.GOLD + args[1]));
                 UHC.extraHealthHelper.addHeartRow(p);
                 return true;
             }
@@ -197,6 +193,7 @@ public class CommandUHC extends BaseCommand {
                 if (p == null) {
                     sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
                 }
+                sender.sendMessage(UtilChat.message("Removed heart row from " + ChatColor.GOLD + args[1]));
                 UHC.extraHealthHelper.removeHealthRow(p);
                 return true;
             }
@@ -229,7 +226,7 @@ public class CommandUHC extends BaseCommand {
                 int duration = Integer.parseInt(args[6]);
                 UHC.arena = new UHCArena(w, size, endSize, duration, new Location(w, x, 0, z));
                 UHC.arena.saveToFile();
-                sender.sendMessage(UtilChat.generateFormattedChat("Created arena successfully!", ChatColor.GREEN, 0).toLegacyText());
+                sender.sendMessage(UtilChat.message("Arena created"));
                 return true;
             }
         }

@@ -7,6 +7,8 @@ import me.mrkirby153.kcuhc.discord.commands.Link;
 import me.mrkirby153.kcuhc.discord.commands.LinkCode;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -36,8 +38,13 @@ public class CommandDiscord extends BaseCommand {
             BaseComponent info = UtilChat.generateFormattedChat("   Your link code is ", ChatColor.WHITE, 0);
             info.addExtra(UtilChat.generateFormattedChat(code, ChatColor.BLUE));
             BaseComponent onServer = UtilChat.generateFormattedChat("   On the discord server, type ", ChatColor.WHITE, 0);
-            onServer.addExtra(UtilChat.generateFormattedChat("!uhcbot link " + code, ChatColor.BLUE, 0));
-            UtilChat.sendMultiple(player, line, padding, padding, padding, info, onServer, padding, padding, padding, line);
+            String codeMsg = "!uhcbot link " + code;
+            BaseComponent component = UtilChat.generateFormattedChat(codeMsg, ChatColor.BLUE, 0);
+            component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{UtilChat.generateFormattedChat("Click here to put your code in your chat window for easy copying", ChatColor.WHITE, 0)}));
+            component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, codeMsg));
+            onServer.addExtra(component);
+            BaseComponent click = UtilChat.generateFormattedChat("Click the highlighted part of the above message to copy your code", ChatColor.WHITE, 0);
+            UtilChat.sendMultiple(player, line, padding, padding, padding, info, onServer, click, padding, padding, line);
             player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1F, 1F);
             return true;
         }
@@ -58,42 +65,40 @@ public class CommandDiscord extends BaseCommand {
             String guildId = args[1];
             String serverId = UHC.plugin.getConfig().getString("discord.serverId");
             new Link(serverId, guildId).send();
-            ((Player) sender).spigot().sendMessage(UtilChat.generateFormattedChat("Linked this minecraft server to the discord server!", ChatColor.GREEN, 12));
+            sender.sendMessage(UtilChat.message("Linked this server to the discord server"));
         }
         if (args[0].equalsIgnoreCase("cinit")) {
-            sender.sendMessage(UtilChat.generateFormattedChat("Generating discord channels", ChatColor.GOLD, 0).toLegacyText());
-            UHC.discordHandler.createAllTeamChannels(() -> player.spigot().sendMessage(UtilChat.generateFormattedChat("Channels generated!", ChatColor.GREEN, 0)));
+            sender.sendMessage(UtilChat.message("Generating discord channels..."));
+            UHC.discordHandler.createAllTeamChannels(() -> sender.sendMessage(UtilChat.message("Discord channels generated!")));
         }
         if (args[0].equalsIgnoreCase("shutdown")) {
-            sender.sendMessage(UtilChat.generateFormattedChat("Deleting discord channels", ChatColor.GOLD, 0).toLegacyText());
-            UHC.discordHandler.deleteAllTeamChannels(() -> player.spigot().sendMessage(UtilChat.generateFormattedChat("Done!", ChatColor.GRAY, 0)));
+            sender.sendMessage(UtilChat.message("Removing discord channels..."));
+            UHC.discordHandler.deleteAllTeamChannels(() -> sender.sendMessage(UtilChat.message("Done!")));
         }
         if (args[0].equalsIgnoreCase("disperse")) {
-            player.spigot().sendMessage(UtilChat.generateFormattedChat("Sending everyone to their channels", ChatColor.GREEN, 0));
+            sender.sendMessage(UtilChat.message("Sending everyone to their channels..."));
             UHC.arena.sendEveryoneToTeamChannels();
         }
         if (args[0].equalsIgnoreCase("bringtolobby")) {
             UHC.arena.bringEveryoneToLobby();
-            player.spigot().sendMessage(UtilChat.generateFormattedChat("Sending everyone to the lobby", ChatColor.GREEN, 4));
+            sender.sendMessage(UtilChat.message("Bringing everyone to the lobby..."));
         }
         if (args[0].equalsIgnoreCase("linked")) {
             player.sendMessage(ChatColor.GRAY + "" + ChatColor.ITALIC + "Looking up all online player's discord link status");
-            UHC.discordHandler.getAllLinkedPlayers(data -> {
-                data.entrySet().forEach(e -> {
-                    OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(e.getKey());
-                    if (offlinePlayer == null)
-                        return;
-                    String value = e.getValue();
-                    player.sendMessage(ChatColor.WHITE + offlinePlayer.getName());
-                    if (value == null) {
-                        player.sendMessage("  + " + ChatColor.RED + ChatColor.BOLD + "Unlinked!");
-                    } else {
-                        String discordName = value.split("::")[1].replace("\\:\\:", "::");
-                        String discordId = value.split("::")[0].replace("\\:\\:", "::");
-                        player.sendMessage("  + " + ChatColor.DARK_GREEN + discordName + " (" + discordId + ")");
-                    }
-                });
-            });
+            UHC.discordHandler.getAllLinkedPlayers(data -> data.entrySet().forEach(e -> {
+                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(e.getKey());
+                if (offlinePlayer == null)
+                    return;
+                String value = e.getValue();
+                player.sendMessage(ChatColor.WHITE + offlinePlayer.getName());
+                if (value == null) {
+                    player.sendMessage("  + " + ChatColor.RED + ChatColor.BOLD + "Unlinked!");
+                } else {
+                    String discordName = value.split("::")[1].replace("\\:\\:", "::");
+                    String discordId = value.split("::")[0].replace("\\:\\:", "::");
+                    player.sendMessage("  + " + ChatColor.DARK_GREEN + discordName + " (" + discordId + ")");
+                }
+            }));
         }
         return true;
     }

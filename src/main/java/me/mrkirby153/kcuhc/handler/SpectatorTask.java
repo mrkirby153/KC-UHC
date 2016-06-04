@@ -39,7 +39,7 @@ public class SpectatorTask implements Runnable, Listener {
         List<Player> players = TeamHandler.spectatorsTeam().getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).collect(Collectors.toList());
         for (Player p : players) {
             if (!p.getInventory().contains(Material.COMPASS)) {
-                p.sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + "Detected you do not have a compass. Re-giving you the spectate inventory");
+                p.sendMessage(UtilChat.message("Giving you the spectate inventory as you no longer have it"));
                 Inventory.closeInventory(p);
                 new SpecInventory(UHC.plugin, p);
             }
@@ -83,7 +83,7 @@ public class SpectatorTask implements Runnable, Listener {
             return;
         event.getPlayer().setGameMode(GameMode.SPECTATOR);
         event.getPlayer().setSpectatorTarget(toSpectate);
-        event.getPlayer().spigot().sendMessage(UtilChat.generateFormattedChat("Sneak to stop spectating", ChatColor.GRAY, 0));
+        event.getPlayer().sendMessage(UtilChat.message("Sneak to stop spectating"));
         spectatorTargets.put(event.getPlayer().getUniqueId(), toSpectate.getUniqueId());
     }
 

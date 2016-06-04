@@ -1,8 +1,8 @@
 package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.UHCArena;
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -51,10 +51,11 @@ public class FreezeHandler implements Listener {
     public static void freezePlayer(Player player) {
         frozenPlayers.add(player.getUniqueId());
         Vector velocity = UHC.velocityTracker.getVelocity(player);
-        System.out.println("Saving velocity for " + player.getName() + " to " + velocity);
         FreezeHandler.velocity.put(player.getUniqueId(), velocity);
-        player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "You have been frozen!");
-        player.sendMessage("   PVP has been disabled and you may no longer interact with the world!");
+/*        player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "You have been frozen!");
+        player.sendMessage("   PVP has been disabled and you may no longer interact with the world!");*/
+        player.sendMessage(UtilChat.message("You are now frozen"));
+        player.sendMessage(UtilChat.message("PVP is disabled and you cannot interact with the world"));
         player.playSound(player.getLocation(), Sound.ENTITY_WITHER_HURT, 1F, 1F);
         ArrayList<PotionEffect> effects = new ArrayList<>();
         effects.addAll(player.getActivePotionEffects());
@@ -73,7 +74,7 @@ public class FreezeHandler implements Listener {
 
     public static void unfreeze(Player player) {
         frozenPlayers.remove(player.getUniqueId());
-        player.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + "You have been unfrozen!");
+        player.sendMessage(UtilChat.message("You are no longer frozen"));
         player.playSound(player.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F);
         for (PotionEffect e : player.getActivePotionEffects()) {
             player.removePotionEffect(e.getType());
@@ -90,7 +91,6 @@ public class FreezeHandler implements Listener {
             }
         }
         Vector vector = velocity.get(player.getUniqueId());
-        System.out.println("\tLoading velocity of " + player.getName() + " : " + vector);
         if (vector != null)
             player.setVelocity(vector);
         bypassedPlayers.remove(player.getUniqueId());
@@ -113,7 +113,7 @@ public class FreezeHandler implements Listener {
         player.setOp(true);
         player.setAllowFlight(true);
         player.setFlying(true);
-        player.sendMessage(ChatColor.GOLD + "Bypassed!");
+        player.sendMessage(UtilChat.message("You have bypassed being frozen"));
         saveInventory(player);
     }
 

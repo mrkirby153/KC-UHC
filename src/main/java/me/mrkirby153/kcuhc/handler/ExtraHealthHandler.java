@@ -47,7 +47,6 @@ public class ExtraHealthHandler implements Runnable, Listener{
     @Override
     public void run() {
         health.keySet().stream().map(Bukkit::getPlayer).filter(p -> p != null).filter(p -> !rightHealthBoost(p, health.get(p.getUniqueId()))).forEach(p -> {
-            System.out.println("Player " + p.getName() + " does not have the right health boost!");
             p.removePotionEffect(PotionEffectType.HEALTH_BOOST);
             int healthBoostRequired = getHealthBoostRequired(health.get(p.getUniqueId()));
             PotionEffect eff = null;

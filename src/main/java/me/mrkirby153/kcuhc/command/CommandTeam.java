@@ -28,9 +28,9 @@ public class CommandTeam extends BaseCommand {
             UHCTeam teamForPlayer = TeamHandler.getTeamForPlayer(p);
             //
             if (teamForPlayer != null) {
-                p.spigot().sendMessage(UtilChat.generateBoldChat("You are on team " + teamForPlayer.getName(), ChatColor.GREEN));
+                p.sendMessage(UtilChat.message("You are on team " + ChatColor.GOLD + teamForPlayer.getName()));
             } else {
-                p.spigot().sendMessage(UtilChat.generateBoldChat("You are not on any team!", ChatColor.RED));
+                p.sendMessage(UtilChat.message("You are not on any team"));
             }
             return true;
         }
@@ -49,7 +49,10 @@ public class CommandTeam extends BaseCommand {
                         teamMembers = teamMembers.substring(0, teamMembers.length() - 2);
                     else
                         teamMembers = ChatColor.RED + "Nobody on team";
-                    sender.sendMessage(t.getColor() + " + " + t.getName() + " [" + t.getFriendlyName() + "] (" + t.getPlayers().size() + "): " + teamMembers);
+//                    sender.sendMessage(t.getColor() + " + " + t.getName() + " [" + t.getFriendlyName() + "] (" + t.getPlayers().size() + "): " + teamMembers);
+                    sender.sendMessage(UtilChat.message("Team " + ChatColor.GOLD + t.getName() + ChatColor.DARK_GRAY + " [" +
+                            ChatColor.AQUA + t.getFriendlyName() + ChatColor.DARK_GRAY + "] (" + ChatColor.GOLD +
+                            t.getPlayers().size() + ChatColor.DARK_GRAY + ") [" + ChatColor.YELLOW + teamMembers + ChatColor.DARK_GRAY + "]"));
                 }
                 return true;
             }
@@ -59,9 +62,9 @@ public class CommandTeam extends BaseCommand {
                 }
                 assignSelf = !assignSelf;
                 if (assignSelf) {
-                    sender.sendMessage(UtilChat.generateFormattedChat("Players can now assign their own teams", ChatColor.GREEN, 8).toLegacyText());
+                    sender.sendMessage(UtilChat.message("Players can now assign their own teams"));
                 } else {
-                    sender.sendMessage(UtilChat.generateFormattedChat("Players can no longer assign their own teams", ChatColor.RED, 8).toLegacyText());
+                    sender.sendMessage(UtilChat.message("Players can no longer assign their own team"));
                 }
                 return true;
             }
@@ -76,21 +79,21 @@ public class CommandTeam extends BaseCommand {
                 if (restrictAdmin(sender))
                     return true;
                 TeamHandler.unregisterAll();
-                TeamHandler.loadFromFile();
-                sender.sendMessage("Removed all teams");
+                sender.sendMessage(UtilChat.message("Removed all teams and loaded teams"));
                 return true;
             }
             if (args[0].equalsIgnoreCase("spread")) {
                 if (restrictAdmin(sender))
                     return true;
                 UHC.arena.distributeTeams(50);
+                sender.sendMessage(UtilChat.message("Spread teams!"));
                 return true;
             }
             if (args[0].equalsIgnoreCase("load")) {
                 if (restrictAdmin(sender))
                     return true;
                 TeamHandler.loadFromFile();
-                sender.sendMessage("Loaded");
+                sender.sendMessage(UtilChat.message("Loaded teams from file"));
                 return true;
             }
             if (!(UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.INITIALIZED)) {
@@ -120,7 +123,7 @@ public class CommandTeam extends BaseCommand {
                     }
                     teamCount++;
                 }
-                sender.sendMessage(UtilChat.generateFormattedChat("Assigned " + playerCount + " player(s) to " + teamCount + " teams", ChatColor.GREEN, 0).toLegacyText());
+                sender.sendMessage(UtilChat.message("Assigned " + ChatColor.GOLD + playerCount + ChatColor.GRAY + " player(s) to " + ChatColor.GOLD + teamCount + ChatColor.GRAY + " teams"));
                 return true;
             }
             if (restrictPlayer(sender))
@@ -163,7 +166,7 @@ public class CommandTeam extends BaseCommand {
                     TeamHandler.leaveTeam(p);
                 }
                 TeamHandler.unregisterTeam(teamByName);
-                sender.sendMessage(UtilChat.generateFormattedChat("Removed team!", ChatColor.GREEN, 0).toLegacyText());
+                sender.sendMessage(UtilChat.message("Removed team " + ChatColor.GOLD + args[1]));
                 return true;
             }
             Player toAdd = Bukkit.getPlayer(args[0]);
@@ -194,7 +197,7 @@ public class CommandTeam extends BaseCommand {
                 }
                 teamByName.setFriendlyName(name);
                 TeamHandler.saveToFile();
-                sender.sendMessage(UtilChat.generateFormattedChat("Set team name to '" + name + "'", ChatColor.GRAY, 0).toLegacyText());
+                sender.sendMessage(UtilChat.message("Set team " + ChatColor.GOLD + args[1] + "'s " + ChatColor.GRAY + "name to " + ChatColor.GOLD + name));
                 return true;
             }
         }
@@ -216,6 +219,7 @@ public class CommandTeam extends BaseCommand {
                 }
                 UHC.arena.newTeam(teamName, color);
                 sender.sendMessage(UtilChat.generateFormattedChat("Added team!", ChatColor.GREEN, 0).toLegacyText());
+                sender.sendMessage(UtilChat.message("Created team " + ChatColor.GOLD + teamName + ChatColor.GRAY + " (" + color + args[2] + ChatColor.GRAY + ")"));
                 return true;
             }
         }
