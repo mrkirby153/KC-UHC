@@ -9,6 +9,8 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -16,6 +18,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityShootBowEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
@@ -23,12 +26,9 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.UUID;
+import java.util.*;
 
-public class FreezeHandler implements Listener {
+public class FreezeHandler implements Listener, Runnable {
 
     private static ArrayList<UUID> frozenPlayers = new ArrayList<>();
 
@@ -43,6 +43,8 @@ public class FreezeHandler implements Listener {
     private static HashMap<UUID, Vector> velocity = new HashMap<>();
 
     public static boolean pvpEnabled = true;
+
+    public static HashMap<Entity, Location> frozenEntities = new HashMap<>();
 
     public static boolean isFrozen() {
         return UHC.arena != null && UHC.arena.currentState() == UHCArena.State.FROZEN;
@@ -147,6 +149,7 @@ public class FreezeHandler implements Listener {
 
     public FreezeHandler(UHC plugin) {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 3L);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -178,6 +181,16 @@ public class FreezeHandler implements Listener {
             return;
         if (frozenPlayers.contains(event.getEntity().getUniqueId()))
             event.setCancelled(true);
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST)
+    public void entityTargetEvent(EntityTargetLivingEntityEvent event) {
+        if (!isFrozen()) {
+            return;
+        }
+        if (frozenPlayers.contains(event.getTarget().getUniqueId())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -237,4 +250,17 @@ public class FreezeHandler implements Listener {
             event.setCancelled(true);
     }
 
+    @Override
+    public void run() {
+        for (Map.Entry<Entity, Location> e : frozenEntities.entrySet()) {
+            Entity ent = e.getKey();
+            PotionEffect slowness = new PotionEffect(PotionEffectType.SLOW, 20, 120, true, false);
+            if (ent instanceof LivingEntity && !(ent instanceof Player)) {
+                ((LivingEntity) ent).addPotionEffect(slowness);
+            }
+            if (e.getValue().distanceSquared(ent.getLocation()) > Math.pow(0.5, 2)) {
+                ent.teleport(e.getValue());
+            }
+        }
+    }
 }
