@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.*;
 
+import static org.spigotmc.SpigotConfig.config;
+
 public class TeamHandler {
 
     public static final String SPECTATORS_TEAM = "spectators";
@@ -84,15 +86,26 @@ public class TeamHandler {
         }
     }
 
-    public static void saveToFile() {
-        YamlConfiguration config = new YamlConfiguration();
+    public synchronized static void saveToFile() {
         for (UHCTeam t : teams()) {
-            if (t == TeamHandler.spectatorsTeam())
+            if (t == TeamHandler.spectatorsTeam()) {
                 continue;
+            }
+            saveTeam(t);
             config.set(t.getName(), t);
         }
+    }
+
+    public synchronized static void saveTeam(UHCTeam team) {
+        File file = new File(UHC.plugin.getDataFolder(), "teams.yml");
+        YamlConfiguration config;
+        if (!file.exists())
+            config = new YamlConfiguration();
+        else
+            config = YamlConfiguration.loadConfiguration(file);
+        config.set(team.getName(), team);
         try {
-            config.save(new File(UHC.plugin.getDataFolder(), "teams.yml"));
+            config.save(file);
         } catch (IOException e) {
             Throwables.propagate(e);
         }
@@ -105,8 +118,6 @@ public class TeamHandler {
         for (String s : config.getKeys(false)) {
             registerTeam(s, (UHCPlayerTeam) config.get(s));
         }
-        // Save teams to convert names to UUIDs
-        saveToFile();
     }
 
     public static void unregisterTeam(UHCTeam teamByName) {

@@ -5,6 +5,7 @@ import me.mrkirby153.kcuhc.UUIDFetcher;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.Player;
 
@@ -97,6 +98,9 @@ public class UHCPlayerTeam extends UHCTeam implements ConfigurationSerializable 
                 System.out.println("Found UUID for " + e.getKey() + " (" + e.getValue() + ")");
                 team.addUUID(e.getValue());
             }
+            YamlConfiguration config = new YamlConfiguration();
+            config.set(team.getName(), team);
+            TeamHandler.saveTeam(team);
         }
     }
 }
