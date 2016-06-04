@@ -4,7 +4,9 @@ import com.google.common.io.ByteArrayDataInput;
 import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
+import me.mrkirby153.kcuhc.arena.TeamSpectator;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
+import me.mrkirby153.kcuhc.discord.commands.CreateSpectator;
 import me.mrkirby153.kcuhc.discord.commands.IsLinked;
 import me.mrkirby153.kcuhc.discord.commands.NewTeam;
 import me.mrkirby153.kcuhc.discord.commands.RemoveTeam;
@@ -142,9 +144,11 @@ public class DiscordBotConnection {
     }
 
     public void createAllTeamChannels(Callback callback) {
+        new CreateSpectator().send();
         processAsync(() -> {
             for (UHCTeam team : TeamHandler.teams()) {
-                new NewTeam(team.getName());
+                if(!(team instanceof TeamSpectator))
+                new NewTeam(team.getName()).send();
             }
         }, callback);
     }

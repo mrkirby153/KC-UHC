@@ -1,9 +1,8 @@
 package me.mrkirby153.kcuhc.arena;
 
 
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.discord.commands.AssignSpectator;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.shop.Inventory;
 import net.md_5.bungee.api.ChatColor;
@@ -34,12 +33,7 @@ public class TeamSpectator extends UHCTeam {
             new SpecInventory(UHC.plugin, player);
         if (UHC.discordHandler != null) {
             System.out.println("Giving " + player.getName() + " the spectator role");
-            ByteArrayDataOutput out = ByteStreams.newDataOutput();
-            out.writeUTF(UHC.plugin.serverId());
-            out.writeUTF("assignRole");
-            out.writeUTF(player.getUniqueId().toString());
-            out.writeUTF(TeamHandler.SPECTATORS_TEAM);
-            UHC.discordHandler.sendMessage(out.toByteArray());
+            new AssignSpectator(player).send();
         }
         hideFromPlayers(player);
         player.setHealth(player.getMaxHealth());
