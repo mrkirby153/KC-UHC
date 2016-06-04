@@ -304,6 +304,8 @@ public class UHCArena implements Runnable, Listener {
                 p.setOp(false);
                 previouslyOpped.add(p);
             }
+            p.getInventory().clear();
+            p.closeInventory();
         }
 /*        // TODO: 5/13/2016 Write spreadplayers algorithm, as args no longer work :(
         String format = String.format("spreadplayers %d %d %d %d true @a[team=!%s]", center.getBlockX(), center.getBlockZ(), 50, startSize / 2, TeamHandler.SPECTATORS_TEAM);
