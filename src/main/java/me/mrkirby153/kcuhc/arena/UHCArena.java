@@ -13,11 +13,12 @@ import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
-import net.minecraft.server.v1_9_R2.IChatBaseComponent;
-import net.minecraft.server.v1_9_R2.PacketPlayOutChat;
-import net.minecraft.server.v1_9_R2.PacketPlayOutTitle;
+import net.minecraft.server.v1_9_R2.*;
 import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.*;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.WorldBorder;
 import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
@@ -27,6 +28,7 @@ import org.bukkit.craftbukkit.v1_9_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_9_R2.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -1272,6 +1274,26 @@ public class UHCArena implements Runnable, Listener {
             }
         }
         System.out.println("Spread teams!");
+        System.out.println("Despawning players...");
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            PacketPlayOutEntityDestroy destroyPacket = new PacketPlayOutEntityDestroy(p.getEntityId());
+            for (Player other : Bukkit.getOnlinePlayers()) {
+                if (other.getUniqueId().equals(p.getUniqueId()))
+                    continue;
+                ((CraftPlayer) other).getHandle().playerConnection.sendPacket(destroyPacket);
+            }
+        }
+        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> {
+            System.out.println("Respawning players");
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                PacketPlayOutNamedEntitySpawn spawn = new PacketPlayOutNamedEntitySpawn(((CraftPlayer) p).getHandle());
+                for (Player other : Bukkit.getOnlinePlayers()) {
+                    if (p.getUniqueId().equals(other.getUniqueId()))
+                        continue;
+                    ((CraftPlayer) other).getHandle().playerConnection.sendPacket(spawn);
+                }
+            }
+        }, 5L);
     }
 
     public void freeze() {
