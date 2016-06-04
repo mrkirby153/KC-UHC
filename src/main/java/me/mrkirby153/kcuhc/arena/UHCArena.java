@@ -34,9 +34,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
@@ -67,7 +64,6 @@ public class UHCArena implements Runnable, Listener {
 
 
     private ArrayList<Player> players = new ArrayList<>();
-    private HashMap<UUID, String> originalNames = new HashMap<>();
 
     private State state = State.INITIALIZED;
     private int generationTaskId;
@@ -904,17 +900,6 @@ public class UHCArena implements Runnable, Listener {
         scoreboard.draw();
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void entityDamageEvent(EntityDamageEvent event) {
-        if (event.isCancelled())
-            return;
-        if (event.getEntity().getType().equals(EntityType.PLAYER))
-            return;
-        if (!event.getEntity().getType().isAlive())
-            return;
-        updateEntityDamageName((LivingEntity) event.getEntity(), ((LivingEntity) event.getEntity()).getHealth() - event.getFinalDamage());
-    }
-
     private void craftingRecipes() {
         ShapedRecipe headApple = new ShapedRecipe(new ItemStack(Material.GOLDEN_APPLE, 1));
         headApple.shape("GGG", "GHG", "GGG");
@@ -992,37 +977,6 @@ public class UHCArena implements Runnable, Listener {
                 }
             }
         }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void entityHeal(EntityRegainHealthEvent event) {
-        if (event.isCancelled())
-            return;
-        if (event.getEntity().getType().equals(EntityType.PLAYER))
-            return;
-        if (!event.getEntity().getType().isAlive())
-            return;
-        updateEntityDamageName((LivingEntity) event.getEntity(), ((LivingEntity) event.getEntity()).getHealth() + event.getAmount());
-    }
-
-
-    private void updateEntityDamageName(LivingEntity le, double damage) {
-        String customName = le.getCustomName() != null ? le.getCustomName() : le.getName();
-        if (!originalNames.containsKey(le.getUniqueId())) {
-            originalNames.put(le.getUniqueId(), customName);
-        }
-        customName = originalNames.get(le.getUniqueId());
-        if (damage >= le.getMaxHealth())
-            damage = le.getMaxHealth();
-        if (damage < 0)
-            damage = 0;
-        le.setCustomName("[" + ChatColor.RED + (int) damage + "/" + (int) le.getMaxHealth() + ChatColor.RESET + "] " + customName);
-        le.setCustomNameVisible(true);
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void entityDeathEvent(EntityDeathEvent event) {
-        originalNames.remove(event.getEntity().getUniqueId());
     }
 
 
