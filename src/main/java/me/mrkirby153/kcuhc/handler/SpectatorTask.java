@@ -1,13 +1,17 @@
 package me.mrkirby153.kcuhc.handler;
 
+import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
+import me.mrkirby153.kcuhc.gui.SpecInventory;
+import me.mrkirby153.kcuhc.shop.Inventory;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_9_R2.IChatBaseComponent;
 import net.minecraft.server.v1_9_R2.PacketPlayOutChat;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -34,6 +38,11 @@ public class SpectatorTask implements Runnable, Listener {
     public void run() {
         List<Player> players = TeamHandler.spectatorsTeam().getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).collect(Collectors.toList());
         for (Player p : players) {
+            if (!p.getInventory().contains(Material.COMPASS)) {
+                p.sendMessage(ChatColor.BLUE + "> " + ChatColor.WHITE + "Detected you do not have a compass. Re-giving you the spectate inventory");
+                Inventory.closeInventory(p);
+                new SpecInventory(UHC.plugin, p);
+            }
             UUID target = spectatorTargets.get(p.getUniqueId());
             Entity currentTarget = p.getSpectatorTarget();
             if (target == null) {
