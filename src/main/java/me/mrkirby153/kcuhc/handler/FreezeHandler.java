@@ -3,13 +3,11 @@ package me.mrkirby153.kcuhc.handler;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.UHCArena;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -95,8 +93,10 @@ public class FreezeHandler implements Listener, Runnable {
         Vector vector = velocity.get(player.getUniqueId());
         if (vector != null)
             player.setVelocity(vector);
-        bypassedPlayers.remove(player.getUniqueId());
-        player.setOp(false);
+        if(bypassedPlayers.remove(player.getUniqueId())){
+            player.setOp(false);
+            player.setGameMode(GameMode.SURVIVAL);
+        }
         if (player.getGameMode() != GameMode.CREATIVE && player.getGameMode() != GameMode.SPECTATOR)
             player.setAllowFlight(false);
         player.setFlying(false);
@@ -113,8 +113,7 @@ public class FreezeHandler implements Listener, Runnable {
         bypassedPlayers.add(player.getUniqueId());
         player.removePotionEffect(PotionEffectType.BLINDNESS);
         player.setOp(true);
-        player.setAllowFlight(true);
-        player.setFlying(true);
+        player.setGameMode(GameMode.CREATIVE);
         player.sendMessage(UtilChat.message("You have bypassed being frozen"));
         saveInventory(player);
     }
@@ -219,6 +218,8 @@ public class FreezeHandler implements Listener, Runnable {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void entityDamageEvent(EntityDamageEvent event) {
+        if(event.getEntity().getType() != EntityType.PLAYER)
+            return;
         if (!pvpEnabled)
             event.setCancelled(true);
         if (!isFrozen())
@@ -252,13 +253,21 @@ public class FreezeHandler implements Listener, Runnable {
 
     @Override
     public void run() {
+        if(!isFrozen())
+            return;
+        for(Entity e : Bukkit.getWorld("world").getEntities()){
+            if(e.getType() == EntityType.PLAYER)
+                continue;
+            if(!frozenEntities.containsKey(e))
+                frozenEntities.put(e, e.getLocation());
+        }
         for (Map.Entry<Entity, Location> e : frozenEntities.entrySet()) {
             Entity ent = e.getKey();
-            PotionEffect slowness = new PotionEffect(PotionEffectType.SLOW, 20, 120, true, false);
+            PotionEffect slowness = new PotionEffect(PotionEffectType.SLOW, 20, 75);
             if (ent instanceof LivingEntity && !(ent instanceof Player)) {
                 ((LivingEntity) ent).addPotionEffect(slowness);
             }
-            if (e.getValue().distanceSquared(ent.getLocation()) > Math.pow(0.5, 2)) {
+            if (e.getValue().distanceSquared(ent.getLocation()) > Math.pow(0.125, 2)) {
                 ent.teleport(e.getValue());
             }
         }
