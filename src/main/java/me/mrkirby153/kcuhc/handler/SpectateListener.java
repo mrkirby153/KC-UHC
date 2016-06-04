@@ -3,58 +3,107 @@ package me.mrkirby153.kcuhc.handler;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import org.bukkit.Bukkit;
-import org.bukkit.entity.ExperienceOrb;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.entity.*;
+import org.bukkit.event.hanging.HangingBreakByEntityEvent;
+import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.event.vehicle.VehicleDestroyEvent;
+import org.bukkit.event.vehicle.VehicleEntityCollisionEvent;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.HashSet;
+import java.util.UUID;
 
 public class SpectateListener implements Listener {
 
-    @EventHandler
-    public void onPickup(PlayerPickupItemEvent event){
-        if(TeamHandler.isSpectator(event.getPlayer()))
-            event.setCancelled(true);
+    private static HashSet<UUID> earlyPickup = new HashSet<>();
+
+    public static void addEarlyPickup(Player player) {
+        earlyPickup.add(player.getUniqueId());
     }
+
     @EventHandler
-    public void onExpTarget(EntityTargetEvent event){
-        if(event.getEntity() instanceof ExperienceOrb){
-            if(event.getTarget() instanceof Player){
-                if(TeamHandler.isSpectator(((Player) event.getTarget())))
+    public void onPickup(PlayerPickupItemEvent event) {
+        if (earlyPickup.contains(event.getPlayer().getUniqueId()))
+            event.setCancelled(true);
+        if (TeamHandler.isSpectator(event.getPlayer())) {
+            earlyPickup.remove(event.getPlayer().getUniqueId());
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onDamage(EntityDamageByEntityEvent event) {
+        if (event.getDamager() instanceof Player) {
+            if (TeamHandler.isSpectator((Player) event.getDamager()))
+                event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onTarget(EntityTargetEvent event) {
+        if (event.getTarget() instanceof Player) {
+            Player player = (Player) event.getTarget();
+            if (TeamHandler.isSpectator(player))
+                event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBreak(HangingBreakEvent event){
+        if(event instanceof HangingBreakByEntityEvent){
+            Entity remover = ((HangingBreakByEntityEvent) event).getRemover();
+            if(remover instanceof Player){
+                if(TeamHandler.isSpectator((Player) remover))
                     event.setCancelled(true);
             }
         }
     }
 
     @EventHandler
-    public void onDamage(EntityDamageByEntityEvent event){
-        if(event.getDamager() instanceof Player){
-            if(TeamHandler.isSpectator((Player) event.getDamager()))
+    public void vehicleDestroy(VehicleDestroyEvent event) {
+        if (event.getAttacker() instanceof Player)
+            if (TeamHandler.isSpectator((Player) event.getAttacker()))
+                event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void vehicleDamage(VehicleDamageEvent event) {
+        if (event.getAttacker() instanceof Player) {
+            if (TeamHandler.isSpectator((Player) event.getAttacker()))
                 event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onInteract(PlayerInteractEvent event){
-        if(TeamHandler.isSpectator(event.getPlayer()))
+    public void vehiclePush(VehicleEntityCollisionEvent event){
+        if(event.getEntity() instanceof Player){
+            if(TeamHandler.isSpectator((Player) event.getEntity()))
+                event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onInteract(PlayerInteractEvent event) {
+        if (TeamHandler.isSpectator(event.getPlayer()))
             event.setCancelled(true);
     }
 
     @EventHandler
-    public void onDamage(EntityDamageEvent event){
-        if(event.getEntity() instanceof Player){
-            if(event.getCause() == EntityDamageEvent.DamageCause.VOID)
+    public void onDamage(EntityDamageEvent event) {
+        if (event.getEntity() instanceof Player) {
+            if (event.getCause() == EntityDamageEvent.DamageCause.VOID)
                 return;
-            if(TeamHandler.isSpectator((Player) event.getEntity())) {
+            if (TeamHandler.isSpectator((Player) event.getEntity())) {
                 event.getEntity().setFireTicks(0);
                 event.setCancelled(true);
             }
