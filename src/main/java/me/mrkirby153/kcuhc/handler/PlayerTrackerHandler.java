@@ -159,7 +159,8 @@ public class PlayerTrackerHandler implements Listener, Runnable {
         meta.setDisplayName(ChatColor.AQUA + "Player Tracker (" + ChatColor.GREEN +
                 ChatColor.BOLD + "Right click to select target" + ChatColor.RESET + ChatColor.AQUA + ")");
         playerTracker.setItemMeta(meta);
-        player.getInventory().addItem(playerTracker);
+        player.getInventory().setItem(8, playerTracker);
+        player.updateInventory();
     }
 
     public double distanceToTarget(UUID tracker) {
