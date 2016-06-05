@@ -3,23 +3,26 @@ package me.mrkirby153.kcuhc.handler;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
+import me.mrkirby153.kcuhc.arena.UHCTeam;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Horse;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.Random;
 
@@ -33,6 +36,7 @@ public class GameListener implements Listener {
         TeamHandler.leaveTeam(event.getEntity());
         UHC.arena.handleDeathMessage(event.getEntity(), event.getDeathMessage());
         event.getEntity().getWorld().strikeLightningEffect(event.getEntity().getLocation());
+        killTamedHorses(event.getEntity());
     }
 
     @EventHandler
@@ -84,6 +88,50 @@ public class GameListener implements Listener {
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
         Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> UHC.arena.spectate(event.getPlayer()), 10L);
+    }
+
+    @EventHandler
+    public void entityTame(EntityTameEvent event) {
+        if (event.getEntityType() == EntityType.HORSE) {
+            if (event.getEntityType() == EntityType.HORSE) {
+                Horse horse = (Horse) event.getEntity();
+                horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
+                UHCTeam team = TeamHandler.getTeamForPlayer((Player) event.getOwner());
+                if (team != null) {
+                    horse.setCustomName("Team " + team.getColor() + team.getName() + "'s " + ChatColor.WHITE + "Horse");
+                } else if (event.getOwner().getName().endsWith("s"))
+                    horse.setCustomName(event.getOwner().getName() + "' Horse");
+                else
+                    horse.setCustomName(event.getOwner().getName() + "'s Horse");
+//                horse.setCustomNameVisible(true);
+            }
+        }
+    }
+
+    private void killTamedHorses(Player player) {
+        for (World w : Bukkit.getWorlds()) {
+            for (Entity e : w.getEntities()) {
+                if (e.getType() != EntityType.HORSE)
+                    continue;
+                Horse horse = (Horse) e;
+                if (horse.getOwner() == null) {
+                    continue;
+                }
+                if (horse.getOwner().getUniqueId().equals(player.getUniqueId())) {
+                    // Check if a player is riding it
+                    Entity passenger = horse.getPassenger();
+                    if (passenger != null && passenger.getType() == EntityType.PLAYER && !passenger.getUniqueId().equals(player.getUniqueId())) {
+                        // Re-tame the horse to them
+                        passenger.sendMessage(UtilChat.message(ChatColor.GOLD + horse.getOwner().getName() + "'s " + ChatColor.GRAY + "horse has been re-tamed to you as they have died"));
+                        horse.setOwner((Player) passenger);
+                        Bukkit.getServer().getPluginManager().callEvent(new EntityTameEvent(horse, (Player) passenger));
+                    } else {
+                        horse.setTamed(false);
+                        horse.setCustomName("");
+                    }
+                }
+            }
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
