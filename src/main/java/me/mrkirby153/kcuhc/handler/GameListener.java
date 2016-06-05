@@ -3,6 +3,7 @@ package me.mrkirby153.kcuhc.handler;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -19,7 +20,6 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.potion.PotionEffectType;
 
 import java.util.Random;
 
@@ -38,7 +38,7 @@ public class GameListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         UHC.arena.playerJoin(event.getPlayer());
-        event.setJoinMessage("");
+        event.setJoinMessage(ChatColor.BLUE + "Join> " + ChatColor.GRAY + event.getPlayer().getName());
         if (TeamHandler.getTeamForPlayer(event.getPlayer()) == null)
             TeamHandler.joinTeam(TeamHandler.spectatorsTeam(), event.getPlayer());
         else
@@ -47,7 +47,7 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onLeave(PlayerQuitEvent event) {
-        event.setQuitMessage("");
+        event.setQuitMessage(ChatColor.BLUE + "Part> " + ChatColor.GRAY + event.getPlayer().getName());
         UHC.arena.playerDisconnect(event.getPlayer());
     }
 
@@ -83,21 +83,20 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
-        UHC.arena.spectate(event.getPlayer());
-        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> {
-            if (!event.getPlayer().hasPotionEffect(PotionEffectType.INVISIBILITY)) {
-                UHC.arena.spectate(event.getPlayer());
-            }
-        }, 10L);
+        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> UHC.arena.spectate(event.getPlayer()), 10L);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void entityInteract(PlayerInteractEvent evt) {
+        if (TeamHandler.isSpectator(evt.getPlayer()))
+            return;
         if (evt.getAction() == Action.RIGHT_CLICK_AIR || evt.getAction() == Action.RIGHT_CLICK_BLOCK)
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (!TeamHandler.isSpectator(p))
                     continue;
                 Block clickedAgainst = evt.getClickedBlock();
+                if (clickedAgainst == null)
+                    return;
                 BlockFace clickedFace = evt.getBlockFace();
                 Block newBlock = clickedAgainst.getWorld().getBlockAt(clickedAgainst.getX() + clickedFace.getModX(), clickedAgainst.getY() + clickedFace.getModY(), clickedAgainst.getZ() + clickedFace.getModZ());
                 // Check if there is a player at this block
