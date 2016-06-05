@@ -34,6 +34,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -573,7 +574,7 @@ public class UHCArena implements Runnable, Listener {
             case COUNTDOWN:
                 if (countdown > 0) {
                     for (Player p : players) {
-                        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1, 1);
+                        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1, 1);
                         PacketPlayOutTitle timings = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TIMES, null, 0, 21, 0);
                         PacketPlayOutTitle title = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE,
                                 IChatBaseComponent.ChatSerializer.a(String.format("{\"text\":\"%s\"}", ChatColor.GREEN + "Starting in")));
@@ -612,8 +613,8 @@ public class UHCArena implements Runnable, Listener {
                     state = ENDGAME;
                 }
                 if (world.getWorldBorder().getSize() == endSize) {
-                    if(!notifiedDisabledSpawn){
-                        for(Player p : Bukkit.getOnlinePlayers()){
+                    if (!notifiedDisabledSpawn) {
+                        for (Player p : Bukkit.getOnlinePlayers()) {
                             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
                             p.sendMessage(UtilChat.message("Natural mob spawning has been cut by 75%"));
                         }
@@ -957,39 +958,30 @@ public class UHCArena implements Runnable, Listener {
             player.sendRawMessage(ChatColor.GREEN + "To Craft: " + ChatColor.WHITE + "Use the recipe for a Golden Apple, but replace the apple with the head");
             player.sendMessage("");
             player.sendMessage(ChatColor.WHITE + "Optionally, right click the player head to eat it");
-            player.sendMessage(ChatColor.WHITE + "  This will be equivalent to eating a goldean apple");
+            player.sendMessage("");
             player.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "=============================================");
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void eatHead(PlayerInteractEvent event) {
-        if (event.getItem() != null)
-            if (event.getItem().getType() == Material.SKULL_ITEM && event.getItem().getDurability() == 3) {
-                event.getPlayer().getInventory().remove(event.getItem());
-                for (Player p : Bukkit.getOnlinePlayers()) {
-                    p.playSound(event.getPlayer().getLocation(), Sound.ENTITY_PLAYER_BURP, 1F, 1F);
-                }
-                UHCTeam team = TeamHandler.getTeamForPlayer(event.getPlayer());
-                if (team != null) {
-                    for (UUID u : team.getPlayers()) {
-                        Player p = Bukkit.getPlayer(u);
-                        if (p != null) {
-                            p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 1));
-                            p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 0));
-                            if (p.getUniqueId().equals(event.getPlayer().getUniqueId())) {
-                                p.sendMessage(UtilChat.message("You have given your team Regeneration and Absorption"));
-                            } else {
-                                p.sendMessage(UtilChat.message(event.getPlayer().getName() + " ate a player head, giving you Regeneration and Absorption"));
-                            }
-                        }
+        if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
+            if (event.getItem() != null)
+                if (event.getItem().getType() == Material.SKULL_ITEM && event.getItem().getDurability() == 3) {
+                    event.setCancelled(true);
+                    if (event.getItem().getAmount() == 1)
+                        event.getPlayer().getInventory().remove(event.getItem());
+                    else {
+                        event.getItem().setAmount(event.getItem().getAmount() - 1);
+                        event.getPlayer().getInventory().setItemInMainHand(event.getItem());
                     }
-                } else {
-                    event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 1));
-                    event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 0));
-                    event.getPlayer().sendMessage(UtilChat.message("You are not on a team so only you get Regeneration and Absorption"));
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        p.playSound(event.getPlayer().getLocation(), Sound.ENTITY_PLAYER_BURP, 1F, 1F);
+                    }
+                    event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 125, 1));
+                    event.getPlayer().sendMessage(UtilChat.message("You have been given Regeneration"));
                 }
-            }
+        }
     }
 
     @EventHandler
@@ -1014,10 +1006,14 @@ public class UHCArena implements Runnable, Listener {
                     if (p.getUniqueId().equals(event.getPlayer().getUniqueId())) {
                         p.sendMessage(UtilChat.message("You have given your team Regeneration II and Absorption!"));
                     } else {
-                        p.sendMessage(UtilChat.message(event.getPlayer().getName() + " ate a head apple, giving you Regeneration II and Absorption!"));
+                        p.sendMessage(UtilChat.message(ChatColor.GOLD + event.getPlayer().getName() + ChatColor.GRAY + " ate a head apple, giving you Regeneration II and Absorption!"));
                     }
                 }
             }
+        } else {
+            event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
+            event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
+            event.getPlayer().sendMessage(UtilChat.message("You are not on a team so only you get the effects"));
         }
     }
 
