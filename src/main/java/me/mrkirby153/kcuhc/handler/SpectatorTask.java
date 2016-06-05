@@ -3,6 +3,7 @@ package me.mrkirby153.kcuhc.handler;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
+import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.shop.Inventory;
@@ -38,7 +39,7 @@ public class SpectatorTask implements Runnable, Listener {
     public void run() {
         List<Player> players = TeamHandler.spectatorsTeam().getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).collect(Collectors.toList());
         for (Player p : players) {
-            if (!p.getInventory().contains(Material.COMPASS)) {
+            if (!p.getInventory().contains(Material.COMPASS) && UHC.arena.currentState() == UHCArena.State.RUNNING) {
                 p.sendMessage(UtilChat.message("Giving you the spectate inventory as you no longer have it"));
                 Inventory.closeInventory(p);
                 new SpecInventory(UHC.plugin, p);
