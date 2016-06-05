@@ -63,6 +63,30 @@ public class CommandUHC extends BaseCommand {
                 Bukkit.broadcastMessage(UtilChat.message("Disabling UHC plugin!"));
                 return true;
             }
+            if (args[0].equalsIgnoreCase("debugStart")) {
+                try {
+                    Field endCheck = UHCArena.class.getDeclaredField("shouldEndCheck");
+                    Field spreadPlayers = UHCArena.class.getDeclaredField("shouldSpreadPlayers");
+                    endCheck.setAccessible(true);
+                    spreadPlayers.setAccessible(true);
+                    if ((Boolean) endCheck.get(UHC.arena))
+                        UHC.arena.toggleShouldEndCheck();
+                    if ((Boolean) spreadPlayers.get(UHC.arena))
+                        UHC.arena.toggleSpreadingPlayers();
+                    if (TeamHandler.getTeamByName("debug") == null)
+                        UHC.arena.newTeam("debug", ChatColor.GOLD);
+                    TeamHandler.joinTeam(TeamHandler.getTeamByName("debug"), (Player) sender);
+                    Bukkit.getScheduler().runTaskLater(UHC.plugin, () -> {
+                        sender.setOp(true);
+                        sender.sendMessage(UtilChat.message("You are now op"));
+                    }, 220);
+                    UHC.arena.startCountdown();
+                    sender.sendMessage(UtilChat.message("Debug starting"));
+                    return true;
+                } catch (IllegalAccessException | NoSuchFieldException e) {
+                    e.printStackTrace();
+                }
+            }
             if (args[0].equalsIgnoreCase("toggleending")) {
                 UHC.arena.toggleShouldEndCheck();
                 return true;
@@ -144,7 +168,7 @@ public class CommandUHC extends BaseCommand {
                     Field f = UHCArena.class.getDeclaredField("nextEndgamePhaseIn");
                     f.setAccessible(true);
                     f.set(UHC.arena, newTime);
-                    sender.sendMessage(UtilChat.message("Next endgame phase in " + ChatColor.GOLD + UtilTime.format(1, newTime, UtilTime.TimeUnit.FIT)));
+                    sender.sendMessage(UtilChat.message("Next endgame phase in " + ChatColor.GOLD + UtilTime.format(1, Long.parseLong(args[1]), UtilTime.TimeUnit.FIT)));
                     return true;
                 } catch (NoSuchFieldException | IllegalAccessException e) {
                     sender.sendMessage(UtilChat.generateLegacyError("Could not set the endgame time!"));
