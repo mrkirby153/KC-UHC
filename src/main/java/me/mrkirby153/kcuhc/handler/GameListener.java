@@ -5,12 +5,11 @@ import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
 import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.apache.commons.io.FileUtils;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Horse;
@@ -23,7 +22,14 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 public class GameListener implements Listener {
@@ -32,6 +38,7 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void death(PlayerDeathEvent event) {
+        savePlayerData(event.getEntity());
         event.getEntity().setGlowing(false);
         TeamHandler.leaveTeam(event.getEntity());
         UHC.arena.handleDeathMessage(event.getEntity(), event.getDeathMessage());
@@ -224,5 +231,84 @@ public class GameListener implements Listener {
                 event.setCancelled(true);
             }
         }
+    }
+
+    private void savePlayerData(Player player) {
+        YamlConfiguration cfg = new YamlConfiguration();
+        cfg.set("username", player.getName());
+        cfg.set("uuid", player.getUniqueId().toString());
+        cfg.set("deathLocation", player.getLocation());
+        if (TeamHandler.getTeamForPlayer(player) != null)
+            cfg.set("team", TeamHandler.getTeamForPlayer(player).getName());
+        PlayerInventory inv = player.getInventory();
+        for (int i = 0; i < inv.getSize(); i++) {
+            cfg.set("inv." + i, inv.getItem(i));
+        }
+
+        List<String> activeEffects = new ArrayList<>();
+        for (PotionEffect e : player.getActivePotionEffects()) {
+            activeEffects.add(e.getType().getName() + ":" + e.getDuration() + ":" + e.getAmplifier() + ":" + e.isAmbient() + ":" +
+                    ((e.getColor() != null) ? e.getColor().asRGB() : "null") + ":" + e.hasParticles());
+        }
+        cfg.set("potions", activeEffects);
+        try {
+            cfg.save(new File(UHC.plugin.getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId())));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void restorePlayerData(Player player, boolean restoreLocation) {
+        File file = new File(UHC.plugin.getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId()));
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
+        Location l = (Location) cfg.get("deathLocation");
+        TeamHandler.leaveTeam(player);
+        if (cfg.getString("team") != null)
+            if (TeamHandler.getTeamByName(cfg.getString("team")) != null) {
+                TeamHandler.joinTeam(TeamHandler.getTeamByName(cfg.getString("team")), player);
+            }
+        for (String key : cfg.getConfigurationSection("inv").getKeys(false)) {
+            player.getInventory().setItem(Integer.parseInt(key), (ItemStack) cfg.get("inv." + key));
+        }
+        player.updateInventory();
+        for (String pot : cfg.getStringList("potions")) {
+            String[] parts = pot.split(":");
+            PotionEffectType type = PotionEffectType.getByName(parts[0]);
+            int duration = Integer.parseInt(parts[1]);
+            int amplifier = Integer.parseInt(parts[2]);
+            boolean ambient = Boolean.parseBoolean(parts[3]);
+            Color color = parts[4].equalsIgnoreCase("null") ? null : Color.fromBGR(Integer.parseInt(parts[4]));
+            boolean hideParticles = Boolean.parseBoolean(parts[4]);
+            PotionEffect eff = new PotionEffect(type, duration, amplifier, ambient, hideParticles, color);
+            player.addPotionEffect(eff);
+        }
+        if (restoreLocation)
+            player.teleport(l);
+        file.delete();
+    }
+
+    public static boolean isDead(Player player) {
+        return new File(UHC.plugin.getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId())).exists();
+    }
+
+    public static void resetDeaths() {
+        try {
+            FileUtils.deleteDirectory(new File(UHC.plugin.getDataFolder(), "deaths"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // TODO: 6/5/2016 Check for lava/water/suffocation
+    public static boolean validLocation(Player player) {
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new File(UHC.plugin.getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId())));
+        Location location = (Location) cfg.get("deathLocation");
+        WorldBorder wb = location.getWorld().getWorldBorder();
+        double bounds = wb.getSize() / 2;
+        if (location.getBlock().getType() != Material.AIR)
+            return false;
+        if (location.getBlock().getType() == Material.WATER || location.getBlock().getType() == Material.LAVA || location.getBlock().getType() == Material.STATIONARY_LAVA)
+            return false;
+        return Math.abs(location.getBlockX()) < bounds && Math.abs(location.getBlockZ()) < bounds;
     }
 }

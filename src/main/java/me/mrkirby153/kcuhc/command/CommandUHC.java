@@ -7,6 +7,7 @@ import me.mrkirby153.kcuhc.arena.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
 import me.mrkirby153.kcuhc.handler.FreezeHandler;
+import me.mrkirby153.kcuhc.handler.GameListener;
 import me.mrkirby153.kcuhc.handler.RegenTicket;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -138,6 +139,47 @@ public class CommandUHC extends BaseCommand {
         }
         if (args.length == 2) {
             if (restrictAdmin(sender)) {
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("respawn")) {
+                String playerName = args[1];
+                Player player = Bukkit.getPlayer(playerName);
+                if (player == null) {
+                    sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
+                    return true;
+                }
+                if (!GameListener.isDead(player)) {
+                    sender.sendMessage(UtilChat.generateLegacyError("That player is not dead!"));
+                    return true;
+                }
+                if (!GameListener.validLocation(player)) {
+                    sender.sendMessage(UtilChat.generateLegacyError("It is unsafe to spawn the player where they died! Use " + ChatColor.GOLD + "/uhc respawnhere " + args[1] + ChatColor.GRAY + " to spawn the player at your current location"));
+                    return true;
+                }
+                GameListener.restorePlayerData(player, true);
+                player.sendMessage(UtilChat.message("You have been respawned by " + ChatColor.GOLD + sender.getName()));
+                player.setHealth(player.getMaxHealth() * 0.5);
+                sender.sendMessage(UtilChat.message("Respawned " + ChatColor.GOLD + sender.getName()));
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("respawnhere")) {
+                if (restrictPlayer(sender))
+                    return true;
+                String playerName = args[1];
+                Player player = Bukkit.getPlayer(playerName);
+                if (player == null) {
+                    sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
+                    return true;
+                }
+                if (!GameListener.isDead(player)) {
+                    sender.sendMessage(UtilChat.generateLegacyError("That player is not dead!"));
+                    return true;
+                }
+                GameListener.restorePlayerData(player, false);
+                player.teleport((Player) sender);
+                player.setHealth(player.getMaxHealth() * 0.5);
+                player.sendMessage(UtilChat.message("You have been respawned by " + ChatColor.GOLD + sender.getName()));
+                sender.sendMessage(UtilChat.message("Respawned " + ChatColor.GOLD + sender.getName()));
                 return true;
             }
             if (args[0].equalsIgnoreCase("state")) {

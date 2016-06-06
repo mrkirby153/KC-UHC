@@ -255,6 +255,7 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void start() {
+        GameListener.resetDeaths();
         currentEndgamePhase = EndgamePhase.NORMALGAME;
         nextEndgamePhase = null;
         nextEndgamePhaseIn = -1;
