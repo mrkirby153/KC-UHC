@@ -60,6 +60,8 @@ public class PregameListener implements Listener {
 
     @EventHandler
     public void entityDamage(EntityDamageEvent event) {
+        if(event.getCause() == EntityDamageEvent.DamageCause.VOID)
+            return;
         if (event.getEntity() instanceof Player) {
             if (event.getEntity().getFireTicks() > 0)
                 event.getEntity().setFireTicks(0);
