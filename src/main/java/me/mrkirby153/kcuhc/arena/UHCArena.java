@@ -1,11 +1,10 @@
 package me.mrkirby153.kcuhc.arena;
 
 
-import com.google.common.io.ByteArrayDataOutput;
-import com.google.common.io.ByteStreams;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
 import me.mrkirby153.kcuhc.UtilTime;
+import me.mrkirby153.kcuhc.discord.commands.AssignSpectator;
 import me.mrkirby153.kcuhc.discord.commands.AssignTeams;
 import me.mrkirby153.kcuhc.discord.commands.ToLobby;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
@@ -340,11 +339,7 @@ public class UHCArena implements Runnable, Listener {
         TeamHandler.joinTeam(TeamHandler.spectatorsTeam(), player);
         if (switchRole) {
             if (discordHandler != null) {
-                ByteArrayDataOutput out = ByteStreams.newDataOutput();
-                out.writeUTF(UHC.plugin.serverId());
-                out.writeUTF("assignRole");
-                out.writeUTF(player.getUniqueId().toString());
-                out.writeUTF(TeamHandler.spectatorsTeam().getName());
+                new AssignSpectator(player).send();
             }
         }
     }
