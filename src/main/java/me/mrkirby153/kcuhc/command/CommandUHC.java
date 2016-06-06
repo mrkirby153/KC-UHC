@@ -8,6 +8,7 @@ import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.arena.UHCTeam;
 import me.mrkirby153.kcuhc.handler.FreezeHandler;
 import me.mrkirby153.kcuhc.handler.GameListener;
+import me.mrkirby153.kcuhc.handler.MOTDHandler;
 import me.mrkirby153.kcuhc.handler.RegenTicket;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -34,6 +35,16 @@ public class CommandUHC extends BaseCommand {
                 }
                 playerNames = playerNames.substring(0, playerNames.length() - 2);
                 sender.sendMessage(ChatColor.GOLD + "Current players: " + ChatColor.RESET + playerNames);
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("whitelistTeams")) {
+                Bukkit.getServer().setWhitelist(true);
+                for (UHCTeam t : TeamHandler.teams()) {
+                    for (UUID u : t.getPlayers()) {
+                        Bukkit.getServer().getOfflinePlayer(u).setWhitelisted(true);
+                    }
+                }
+                sender.sendMessage(UtilChat.message("Whitelisted all team members!"));
                 return true;
             }
             if (args[0].equalsIgnoreCase("start")) {
@@ -293,6 +304,26 @@ public class CommandUHC extends BaseCommand {
                 UHC.arena = new UHCArena(w, size, endSize, duration, new Location(w, x, 0, z));
                 UHC.arena.saveToFile();
                 sender.sendMessage(UtilChat.message("Arena created"));
+                return true;
+            }
+        }
+        if (args.length >= 2) {
+            if (args[0].equalsIgnoreCase("closeServer")) {
+                String msg = "";
+                for (int i = 1; i < args.length; i++) {
+                    msg += args[i] + " ";
+                }
+                Bukkit.getWhitelistedPlayers().forEach(p -> p.setWhitelisted(false));
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    if (!UHC.isAdmin(p)) {
+                        p.kickPlayer(ChatColor.GOLD + "Kicked by " + sender.getName() + "\n\n" + ChatColor.RESET + msg.trim());
+                    } else {
+                        p.setWhitelisted(true);
+                    }
+                }
+                MOTDHandler.setMotd(ChatColor.RED + "(Admin Only) " + ChatColor.GOLD + msg);
+                Bukkit.setWhitelist(true);
+                sender.sendMessage(UtilChat.message("Kicked all non-admins and enabled whitelist with " + ChatColor.GOLD + msg.trim()));
                 return true;
             }
         }
