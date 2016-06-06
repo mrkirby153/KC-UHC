@@ -314,6 +314,7 @@ public class UHCArena implements Runnable, Listener {
         for (Entity e : world.getEntities()) {
             if (e instanceof Tameable) {
                 ((Tameable) e).setOwner(null);
+                ((Tameable) e).setTamed(false);
             }
             if (e.getType() == EntityType.DROPPED_ITEM) {
                 e.remove();
@@ -411,8 +412,6 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void startCountdown() {
-        CountdownBarTask runnable = new CountdownBarTask(System.currentTimeMillis() + 11000, 11000);
-        runnable.setTaskId(UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, runnable, 0L, 1L));
         countdown = 10;
         barProgress = 1;
         state = COUNTDOWN;
@@ -559,6 +558,7 @@ public class UHCArena implements Runnable, Listener {
         return uhcArena;
     }
 
+    CountdownBarTask countdownTask;
     @Override
     public void run() {
         switch (state) {
@@ -572,6 +572,10 @@ public class UHCArena implements Runnable, Listener {
                 }
                 break;
             case COUNTDOWN:
+                if (countdownTask == null) {
+                    countdownTask = new CountdownBarTask(System.currentTimeMillis() + 10000, 10000);
+                    countdownTask.setTaskId(UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, countdownTask, 0L, 1L));
+                }
                 if (countdown > 0) {
                     for (Player p : players) {
                         p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1, 1);
