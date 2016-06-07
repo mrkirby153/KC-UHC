@@ -35,6 +35,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
@@ -555,6 +556,7 @@ public class UHCArena implements Runnable, Listener {
     }
 
     CountdownBarTask countdownTask;
+
     @Override
     public void run() {
         switch (state) {
@@ -946,6 +948,20 @@ public class UHCArena implements Runnable, Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void chatEvent(AsyncPlayerChatEvent event) {
+        UHCTeam team = TeamHandler.getTeamForPlayer(event.getPlayer());
+        if (team != null) {
+            if (team instanceof TeamSpectator) {
+                event.setFormat(ChatColor.GRAY + "Spectator %s " + ChatColor.WHITE + "%s");
+            } else {
+                event.setFormat(team.getColor() + "%s " + ChatColor.WHITE + "%s");
+            }
+        } else {
+            event.setFormat(ChatColor.GRAY + "%s " + ChatColor.WHITE + "%s");
+        }
+    }
+
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void itemPickup(PlayerPickupItemEvent event) {
         if (event.getItem().getItemStack().getType() == Material.SKULL_ITEM && event.getItem().getItemStack().getDurability() == 3) {
@@ -965,7 +981,7 @@ public class UHCArena implements Runnable, Listener {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void eatHead(PlayerInteractEvent event) {
-        if(event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
             if (event.getItem() != null)
                 if (event.getItem().getType() == Material.SKULL_ITEM && event.getItem().getDurability() == 3) {
                     event.setCancelled(true);
