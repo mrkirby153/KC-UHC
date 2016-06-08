@@ -43,13 +43,26 @@ public class CommandDiscord extends BaseCommand {
             component.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{UtilChat.generateFormattedChat("Click here to put your code in your chat window for easy copying", ChatColor.WHITE, 0)}));
             component.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, codeMsg));
             onServer.addExtra(component);
-            BaseComponent click = UtilChat.generateFormattedChat("Click the highlighted part of the above message to copy your code", ChatColor.WHITE, 0);
-            UtilChat.sendMultiple(player, line, padding, padding, padding, info, onServer, click, padding, padding, line);
+            BaseComponent click = UtilChat.generateFormattedChat("   Click the highlighted part of the above message to copy", ChatColor.WHITE, 0);
+            BaseComponent click2 = UtilChat.generateFormattedChat("   your code", ChatColor.WHITE, 0);
+            UtilChat.sendMultiple(player, line, padding, padding, info, onServer, click, click2, padding, padding, line);
             player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_LAND, 1F, 1F);
             return true;
         }
-        if (restrictAdmin(sender))
+        if (restrictAdmin(sender)) {
             return true;
+        }
+        if (args[0].equalsIgnoreCase("invite")) {
+            for(Player p : Bukkit.getOnlinePlayers()) {
+                BaseComponent line = UtilChat.generateFormattedChat("=============================================", ChatColor.GREEN, 10);
+                BaseComponent padding = new TextComponent(" ");
+                BaseComponent message = UtilChat.generateFormattedChat("             >>> Click here to join the discord server <<<", ChatColor.GRAY, 0);
+                message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, UHC.plugin.getConfig().getString("discord.inviteUrl")));
+                message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{UtilChat.generateFormattedChat("Join the discord server", ChatColor.WHITE, 0)}));
+                UtilChat.sendMultiple(p, line, padding, padding, padding, padding, message, padding, padding, padding, line);
+                p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1F, 0.8F);
+            }
+        }
         if (args[0].equalsIgnoreCase("reconnect")) {
             UHC.discordHandler.connect();
         }
