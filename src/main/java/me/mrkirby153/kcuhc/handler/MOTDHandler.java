@@ -61,9 +61,9 @@ public class MOTDHandler implements Listener {
                             usingDiscord.addExtra(UtilChat.generateFormattedChat(" to manage team chat.", ChatColor.WHITE, 0));
                             event.getPlayer().spigot().sendMessage(usingDiscord);
 
-                            BaseComponent discordInvite = UtilChat.generateFormattedChat("   Please join the discord server by clicking ", ChatColor.WHITE, 0);
+                            BaseComponent discordInvite = UtilChat.generateFormattedChat("   Join the discord server by clicking ", ChatColor.WHITE, 0);
                             discordInvite.addExtra(UtilChat.generateHyperlink(UtilChat.generateFormattedChat("[HERE]", ChatColor.BLUE, 0), UHC.plugin.getConfig().getString("discord.inviteUrl")));
-
+                            discordInvite.addExtra(UtilChat.generateHyperlink(UtilChat.generateFormattedChat(" [MORE INFO]", ChatColor.BLUE), "https://docs.google.com/document/d/1nbrxbNHjko88v_CHoXLbfvZzC2b81hojC8j-OfOU0lQ/edit?usp=sharing"));
                             BaseComponent linkCommand = UtilChat.generateFormattedChat("   Once you have joined the discord server, type ", ChatColor.WHITE, 0);
                             TextComponent cmd = new TextComponent("/discord link");
                             cmd.setColor(ChatColor.AQUA);
