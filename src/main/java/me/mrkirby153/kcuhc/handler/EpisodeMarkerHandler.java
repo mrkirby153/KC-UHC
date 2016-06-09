@@ -52,11 +52,11 @@ public class EpisodeMarkerHandler implements Runnable {
     public void run() {
         if (System.currentTimeMillis() > nextAnnounce && running) {
             for (Player p : Bukkit.getOnlinePlayers()) {
-                p.sendMessage(ChatColor.BLUE + UtilTime.format(1, nextAnnounce - startedOn, UtilTime.TimeUnit.FIT) + " in! (End of Episode " + episodeNumber++ + ")");
+                p.sendMessage(ChatColor.BLUE + UtilTime.format(1, nextAnnounce - startedOn, UtilTime.TimeUnit.FIT) + " in! (End of Episode " + episodeNumber + ")");
                 p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
             }
             nextAnnounce = System.currentTimeMillis() + (1000 * 60 * episodeLength);
-            System.out.println("=== [Next Episode (" + episodeNumber + ")in " + episodeLength + " minutes (" + sdf.format(new Date(nextAnnounce)) + ") ] ===");
+            System.out.println("=== [Next Episode (" + ++episodeNumber + ") in " + episodeLength + " minutes (" + sdf.format(new Date(nextAnnounce)) + ") ] ===");
         }
     }
 }
