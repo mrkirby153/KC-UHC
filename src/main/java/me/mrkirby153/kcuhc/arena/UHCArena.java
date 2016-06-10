@@ -49,8 +49,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scoreboard.Objective;
-import org.bukkit.scoreboard.Scoreboard;
 
 import java.io.File;
 import java.io.IOException;
@@ -80,7 +78,6 @@ public class UHCArena implements Runnable, Listener {
     private final World world;
     private final World nether;
 
-    private final Scoreboard board = Bukkit.getScoreboardManager().getMainScoreboard();
     private final int startSize;
     private final int endSize;
     private final int duration;
@@ -88,17 +85,9 @@ public class UHCArena implements Runnable, Listener {
     private final Location center;
 
     private int percentToGlow = 15;
-    private int startingPlayers;
 
     private WorldBorderHandler worldBorderHandler;
-
-    private double barProgress = 1;
-    private static final double BAR_PROGRESS_DEC = 0.1;
-    private final int WORLDBORDER_WARN_DIST = 50;
-
-    private double worldborderInitSize;
-
-    private static final int FIREWORKS_TO_LAUNCH = 10;
+    private static final int WORLDBORDER_WARN_DIST = 50;
     private int launchedFw = 0;
 
     private Color winningTeamColor = Color.WHITE;
@@ -297,7 +286,6 @@ public class UHCArena implements Runnable, Listener {
             UHC.playerTracker.giveTracker(p);
         }
         sendEveryoneToTeamChannels();
-        startingPlayers = players.size() - getSpectatorCount();
         state = State.RUNNING;
         startTime = System.currentTimeMillis();
         if (UHC.plugin.getConfig().getBoolean("episodes.use"))
@@ -374,7 +362,6 @@ public class UHCArena implements Runnable, Listener {
 
     public void startCountdown() {
         countdown = 10;
-        barProgress = 1;
         state = COUNTDOWN;
     }
 
@@ -389,9 +376,6 @@ public class UHCArena implements Runnable, Listener {
         HandlerList.unregisterAll(UHC.plugin);
         Bukkit.getServer().getScheduler().cancelTasks(UHC.plugin);
         this.worldBorderHandler.setWorldborder(this.worldBorderHandler.getOverworld().getSize() + 150, 0);
-        Objective healthObj = board.getObjective("health");
-        if (healthObj != null)
-            healthObj.unregister();
         UHC.plugin.getPluginLoader().disablePlugin(UHC.plugin);
     }
 
@@ -507,7 +491,6 @@ public class UHCArena implements Runnable, Listener {
                     }
                     MOTDHandler.setMotd(ChatColor.YELLOW + "Starting in " + countdown);
                     countdown--;
-                    barProgress -= BAR_PROGRESS_DEC;
                 } else {
                     start();
                 }
