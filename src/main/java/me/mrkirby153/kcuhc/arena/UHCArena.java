@@ -84,8 +84,6 @@ public class UHCArena implements Runnable, Listener {
     private final int minX, maxX, minZ, maxZ;
     private final Location center;
 
-    private int percentToGlow = 15;
-
     private WorldBorderHandler worldBorderHandler;
     private static final int WORLDBORDER_WARN_DIST = 50;
     private int launchedFw = 0;
@@ -422,7 +420,6 @@ public class UHCArena implements Runnable, Listener {
         cfg.set("startSize", startSize);
         cfg.set("world", world.getName());
         cfg.set("startingPoint", center);
-        cfg.set("glowPercent", percentToGlow);
         try {
             cfg.save(new File(UHC.plugin.getDataFolder(), "arena.yml"));
         } catch (IOException e) {
@@ -432,9 +429,7 @@ public class UHCArena implements Runnable, Listener {
 
     public static UHCArena loadFromFile() {
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new File(UHC.plugin.getDataFolder(), "arena.yml"));
-        UHCArena uhcArena = new UHCArena(Bukkit.getWorld(cfg.getString("world")), cfg.getInt("startSize"), cfg.getInt("endSize"), cfg.getInt("duration"), (Location) cfg.get("startingPoint"));
-        uhcArena.setPercentToGlow(cfg.getInt("glowPercent"));
-        return uhcArena;
+        return new UHCArena(Bukkit.getWorld(cfg.getString("world")), cfg.getInt("startSize"), cfg.getInt("endSize"), cfg.getInt("duration"), (Location) cfg.get("startingPoint"));
     }
 
     CountdownBarTask countdownTask;
@@ -958,10 +953,6 @@ public class UHCArena implements Runnable, Listener {
         } else {
             Bukkit.broadcastMessage(UtilChat.message("No longer spreading players"));
         }
-    }
-
-    public void setPercentToGlow(int percent) {
-        this.percentToGlow = percent;
     }
 
     public Location getCenter() {
