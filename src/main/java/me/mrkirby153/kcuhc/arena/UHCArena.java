@@ -2,8 +2,6 @@ package me.mrkirby153.kcuhc.arena;
 
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.utils.UtilChat;
-import me.mrkirby153.kcuhc.utils.UtilTime;
 import me.mrkirby153.kcuhc.discord.commands.AssignSpectator;
 import me.mrkirby153.kcuhc.discord.commands.AssignTeams;
 import me.mrkirby153.kcuhc.discord.commands.ToLobby;
@@ -14,21 +12,23 @@ import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.TeamSpectator;
 import me.mrkirby153.kcuhc.team.UHCPlayerTeam;
 import me.mrkirby153.kcuhc.team.UHCTeam;
+import me.mrkirby153.kcuhc.utils.UtilChat;
+import me.mrkirby153.kcuhc.utils.UtilTime;
+import me.mrkirby153.kcuhc.utils.UtilTitle;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
-import net.minecraft.server.v1_9_R2.*;
+import net.minecraft.server.v1_9_R2.IChatBaseComponent;
+import net.minecraft.server.v1_9_R2.PacketPlayOutChat;
+import net.minecraft.server.v1_9_R2.PacketPlayOutEntityDestroy;
+import net.minecraft.server.v1_9_R2.PacketPlayOutNamedEntitySpawn;
 import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.*;
-import org.bukkit.Material;
-import org.bukkit.World;
-import org.bukkit.WorldBorder;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_9_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_9_R2.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -56,10 +56,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static me.mrkirby153.kcuhc.UHC.discordHandler;
-import static me.mrkirby153.kcuhc.utils.UtilChat.generateBoldChat;
 import static me.mrkirby153.kcuhc.arena.UHCArena.EndgamePhase.NORMALGAME;
 import static me.mrkirby153.kcuhc.arena.UHCArena.EndgamePhase.SHRINKING_WORLDBORDER;
 import static me.mrkirby153.kcuhc.arena.UHCArena.State.*;
+import static me.mrkirby153.kcuhc.utils.UtilChat.generateBoldChat;
 
 public class UHCArena implements Runnable, Listener {
 
@@ -238,14 +238,8 @@ public class UHCArena implements Runnable, Listener {
         PotionEffect regen = new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 10, true, false);
         PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 30 * 20, 20, true, false);
         for (Player p : players) {
-            PacketPlayOutTitle timings = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TIMES, null, 10, 20 * 5, 20);
-            PacketPlayOutTitle title = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE, IChatBaseComponent.ChatSerializer.a("{\"text\":\"\"}"));
-            PacketPlayOutTitle subtitle = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE,
-                    IChatBaseComponent.ChatSerializer.a(String.format("{\"text\":\"%s\"}", ChatColor.GOLD + "The game has begun!")));
+            UtilTitle.title(p, null, ChatColor.GOLD + "The game has begun!", 10, 20 * 5, 20);
             p.sendMessage(UtilChat.message("The game has begun"));
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(timings);
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(subtitle);
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(title);
             if (!TeamHandler.isSpectator(p)) {
                 p.setGameMode(GameMode.SURVIVAL);
                 p.setAllowFlight(false);
@@ -321,14 +315,7 @@ public class UHCArena implements Runnable, Listener {
         world.setThundering(false);
         world.setStorm(false);
         for (Player p : players) {
-            PacketPlayOutTitle timings = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TIMES, null, 10, 20 * 5, 20);
-            PacketPlayOutTitle title = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE,
-                    IChatBaseComponent.ChatSerializer.a(String.format("{\"text\":\"%s\"}", ChatColor.GOLD + winner)));
-            PacketPlayOutTitle subtitle = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE,
-                    IChatBaseComponent.ChatSerializer.a(String.format("{\"text\":\"%s\"}", ChatColor.GREEN + "has won the game!")));
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(timings);
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(title);
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(subtitle);
+            UtilTitle.title(p, ChatColor.GOLD + winner, ChatColor.GOLD + "has won the game", 10, 20 * 5, 20);
             p.teleport(center);
             p.setGameMode(GameMode.SURVIVAL);
             p.setAllowFlight(true);
@@ -414,14 +401,7 @@ public class UHCArena implements Runnable, Listener {
 
     public void handleDeathMessage(Player dead, String message) {
         for (Player p : players) {
-            PacketPlayOutTitle timings = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TIMES, null, 10, 20 * 5, 20);
-            PacketPlayOutTitle title = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE,
-                    IChatBaseComponent.ChatSerializer.a(String.format("{\"text\":\"%s\"}", ChatColor.DARK_PURPLE + dead.getDisplayName())));
-            PacketPlayOutTitle subtitle = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE,
-                    IChatBaseComponent.ChatSerializer.a(String.format("{\"text\":\"%s\"}", ChatColor.AQUA + message.replace(dead.getName(), ""))));
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(timings);
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(title);
-            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(subtitle);
+            UtilTitle.title(p, ChatColor.DARK_PURPLE + dead.getDisplayName(), ChatColor.AQUA + message.replace(dead.getName(), ""), 10, 20 * 5, 20);
             p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_THUNDER, 1, 1);
         }
         Location playerLoc = dead.getLocation();
@@ -479,14 +459,7 @@ public class UHCArena implements Runnable, Listener {
                 if (countdown > 0) {
                     for (Player p : players) {
                         p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1, 1);
-                        PacketPlayOutTitle timings = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TIMES, null, 0, 21, 0);
-                        PacketPlayOutTitle title = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE,
-                                IChatBaseComponent.ChatSerializer.a(String.format("{\"text\":\"%s\"}", ChatColor.GREEN + "Starting in")));
-                        PacketPlayOutTitle subtitle = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE,
-                                IChatBaseComponent.ChatSerializer.a(String.format("{\"text\":\"%s\"}", ChatColor.RED + "" + countdown)));
-                        ((CraftPlayer) p).getHandle().playerConnection.sendPacket(timings);
-                        ((CraftPlayer) p).getHandle().playerConnection.sendPacket(title);
-                        ((CraftPlayer) p).getHandle().playerConnection.sendPacket(subtitle);
+                        UtilTitle.title(p, ChatColor.GOLD + "Starting in", ChatColor.RED + "" + countdown, 0, 25, 0);
                         p.sendMessage(UtilChat.message("Starting in " + ChatColor.GOLD + countdown));
                     }
                     MOTDHandler.setMotd(ChatColor.YELLOW + "Starting in " + countdown);
