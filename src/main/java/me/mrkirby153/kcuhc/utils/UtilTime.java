@@ -1,4 +1,4 @@
-package me.mrkirby153.kcuhc;
+package me.mrkirby153.kcuhc.utils;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;

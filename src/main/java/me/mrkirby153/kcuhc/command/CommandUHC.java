@@ -1,8 +1,8 @@
 package me.mrkirby153.kcuhc.command;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.UtilChat;
-import me.mrkirby153.kcuhc.UtilTime;
+import me.mrkirby153.kcuhc.utils.UtilChat;
+import me.mrkirby153.kcuhc.utils.UtilTime;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.team.UHCTeam;

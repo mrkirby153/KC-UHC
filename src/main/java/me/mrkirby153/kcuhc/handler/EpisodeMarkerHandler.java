@@ -1,7 +1,7 @@
 package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.UtilTime;
+import me.mrkirby153.kcuhc.utils.UtilTime;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;

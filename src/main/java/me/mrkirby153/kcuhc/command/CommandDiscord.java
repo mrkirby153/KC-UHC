@@ -2,7 +2,7 @@ package me.mrkirby153.kcuhc.command;
 
 import com.google.common.io.ByteArrayDataInput;
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.UtilChat;
+import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.discord.commands.Link;
 import me.mrkirby153.kcuhc.discord.commands.LinkCode;
 import net.md_5.bungee.api.ChatColor;

@@ -1,7 +1,7 @@
 package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.UtilTime;
+import me.mrkirby153.kcuhc.utils.UtilTime;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.TeamSpectator;
 import me.mrkirby153.kcuhc.team.UHCTeam;

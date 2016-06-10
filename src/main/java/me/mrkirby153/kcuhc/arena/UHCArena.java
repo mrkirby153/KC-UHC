@@ -2,8 +2,8 @@ package me.mrkirby153.kcuhc.arena;
 
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.UtilChat;
-import me.mrkirby153.kcuhc.UtilTime;
+import me.mrkirby153.kcuhc.utils.UtilChat;
+import me.mrkirby153.kcuhc.utils.UtilTime;
 import me.mrkirby153.kcuhc.discord.commands.AssignSpectator;
 import me.mrkirby153.kcuhc.discord.commands.AssignTeams;
 import me.mrkirby153.kcuhc.discord.commands.ToLobby;
@@ -56,7 +56,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static me.mrkirby153.kcuhc.UHC.discordHandler;
-import static me.mrkirby153.kcuhc.UtilChat.generateBoldChat;
+import static me.mrkirby153.kcuhc.utils.UtilChat.generateBoldChat;
 import static me.mrkirby153.kcuhc.arena.UHCArena.EndgamePhase.NORMALGAME;
 import static me.mrkirby153.kcuhc.arena.UHCArena.EndgamePhase.SHRINKING_WORLDBORDER;
 import static me.mrkirby153.kcuhc.arena.UHCArena.State.*;

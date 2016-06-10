@@ -1,7 +1,7 @@
 package me.mrkirby153.kcuhc.handler;
 
 
-import me.mrkirby153.kcuhc.UtilChat;
+import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import net.minecraft.server.v1_9_R2.NBTTagCompound;
 import net.minecraft.server.v1_9_R2.NBTTagList;

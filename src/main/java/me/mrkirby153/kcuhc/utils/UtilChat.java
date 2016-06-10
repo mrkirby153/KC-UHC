@@ -1,4 +1,4 @@
-package me.mrkirby153.kcuhc;
+package me.mrkirby153.kcuhc.utils;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;

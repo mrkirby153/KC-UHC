@@ -1,7 +1,7 @@
 package me.mrkirby153.kcuhc.arena;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.UtilTime;
+import me.mrkirby153.kcuhc.utils.UtilTime;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.boss.BarColor;

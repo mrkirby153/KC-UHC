@@ -1,7 +1,7 @@
 package me.mrkirby153.kcuhc.command;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.UtilChat;
+import me.mrkirby153.kcuhc.utils.UtilChat;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

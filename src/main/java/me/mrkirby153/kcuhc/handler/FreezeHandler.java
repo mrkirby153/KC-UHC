@@ -1,7 +1,7 @@
 package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.UtilChat;
+import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import org.bukkit.*;
 import org.bukkit.block.Block;

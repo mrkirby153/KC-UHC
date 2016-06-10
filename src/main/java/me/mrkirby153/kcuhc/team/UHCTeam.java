@@ -1,6 +1,6 @@
 package me.mrkirby153.kcuhc.team;
 
-import me.mrkirby153.kcuhc.UtilChat;
+import me.mrkirby153.kcuhc.utils.UtilChat;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.Color;
