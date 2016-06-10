@@ -73,8 +73,6 @@ public class UHCArena implements Runnable, Listener {
     private PregameListener pregameListener = new PregameListener();
     private GameListener gameListener = new GameListener();
     private int countdown;
-    private int deathmatch = -1;
-    private boolean dmStarted = false;
     private boolean shouldEndCheck = true;
     private boolean shouldSpreadPlayers = true;
     public UHCScoreboard scoreboard;
@@ -226,7 +224,6 @@ public class UHCArena implements Runnable, Listener {
         Bukkit.broadcastMessage(UtilChat.message("Initialized"));
         MOTDHandler.setMotd(ChatColor.GREEN + "Ready");
         players = new ArrayList<>();
-        dmStarted = false;
         launchedFw = 0;
         winningTeamColor = Color.WHITE;
         state = State.INITIALIZED;
@@ -547,26 +544,6 @@ public class UHCArena implements Runnable, Listener {
                 if (nether != null)
                     if (worldBorderHandler.netherTravelComplete())
                         nether.getWorldBorder().setWarningDistance(0);
-                if (deathmatch != -1) {
-                    deathmatch--;
-                    if (deathmatch > 0) {
-                        for (Player p : players) {
-                            PacketPlayOutTitle timings = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TIMES, null, 0, 21, 0);
-                            PacketPlayOutTitle title = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.TITLE,
-                                    IChatBaseComponent.ChatSerializer.a(String.format("{\"text\":\"%s\"}", "")));
-                            PacketPlayOutTitle subtitle = new PacketPlayOutTitle(PacketPlayOutTitle.EnumTitleAction.SUBTITLE,
-                                    IChatBaseComponent.ChatSerializer.a(String.format("{\"text\":\"%s\"}", ChatColor.RED + "Deathmatch in " + ChatColor.GREEN + deathmatch)));
-                            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(timings);
-                            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(title);
-                            ((CraftPlayer) p).getHandle().playerConnection.sendPacket(subtitle);
-                            if (deathmatch <= 3) {
-                                p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
-                            }
-                        }
-                    } else {
-                        deathmatch();
-                    }
-                }
                 break;
             case ENDGAME:
                 for (Player p : Bukkit.getOnlinePlayers()) {
@@ -981,20 +958,6 @@ public class UHCArena implements Runnable, Listener {
         return new ArrayList<>(Bukkit.getOnlinePlayers()).get(new Random().nextInt(Bukkit.getOnlinePlayers().size())).getName();
     }
 
-    private void deathmatch() {
-        deathmatch = -1;
-        // Teleport all players to the surface
-        PotionEffect effect = new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 5 * 20, 6, true, false);
-        for (Player p : players) {
-            if (TeamHandler.isSpectator(p))
-                continue;
-            p.addPotionEffect(effect);
-            p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1, 1);
-            p.spigot().sendMessage(UtilChat.generateFormattedChat("Deathmatch has begun!", net.md_5.bungee.api.ChatColor.RED, 8));
-        }
-        dmStarted = true;
-    }
-
     private int playerCount() {
         return this.players.size() - getSpectatorCount();
     }
@@ -1106,15 +1069,6 @@ public class UHCArena implements Runnable, Listener {
             players.remove(player);
             spectate(player);
             player.sendMessage(UtilChat.message("You have disconnected more than five minutes ago and have been removed from the game"));
-        }
-    }
-
-    public void startDeathmatch() {
-        deathmatch = 30;
-        for (Player p : players) {
-            p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_AMBIENT, 1, 1);
-            p.spigot().sendMessage(generateBoldChat("When deathmatch starts, the world border will shrink to 1 block over the course of 5 minutes. " +
-                    "Good luck!", net.md_5.bungee.api.ChatColor.GREEN));
         }
     }
 
