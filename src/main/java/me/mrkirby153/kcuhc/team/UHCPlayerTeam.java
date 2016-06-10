@@ -1,4 +1,4 @@
-package me.mrkirby153.kcuhc.arena;
+package me.mrkirby153.kcuhc.team;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UUIDFetcher;

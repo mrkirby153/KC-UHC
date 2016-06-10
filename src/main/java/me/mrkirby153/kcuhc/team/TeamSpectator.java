@@ -1,7 +1,8 @@
-package me.mrkirby153.kcuhc.arena;
+package me.mrkirby153.kcuhc.team;
 
 
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.discord.commands.AssignSpectator;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.shop.Inventory;

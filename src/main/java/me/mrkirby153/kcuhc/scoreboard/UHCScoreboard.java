@@ -1,7 +1,7 @@
 package me.mrkirby153.kcuhc.scoreboard;
 
-import me.mrkirby153.kcuhc.arena.TeamHandler;
-import me.mrkirby153.kcuhc.arena.UHCTeam;
+import me.mrkirby153.kcuhc.team.TeamHandler;
+import me.mrkirby153.kcuhc.team.UHCTeam;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;

@@ -2,9 +2,9 @@ package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
-import me.mrkirby153.kcuhc.arena.TeamHandler;
+import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCArena;
-import me.mrkirby153.kcuhc.arena.UHCTeam;
+import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.shop.Inventory;
 import net.md_5.bungee.api.ChatColor;

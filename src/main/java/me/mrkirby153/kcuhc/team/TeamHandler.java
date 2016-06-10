@@ -1,4 +1,4 @@
-package me.mrkirby153.kcuhc.arena;
+package me.mrkirby153.kcuhc.team;
 
 import com.google.common.base.Throwables;
 import me.mrkirby153.kcuhc.UHC;

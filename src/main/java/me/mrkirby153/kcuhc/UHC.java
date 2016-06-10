@@ -1,7 +1,7 @@
 package me.mrkirby153.kcuhc;
 
-import me.mrkirby153.kcuhc.arena.TeamHandler;
-import me.mrkirby153.kcuhc.arena.TeamSpectator;
+import me.mrkirby153.kcuhc.team.TeamHandler;
+import me.mrkirby153.kcuhc.team.TeamSpectator;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.discord.DiscordBotConnection;

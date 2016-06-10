@@ -1,8 +1,8 @@
 package me.mrkirby153.kcuhc.gui;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.arena.TeamHandler;
-import me.mrkirby153.kcuhc.arena.UHCTeam;
+import me.mrkirby153.kcuhc.team.TeamHandler;
+import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.shop.Shop;
 import me.mrkirby153.kcuhc.shop.item.Action;
 import me.mrkirby153.kcuhc.shop.item.ShopItem;

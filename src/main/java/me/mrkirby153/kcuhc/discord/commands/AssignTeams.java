@@ -1,7 +1,7 @@
 package me.mrkirby153.kcuhc.discord.commands;
 
 import com.google.common.io.ByteArrayDataOutput;
-import me.mrkirby153.kcuhc.arena.UHCTeam;
+import me.mrkirby153.kcuhc.team.UHCTeam;
 
 import java.util.*;
 
