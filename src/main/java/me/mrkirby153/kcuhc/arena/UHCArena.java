@@ -22,9 +22,6 @@ import org.bukkit.*;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.WorldBorder;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarStyle;
-import org.bukkit.boss.BossBar;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_9_R2.CraftWorld;
@@ -97,7 +94,7 @@ public class UHCArena implements Runnable, Listener {
     private int percentToGlow = 15;
     private int startingPlayers;
 
-    private BossBar closeToBorder;
+    private WorldBorderHandler worldBorderHandler;
 
     private double barProgress = 1;
     private static final double BAR_PROGRESS_DEC = 0.1;
@@ -161,6 +158,7 @@ public class UHCArena implements Runnable, Listener {
         this.endSize = endSize;
         this.duration = duration;
         this.center = world.getHighestBlockAt(center.getBlockX(), center.getBlockZ()).getLocation();
+        this.worldBorderHandler = new WorldBorderHandler(UHC.plugin, this, world, nether);
         minX = center.getBlockX() - startSize;
         maxX = center.getBlockX() + startSize;
         minZ = center.getBlockZ() - startSize;
@@ -184,7 +182,6 @@ public class UHCArena implements Runnable, Listener {
         endgameThread.setName("Endgame Thread");
         endgameThread.setDaemon(true);
         endgameThread.start();
-        closeToBorder = Bukkit.createBossBar(ChatColor.RED + "You are close to the worldborder!", BarColor.PINK, BarStyle.SOLID);
         UHC.plugin.getServer().getPluginManager().registerEvents(this, UHC.plugin);
         this.scoreboard = new UHCScoreboard();
         craftingRecipes();
@@ -216,31 +213,12 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void initialize() {
-/*        Objective health;
-        if (board.getObjective("health") == null)
-            health = board.registerNewObjective("health", "health");
-        else
-            health = board.getObjective("health");
-        health.setDisplaySlot(DisplaySlot.PLAYER_LIST);
-        Objective belowName;
-        if (board.getObjective("belowName") != null) {
-            board.getObjective("belowName").unregister();
-        }
-        belowName = board.registerNewObjective("belowName", "health");
-        char heart = '\u2764';
-        belowName.setDisplayName(ChatColor.RED + Character.toString(heart));
-        belowName.setDisplaySlot(DisplaySlot.BELOW_NAME);*/
         currentEndgamePhase = EndgamePhase.NORMALGAME;
         nextEndgamePhase = null;
         nextEndgamePhaseIn = -1;
         scoreboard.createTeams();
-        WorldBorder border = world.getWorldBorder();
-        border.setSize(60);
-        border.setWarningDistance(0);
-        if (nether != null && nether.getWorldBorder() != null) {
-            nether.getWorldBorder().setSize(60);
-            nether.getWorldBorder().setWarningDistance(0);
-        }
+        this.worldBorderHandler.setWorldborder(60);
+        this.worldBorderHandler.setWarningDistance(0);
         world.setGameRuleValue("doDaylightCycle", "false");
         world.setGameRuleValue("doMobSpawning", "false");
         world.setGameRuleValue("doMobLoot", "false");
@@ -264,14 +242,9 @@ public class UHCArena implements Runnable, Listener {
         currentEndgamePhase = EndgamePhase.NORMALGAME;
         nextEndgamePhase = null;
         nextEndgamePhaseIn = -1;
-        WorldBorder border = world.getWorldBorder();
-        border.setSize(startSize);
-        border.setWarningDistance(WORLDBORDER_WARN_DIST);
-        if (nether != null && nether.getWorldBorder() != null) {
-            nether.getWorldBorder().setSize(startSize * 2);
-            nether.getWorldBorder().setWarningDistance(WORLDBORDER_WARN_DIST);
-        }
-        setWorldborder(endSize, duration);
+        this.worldBorderHandler.setWorldborder(startSize);
+        this.worldBorderHandler.setWarningDistance(WORLDBORDER_WARN_DIST);
+        this.worldBorderHandler.setWorldborder(endSize, duration);
         HandlerList.unregisterAll(pregameListener);
         UHC.plugin.getServer().getPluginManager().registerEvents(gameListener, UHC.plugin);
         world.setGameRuleValue("naturalRegeneration", "false");
@@ -357,13 +330,8 @@ public class UHCArena implements Runnable, Listener {
         this.nextEndgamePhase = null;
         RegenTicket.clearRegenTickets();
         winner = WordUtils.capitalizeFully(winner.replace('_', ' '));
-        WorldBorder border = world.getWorldBorder();
-        border.setSize(60);
-        border.setWarningDistance(0);
-        if (nether != null) {
-            nether.getWorldBorder().setSize(60);
-            nether.getWorldBorder().setWarningDistance(0);
-        }
+        this.worldBorderHandler.setWorldborder(60);
+        this.worldBorderHandler.setWarningDistance(0);
         world.setGameRuleValue("doDaylightCycle", "false");
         world.setGameRuleValue("doMobSpawning", "false");
         world.setGameRuleValue("doMobLoot", "false");
@@ -428,7 +396,7 @@ public class UHCArena implements Runnable, Listener {
         }
         HandlerList.unregisterAll(UHC.plugin);
         Bukkit.getServer().getScheduler().cancelTasks(UHC.plugin);
-        setWorldborder(world.getWorldBorder().getSize() + 150, 0);
+        this.worldBorderHandler.setWorldborder(this.worldBorderHandler.getOverworld().getSize() + 150, 0);
         Objective healthObj = board.getObjective("health");
         if (healthObj != null)
             healthObj.unregister();
@@ -486,7 +454,6 @@ public class UHCArena implements Runnable, Listener {
         ((SkullMeta) m).setOwner(dead.getName());
         head.setItemMeta(m);
         playerLoc.getWorld().dropItemNaturally(playerLoc, head);
-        closeToBorder.removePlayer(dead);
         players.remove(dead);
         dead.sendMessage(UtilChat.message("You have died and are now a spectator"));
     }
@@ -505,51 +472,6 @@ public class UHCArena implements Runnable, Listener {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private void warnAboutWorldBorder(Player player) {
-        if (dmStarted)
-            return;
-        if (player.getWorld().getWorldBorder().getSize() == endSize || currentEndgamePhase == SHRINKING_WORLDBORDER) {
-            if (closeToBorder.getPlayers().contains(player))
-                closeToBorder.removePlayer(player);
-            return;
-        }
-        WorldBorder wb = player.getWorld().getWorldBorder();
-        Location wb_c = wb.getCenter();
-        double wb_x = Math.abs(wb_c.getX() + (wb.getSize() / 2)) - 1;
-        double wb_z = Math.abs(wb_c.getZ() + (wb.getSize() / 2)) - 1;
-        double pLocX = Math.abs(player.getLocation().getX());
-        double pLocZ = Math.abs(player.getLocation().getZ());
-        double distX = wb_x - pLocX;
-        double distZ = wb_z - pLocZ;
-        double targetX = wb_x - WORLDBORDER_WARN_DIST;
-        double targetZ = wb_z - WORLDBORDER_WARN_DIST;
-        if (distX < distZ) {
-            if (pLocX > targetX) {
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, scaleSound(distX), 0.5f);
-                if (!closeToBorder.getPlayers().contains(player))
-                    closeToBorder.addPlayer(player);
-            } else {
-                if (closeToBorder.getPlayers().contains(player))
-                    closeToBorder.removePlayer(player);
-            }
-        } else if (pLocZ > targetZ) {
-            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, scaleSound(distZ), 2);
-            if (!closeToBorder.getPlayers().contains(player))
-                closeToBorder.addPlayer(player);
-        } else {
-            if (closeToBorder.getPlayers().contains(player))
-                closeToBorder.removePlayer(player);
-        }
-    }
-
-    private float scaleSound(double dist) {
-        if (dist > WORLDBORDER_WARN_DIST)
-            dist = WORLDBORDER_WARN_DIST;
-        if (dist < 0)
-            dist = 0;
-        return (float) (2.0 - (2.0f / WORLDBORDER_WARN_DIST) * dist);
     }
 
     public static UHCArena loadFromFile() {
@@ -600,15 +522,8 @@ public class UHCArena implements Runnable, Listener {
                 break;
             case RUNNING:
                 MOTDHandler.setMotd(ChatColor.RED + "Game in progress. " + ChatColor.AQUA + "" + (players.size() - getSpectatorCount()) + ChatColor.RED + " alive");
-                if (closeToBorder.getTitle().equalsIgnoreCase(ChatColor.RED + "!!! You are close to the worldborder !!!")) {
-                    closeToBorder.setTitle(ChatColor.RED + "" + ChatColor.BOLD + "!! You are close to the worldborder !!");
-                } else {
-                    closeToBorder.setTitle(ChatColor.RED + "!!! You are close to the worldborder !!!");
-                }
                 for (Player p : players) {
                     p.setGlowing(false);
-                    if (!TeamHandler.isSpectator(p))
-                        warnAboutWorldBorder(p);
                 }
                 if (teamCountLeft() <= 1 && shouldEndCheck) {
                     if (teamsLeft().size() > 0) {
@@ -618,7 +533,7 @@ public class UHCArena implements Runnable, Listener {
                     }
                     state = ENDGAME;
                 }
-                if (world.getWorldBorder().getSize() == endSize) {
+                if (worldBorderHandler.overworldTravelComplete()) {
                     if (!notifiedDisabledSpawn) {
                         for (Player p : Bukkit.getOnlinePlayers()) {
                             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
@@ -630,7 +545,7 @@ public class UHCArena implements Runnable, Listener {
                     world.getWorldBorder().setWarningDistance(0);
                 }
                 if (nether != null)
-                    if (nether.getWorldBorder().getSize() == endSize)
+                    if (worldBorderHandler.netherTravelComplete())
                         nether.getWorldBorder().setWarningDistance(0);
                 if (deathmatch != -1) {
                     deathmatch--;
@@ -1077,7 +992,6 @@ public class UHCArena implements Runnable, Listener {
             p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1, 1);
             p.spigot().sendMessage(UtilChat.generateFormattedChat("Deathmatch has begun!", net.md_5.bungee.api.ChatColor.RED, 8));
         }
-        setWorldborder(1, 60 * 5);
         dmStarted = true;
     }
 
@@ -1202,14 +1116,6 @@ public class UHCArena implements Runnable, Listener {
             p.spigot().sendMessage(generateBoldChat("When deathmatch starts, the world border will shrink to 1 block over the course of 5 minutes. " +
                     "Good luck!", net.md_5.bungee.api.ChatColor.GREEN));
         }
-    }
-
-    public void setWorldborder(double radius, int time) {
-        worldborderInitSize = world.getWorldBorder().getSize();
-        System.out.println("Worldborder init Size: " + worldborderInitSize);
-        world.getWorldBorder().setSize(radius, time);
-        if (nether != null)
-            nether.getWorldBorder().setSize(radius * 2, time);
     }
 
     public World getWorld() {
