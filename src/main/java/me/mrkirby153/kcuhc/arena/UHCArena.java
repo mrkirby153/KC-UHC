@@ -70,8 +70,6 @@ public class UHCArena implements Runnable, Listener {
 
     private State state = State.INITIALIZED;
     private int generationTaskId;
-    private PregameListener pregameListener = new PregameListener();
-    private GameListener gameListener = new GameListener();
     private int countdown;
     private boolean shouldEndCheck = true;
     private boolean shouldSpreadPlayers = true;
@@ -161,7 +159,8 @@ public class UHCArena implements Runnable, Listener {
         maxX = center.getBlockX() + startSize;
         minZ = center.getBlockZ() - startSize;
         maxZ = center.getBlockZ() + startSize;
-        UHC.plugin.getServer().getPluginManager().registerEvents(pregameListener, UHC.plugin);
+        UHC.plugin.getServer().getPluginManager().registerEvents(new PregameListener(), UHC.plugin);
+        UHC.plugin.getServer().getPluginManager().registerEvents(new GameListener(), UHC.plugin);
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this, 0, 20);
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this::drawScoreboard, 0, 1L);
         Thread endgameThread = new Thread() {
@@ -242,8 +241,6 @@ public class UHCArena implements Runnable, Listener {
         this.worldBorderHandler.setWorldborder(startSize);
         this.worldBorderHandler.setWarningDistance(WORLDBORDER_WARN_DIST);
         this.worldBorderHandler.setWorldborder(endSize, duration);
-        HandlerList.unregisterAll(pregameListener);
-        UHC.plugin.getServer().getPluginManager().registerEvents(gameListener, UHC.plugin);
         world.setGameRuleValue("naturalRegeneration", "false");
         world.setGameRuleValue("doMobSpawning", "true");
         world.setGameRuleValue("doMobLoot", "true");
@@ -368,8 +365,6 @@ public class UHCArena implements Runnable, Listener {
         for (Player p : previouslyOpped) {
             p.setOp(true);
         }
-        HandlerList.unregisterAll(gameListener);
-        UHC.plugin.getServer().getPluginManager().registerEvents(pregameListener, UHC.plugin);
         bringEveryoneToLobby();
         MOTDHandler.setMotd(ChatColor.RESET + "" + ChatColor.RED + ChatColor.MAGIC + "|..|" + ChatColor.RESET + "  " + ChatColor.GOLD + winner + ChatColor.RED + " has won the game!  " + ChatColor.RED + ChatColor.MAGIC + "|..|");
         launchedFw = 0;

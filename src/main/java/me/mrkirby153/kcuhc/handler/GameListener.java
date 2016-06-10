@@ -2,6 +2,7 @@ package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.UtilChat;
+import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCTeam;
 import net.md_5.bungee.api.ChatColor;
@@ -38,6 +39,8 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void death(PlayerDeathEvent event) {
+        if(!isRunning())
+            return;
         savePlayerData(event.getEntity());
         event.getEntity().setGlowing(false);
         TeamHandler.leaveTeam(event.getEntity());
@@ -48,6 +51,8 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        if(!isRunning())
+            return;
         UHC.arena.playerJoin(event.getPlayer());
         event.setJoinMessage(ChatColor.BLUE + "Join> " + ChatColor.GRAY + event.getPlayer().getName());
         if (TeamHandler.getTeamForPlayer(event.getPlayer()) == null)
@@ -58,12 +63,16 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onLeave(PlayerQuitEvent event) {
+        if(!isRunning())
+            return;
         event.setQuitMessage(ChatColor.BLUE + "Part> " + ChatColor.GRAY + event.getPlayer().getName());
         UHC.arena.playerDisconnect(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDamage(EntityDamageEvent event) {
+        if(!isRunning())
+            return;
         if (event.getEntityType() != EntityType.PLAYER) {
             return;
         }
@@ -81,6 +90,8 @@ public class GameListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void entityDamage(EntityDamageByEntityEvent event) {
+        if(!isRunning())
+            return;
         if (event.getDamager().getType() == EntityType.PLAYER || event.getEntity().getType() != EntityType.PLAYER) {
             return;
         }
@@ -94,11 +105,15 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
+        if(!isRunning())
+            return;
         Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> UHC.arena.spectate(event.getPlayer()), 10L);
     }
 
     @EventHandler
     public void entityTame(EntityTameEvent event) {
+        if(!isRunning())
+            return;
         if (event.getEntityType() == EntityType.HORSE) {
             if (event.getEntityType() == EntityType.HORSE) {
                 Horse horse = (Horse) event.getEntity();
@@ -143,6 +158,8 @@ public class GameListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void entityInteract(PlayerInteractEvent evt) {
+        if(!isRunning())
+            return;
         if (TeamHandler.isSpectator(evt.getPlayer()))
             return;
         if (evt.getAction() == Action.RIGHT_CLICK_AIR || evt.getAction() == Action.RIGHT_CLICK_BLOCK)
@@ -176,6 +193,8 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void changeWorld(PlayerChangedWorldEvent event) {
+        if(!isRunning())
+            return;
         if (!event.getFrom().getName().contains("nether")) {
             return;
         }
@@ -223,6 +242,8 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void spawnEvent(CreatureSpawnEvent event) {
+        if(!isRunning())
+            return;
         if (event.getSpawnReason() != CreatureSpawnEvent.SpawnReason.NATURAL)
             return;
         if (UHC.arena.endSize() <= UHC.arena.getWorld().getWorldBorder().getSize()) {
@@ -310,5 +331,9 @@ public class GameListener implements Listener {
         if (location.getBlock().getType() == Material.WATER || location.getBlock().getType() == Material.LAVA || location.getBlock().getType() == Material.STATIONARY_LAVA)
             return false;
         return Math.abs(location.getBlockX()) < bounds && Math.abs(location.getBlockZ()) < bounds;
+    }
+
+    private static boolean isRunning(){
+        return UHC.arena.currentState() == UHCArena.State.RUNNING;
     }
 }

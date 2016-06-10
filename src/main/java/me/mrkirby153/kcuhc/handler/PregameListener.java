@@ -29,6 +29,8 @@ public class PregameListener implements Listener {
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
+        if (!isPregame())
+            return;
         if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
             return;
         event.setCancelled(true);
@@ -36,12 +38,16 @@ public class PregameListener implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
+        if (!isPregame())
+            return;
         event.setJoinMessage(ChatColor.GREEN + event.getPlayer().getName() + " has joined!");
         event.getPlayer().setAllowFlight(true);
     }
 
     @EventHandler
     public void onLogin(AsyncPlayerPreLoginEvent event) {
+        if (!isPregame())
+            return;
         // Remove the player's data
         if (UHC.arena.currentState() != UHCArena.State.RUNNING) {
             UUID u = event.getUniqueId();
@@ -61,6 +67,8 @@ public class PregameListener implements Listener {
 
     @EventHandler
     public void onLogout(PlayerQuitEvent event) {
+        if (!isPregame())
+            return;
         if (UHC.arena.currentState() != UHCArena.State.RUNNING) {
             // Remove the player from the arena
             UHC.arena.removePlayer(event.getPlayer());
@@ -69,6 +77,8 @@ public class PregameListener implements Listener {
 
     @EventHandler
     public void entityDamage(EntityDamageEvent event) {
+        if (!isPregame())
+            return;
         if (event.getCause() == EntityDamageEvent.DamageCause.VOID)
             return;
         if (event.getEntity() instanceof Player) {
@@ -80,11 +90,15 @@ public class PregameListener implements Listener {
 
     @EventHandler
     public void onFoodChange(FoodLevelChangeEvent event) {
+        if (!isPregame())
+            return;
         event.setCancelled(true);
     }
 
     @EventHandler
     public void itemPickup(PlayerPickupItemEvent event) {
+        if (!isPregame())
+            return;
         if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
             return;
         event.setCancelled(true);
@@ -92,6 +106,8 @@ public class PregameListener implements Listener {
 
     @EventHandler
     public void itemDrop(PlayerDropItemEvent event) {
+        if (!isPregame())
+            return;
         if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
             return;
         event.setCancelled(true);
@@ -99,6 +115,8 @@ public class PregameListener implements Listener {
 
     @EventHandler
     public void blockPlace(BlockPlaceEvent event) {
+        if (!isPregame())
+            return;
         if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
             return;
         event.setCancelled(true);
@@ -106,11 +124,15 @@ public class PregameListener implements Listener {
 
     @EventHandler
     public void entityTarget(EntityTargetEvent event) {
+        if (!isPregame())
+            return;
         event.setCancelled(true);
     }
 
     @EventHandler
     public void hangingBreak(HangingBreakByEntityEvent event) {
+        if (!isPregame())
+            return;
         if (event.getRemover().getType() == EntityType.PLAYER) {
             if (((Player) event.getRemover()).getGameMode() == GameMode.CREATIVE)
                 return;
@@ -120,6 +142,8 @@ public class PregameListener implements Listener {
 
     @EventHandler
     public void vehicleDestroy(VehicleDestroyEvent event) {
+        if (!isPregame())
+            return;
         if (event.getAttacker() instanceof Player) {
             if (((Player) event.getAttacker()).getGameMode() == GameMode.CREATIVE)
                 return;
@@ -128,9 +152,11 @@ public class PregameListener implements Listener {
     }
 
     @EventHandler
-    public void vehiclePush(VehicleEntityCollisionEvent event){
-        if(event.getEntity() instanceof Player){
-            if(((Player) event.getEntity()).getGameMode() == GameMode.CREATIVE)
+    public void vehiclePush(VehicleEntityCollisionEvent event) {
+        if (!isPregame())
+            return;
+        if (event.getEntity() instanceof Player) {
+            if (((Player) event.getEntity()).getGameMode() == GameMode.CREATIVE)
                 return;
             event.setCancelled(true);
         }
@@ -138,6 +164,8 @@ public class PregameListener implements Listener {
 
     @EventHandler
     public void vehicleDamage(VehicleDamageEvent event) {
+        if (!isPregame())
+            return;
         if (event.getAttacker() instanceof Player) {
             if (((Player) event.getAttacker()).getGameMode() == GameMode.CREATIVE) {
                 return;
@@ -147,14 +175,18 @@ public class PregameListener implements Listener {
     }
 
     @EventHandler
-    public void entityInteract(PlayerInteractEntityEvent event){
-        if(event.getPlayer().getGameMode() == GameMode.CREATIVE)
+    public void entityInteract(PlayerInteractEntityEvent event) {
+        if (!isPregame())
+            return;
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
             return;
         event.setCancelled(true);
     }
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
+        if (!isPregame())
+            return;
         if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
             return;
         event.setCancelled(true);
@@ -163,5 +195,9 @@ public class PregameListener implements Listener {
     @EventHandler
     public void weatherChange(WeatherChangeEvent event) {
         event.setCancelled(true);
+    }
+
+    private boolean isPregame() {
+        return UHC.arena.currentState() == UHCArena.State.INITIALIZED || UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.ENDGAME;
     }
 }
