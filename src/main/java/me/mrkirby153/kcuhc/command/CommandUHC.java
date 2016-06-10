@@ -1,15 +1,15 @@
 package me.mrkirby153.kcuhc.command;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.utils.UtilChat;
-import me.mrkirby153.kcuhc.utils.UtilTime;
-import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCArena;
-import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.handler.FreezeHandler;
 import me.mrkirby153.kcuhc.handler.GameListener;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
 import me.mrkirby153.kcuhc.handler.RegenTicket;
+import me.mrkirby153.kcuhc.team.TeamHandler;
+import me.mrkirby153.kcuhc.team.UHCTeam;
+import me.mrkirby153.kcuhc.utils.UtilChat;
+import me.mrkirby153.kcuhc.utils.UtilTime;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -87,7 +87,8 @@ public class CommandUHC extends BaseCommand {
                         UHC.arena.toggleSpreadingPlayers();
                     if (TeamHandler.getTeamByName("debug") == null)
                         UHC.arena.newTeam("debug", ChatColor.GOLD);
-                    TeamHandler.joinTeam(TeamHandler.getTeamByName("debug"), (Player) sender);
+                    for (Player p : Bukkit.getOnlinePlayers())
+                        TeamHandler.joinTeam(TeamHandler.getTeamByName("debug"), p);
                     Bukkit.getScheduler().runTaskLater(UHC.plugin, () -> {
                         sender.setOp(true);
                         sender.sendMessage(UtilChat.message("You are now op"));
