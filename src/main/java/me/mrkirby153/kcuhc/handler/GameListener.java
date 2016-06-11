@@ -334,6 +334,6 @@ public class GameListener implements Listener {
     }
 
     private static boolean isRunning(){
-        return UHC.arena.currentState() == UHCArena.State.RUNNING;
+        return UHC.arena.currentState() == UHCArena.State.RUNNING || UHC.arena.currentState() == UHCArena.State.FROZEN;
     }
 }
