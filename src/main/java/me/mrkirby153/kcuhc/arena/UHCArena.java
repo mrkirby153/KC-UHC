@@ -232,6 +232,7 @@ public class UHCArena implements Runnable, Listener {
         world.setGameRuleValue("doMobSpawning", "true");
         world.setGameRuleValue("doMobLoot", "true");
         world.setGameRuleValue("doDaylightCycle", "true");
+        world.setTime(0);
         PotionEffect resist = new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 6, true, false);
         PotionEffect regen = new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 10, true, false);
         PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 30 * 20, 20, true, false);
