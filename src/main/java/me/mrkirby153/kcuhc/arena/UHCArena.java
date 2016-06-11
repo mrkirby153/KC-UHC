@@ -476,7 +476,7 @@ public class UHCArena implements Runnable, Listener {
                     }
                     state = ENDGAME;
                 }
-                if (worldBorderHandler.overworldTravelComplete()) {
+                if (worldBorderHandler.getOverworld().getSize() <= endSize) {
                     if (!notifiedDisabledSpawn) {
                         for (Player p : Bukkit.getOnlinePlayers()) {
                             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);

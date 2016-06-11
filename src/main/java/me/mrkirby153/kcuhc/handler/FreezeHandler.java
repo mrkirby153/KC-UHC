@@ -1,8 +1,8 @@
 package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.arena.UHCArena;
+import me.mrkirby153.kcuhc.utils.UtilChat;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -14,10 +14,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityShootBowEvent;
-import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -93,7 +90,7 @@ public class FreezeHandler implements Listener, Runnable {
         Vector vector = velocity.get(player.getUniqueId());
         if (vector != null)
             player.setVelocity(vector);
-        if(bypassedPlayers.remove(player.getUniqueId())){
+        if (bypassedPlayers.remove(player.getUniqueId())) {
             player.setOp(false);
             player.setGameMode(GameMode.SURVIVAL);
         }
@@ -218,7 +215,7 @@ public class FreezeHandler implements Listener, Runnable {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void entityDamageEvent(EntityDamageEvent event) {
-        if(event.getEntity().getType() != EntityType.PLAYER)
+        if (event.getEntity().getType() != EntityType.PLAYER || event.getCause() == EntityDamageEvent.DamageCause.VOID)
             return;
         if (!pvpEnabled)
             event.setCancelled(true);
@@ -226,6 +223,11 @@ public class FreezeHandler implements Listener, Runnable {
             return;
         if (frozenPlayers.contains(event.getEntity().getUniqueId()))
             event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void entityDeath(PlayerDeathEvent event) {
+        frozenPlayers.remove(event.getEntity().getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -253,12 +255,12 @@ public class FreezeHandler implements Listener, Runnable {
 
     @Override
     public void run() {
-        if(!isFrozen())
+        if (!isFrozen())
             return;
-        for(Entity e : Bukkit.getWorld("world").getEntities()){
-            if(e.getType() == EntityType.PLAYER)
+        for (Entity e : Bukkit.getWorld("world").getEntities()) {
+            if (e.getType() == EntityType.PLAYER)
                 continue;
-            if(!frozenEntities.containsKey(e))
+            if (!frozenEntities.containsKey(e))
                 frozenEntities.put(e, e.getLocation());
         }
         for (Map.Entry<Entity, Location> e : frozenEntities.entrySet()) {
