@@ -12,6 +12,6 @@ public class ScoreboardManager implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void playerLogin(PlayerLoginEvent event) {
         if (event.getResult() == PlayerLoginEvent.Result.ALLOWED)
-            Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> event.getPlayer().setScoreboard(UHC.arena.scoreboard.getBoard()), 10);
+            Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> event.getPlayer().setScoreboard(UHC.arena.scoreboardUpdater.getScoreboard().getBoard()), 10);
     }
 }

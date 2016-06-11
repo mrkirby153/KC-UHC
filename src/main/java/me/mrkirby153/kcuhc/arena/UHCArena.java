@@ -71,9 +71,9 @@ public class UHCArena implements Runnable, Listener {
     private int countdown;
     private boolean shouldEndCheck = true;
     private boolean shouldSpreadPlayers = true;
-    public UHCScoreboard scoreboard;
+    public ScoreboardUpdater scoreboardUpdater;
 
-    private String winner;
+    protected String winner;
 
     private final World world;
     private final World nether;
@@ -96,11 +96,11 @@ public class UHCArena implements Runnable, Listener {
     private HashMap<UUID, Long> logoutTimes = new HashMap<>();
     private ArrayList<UUID> queuedTeamRemovals = new ArrayList<>();
 
-    private long startTime = 0;
+    protected long startTime = 0;
 
-    private long nextEndgamePhaseIn = -1;
-    private EndgamePhase currentEndgamePhase = EndgamePhase.NORMALGAME;
-    private EndgamePhase nextEndgamePhase;
+    protected long nextEndgamePhaseIn = -1;
+    protected EndgamePhase currentEndgamePhase = EndgamePhase.NORMALGAME;
+    protected EndgamePhase nextEndgamePhase;
 
     private int secondsRemaining;
     private double overworldWorldborderSize;
@@ -142,6 +142,7 @@ public class UHCArena implements Runnable, Listener {
         this.duration = duration;
         this.center = world.getHighestBlockAt(center.getBlockX(), center.getBlockZ()).getLocation();
         this.worldBorderHandler = new WorldBorderHandler(UHC.plugin, this, world, nether);
+        this.scoreboardUpdater = new ScoreboardUpdater(this, new UHCScoreboard());
         minX = center.getBlockX() - startSize;
         maxX = center.getBlockX() + startSize;
         minZ = center.getBlockZ() - startSize;
@@ -149,7 +150,7 @@ public class UHCArena implements Runnable, Listener {
         UHC.plugin.getServer().getPluginManager().registerEvents(new PregameListener(), UHC.plugin);
         UHC.plugin.getServer().getPluginManager().registerEvents(new GameListener(), UHC.plugin);
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this, 0, 20);
-        UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this::drawScoreboard, 0, 1L);
+        UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, scoreboardUpdater::refresh, 0, 1L);
         Thread endgameThread = new Thread() {
             @Override
             public void run() {
@@ -167,7 +168,6 @@ public class UHCArena implements Runnable, Listener {
         endgameThread.setDaemon(true);
         endgameThread.start();
         UHC.plugin.getServer().getPluginManager().registerEvents(this, UHC.plugin);
-        this.scoreboard = new UHCScoreboard();
         craftingRecipes();
     }
 
@@ -200,7 +200,7 @@ public class UHCArena implements Runnable, Listener {
         currentEndgamePhase = EndgamePhase.NORMALGAME;
         nextEndgamePhase = null;
         nextEndgamePhaseIn = -1;
-        scoreboard.createTeams();
+        scoreboardUpdater.getScoreboard().createTeams();
         this.worldBorderHandler.setWorldborder(60);
         this.worldBorderHandler.setWarningDistance(0);
         world.setGameRuleValue("doDaylightCycle", "false");
@@ -530,7 +530,6 @@ public class UHCArena implements Runnable, Listener {
                 break;
         }
         updateDisconnect();
-        drawScoreboard();
     }
 
     private void detonateFirework(Firework firework) {
@@ -623,137 +622,6 @@ public class UHCArena implements Runnable, Listener {
         }
     }
 
-
-    private void drawScoreboard() {
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            if (p.getScoreboard() != scoreboard.getBoard())
-                p.setScoreboard(scoreboard.getBoard());
-        }
-        scoreboard.reset();
-        switch (currentState()) {
-            case WAITING:
-            case INITIALIZED:
-                scoreboard.add(" ");
-                scoreboard.add(ChatColor.RED + "" + ChatColor.BOLD + "WAITING...");
-                scoreboard.add(" ");
-                scoreboard.add("Players: " + Bukkit.getOnlinePlayers().size() + "/" + Bukkit.getMaxPlayers());
-                scoreboard.add(" ");
-                break;
-            case FROZEN:
-                scoreboard.add(ChatColor.RED + "" + ChatColor.GOLD + "The game is frozen!");
-                break;
-            case RUNNING:
-                List<UUID> players = this.players.stream().map(Entity::getUniqueId).collect(Collectors.toList());
-                players.removeAll(TeamHandler.spectatorsTeam().getPlayers());
-                players.sort((o1, o2) -> {
-                    Player p1 = Bukkit.getPlayer(o1);
-                    Player p2 = Bukkit.getPlayer(o2);
-                    if (p1 == null) {
-                        return 1;
-                    }
-                    if (p2 == null) {
-                        return -1;
-                    }
-                    UHCTeam team1 = TeamHandler.getTeamForPlayer(p1);
-                    UHCTeam team2 = TeamHandler.getTeamForPlayer(p2);
-                    if (team1 == null || TeamHandler.spectatorsTeam() == team1) {
-                        return -1;
-                    }
-                    if (team2 == null || TeamHandler.spectatorsTeam() == team2) {
-                        return 1;
-                    }
-                    if (team1.getName().equalsIgnoreCase(team2.getName())) {
-                        return (int) Math.floor(p2.getHealth() - p1.getHealth());
-                    } else {
-                        return team1.getName().compareToIgnoreCase(team2.getName());
-                    }
-                });
-                int spacesNeeded = players.size();
-                if (spacesNeeded < ((nextEndgamePhaseIn == -1) ? 9 : 8)) {
-                    for (UUID u : players) {
-                        OfflinePlayer op = Bukkit.getOfflinePlayer(u);
-                        Player onlinePlayer = null;
-                        UHCTeam team;
-                        if (op instanceof Player) {
-                            team = TeamHandler.getTeamForPlayer((Player) op);
-                            onlinePlayer = (Player) op;
-                        } else
-                            team = null;
-                        if (team == null) {
-                            scoreboard.add(ChatColor.GRAY + op.getName());
-                        } else {
-                            if (team instanceof TeamSpectator)
-                                continue;
-                            scoreboard.add(ChatColor.RED + "" + (int) onlinePlayer.getHealth() + " " + team.getColor() + op.getName());
-                        }
-                    }
-                } else {
-                    List<UHCTeam> teams = TeamHandler.teams().stream().filter(t -> t != TeamHandler.spectatorsTeam()).collect(Collectors.toList());
-                    int teamsIngame = 0;
-                    for (UHCTeam t : teams) {
-                        if (t instanceof TeamSpectator)
-                            continue;
-                        if (t.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count() > 0)
-                            teamsIngame++;
-                    }
-                    scoreboard.add(ChatColor.AQUA + "Teams: ");
-                    if (teamsIngame > 9) {
-                        scoreboard.add(ChatColor.GOLD + "" + teamsIngame + ChatColor.WHITE + " alive");
-                    } else {
-                        HashMap<String, Integer> onlineCount = new HashMap<>();
-                        int offlineCount = 0;
-                        for (UUID u : players) {
-                            Player player = Bukkit.getPlayer(u);
-                            if (player != null) {
-                                UHCTeam team = TeamHandler.getTeamForPlayer(player);
-                                if (team instanceof TeamSpectator)
-                                    continue;
-                                Integer i = onlineCount.get(team.getName());
-                                if (i == null)
-                                    i = 1;
-                                else
-                                    i++;
-                                onlineCount.put(team.getName(), i);
-                            } else {
-                                offlineCount++;
-                            }
-                        }
-                        for (String t : onlineCount.keySet()) {
-                            scoreboard.add(onlineCount.get(t) + " " + TeamHandler.getTeamByName(t).getColor() + TeamHandler.getTeamByName(t).getFriendlyName());
-                        }
-                        if (offlineCount > 0)
-                            scoreboard.add(offlineCount + "" + ChatColor.GRAY + " Offline");
-                    }
-                }
-                scoreboard.add(" ");
-                if (nextEndgamePhase == null && (currentEndgamePhase == NORMALGAME || currentEndgamePhase == SHRINKING_WORLDBORDER)) {
-                    scoreboard.add(ChatColor.YELLOW + "" + ChatColor.BOLD + "Worldborder:");
-                    double[] wbPos = worldborderLoc();
-                    scoreboard.add("from -" + UtilTime.trim(1, wbPos[0]) + " to +" + UtilTime.trim(1, wbPos[0]));
-                    scoreboard.add(" ");
-                } else if (nextEndgamePhase != null && nextEndgamePhaseIn != -1) {
-                    scoreboard.add(ChatColor.DARK_RED + "" + ChatColor.BOLD + nextEndgamePhase.getName());
-                    if (System.currentTimeMillis() > nextEndgamePhaseIn) {
-                        scoreboard.add(" ACTIVE");
-                    } else {
-                        int trim = (int) (nextEndgamePhaseIn - System.currentTimeMillis());
-                        scoreboard.add("  in " + UtilTime.format(1, trim, UtilTime.TimeUnit.FIT));
-                    }
-                    scoreboard.add(" ");
-                }
-                scoreboard.add(ChatColor.GREEN + "" + ChatColor.BOLD + "Time Elapsed");
-                scoreboard.add("  " + UtilTime.format(1, System.currentTimeMillis() - startTime, UtilTime.TimeUnit.FIT));
-                break;
-            case ENDGAME:
-                scoreboard.add(" ");
-                scoreboard.add(ChatColor.RED + "" + ChatColor.BOLD + "ENDED!");
-                scoreboard.add(" ");
-                scoreboard.add(ChatColor.GOLD + "WINNER:");
-                scoreboard.add("   " + winner);
-                scoreboard.add(" ");
-        }
-        scoreboard.draw();
-    }
 
     private void craftingRecipes() {
         ShapedRecipe headApple = new ShapedRecipe(new ItemStack(Material.GOLDEN_APPLE, 1));
@@ -918,7 +786,7 @@ public class UHCArena implements Runnable, Listener {
         return count;
     }
 
-    private double[] worldborderLoc() {
+    protected double[] worldborderLoc() {
         WorldBorder wb = world.getWorldBorder();
         Location l = wb.getCenter();
         double locX = (wb.getSize() / 2) + l.getX();

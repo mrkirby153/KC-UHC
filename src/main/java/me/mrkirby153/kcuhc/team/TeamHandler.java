@@ -30,7 +30,7 @@ public class TeamHandler {
             leaveTeam(player);
         }
         team.addPlayer(player);
-        UHC.arena.scoreboard.setPlayerTeam(player, team.getName());
+        UHC.arena.scoreboardUpdater.getScoreboard().setPlayerTeam(player, team.getName());
         playerToTeamMap.put(player.getUniqueId(), team);
         UHC.arena.addPlayer(player);
     }
@@ -42,7 +42,7 @@ public class TeamHandler {
             if (t != null) {
                 t.removeEntry(player.getName());
             }*/
-            UHC.arena.scoreboard.leaveTeam(player, team.getName());
+            UHC.arena.scoreboardUpdater.getScoreboard().leaveTeam(player, team.getName());
             team.removePlayer(player);
             team.onLeave(player);
             System.out.println("Removing " + player.getName() + " from team " + team.getName());
