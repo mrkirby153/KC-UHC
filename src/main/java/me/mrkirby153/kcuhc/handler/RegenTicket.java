@@ -1,15 +1,15 @@
 package me.mrkirby153.kcuhc.handler;
 
 
-import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.team.TeamHandler;
-import net.minecraft.server.v1_9_R2.NBTTagCompound;
-import net.minecraft.server.v1_9_R2.NBTTagList;
+import me.mrkirby153.kcuhc.utils.UtilChat;
+import net.minecraft.server.v1_10_R1.NBTTagCompound;
+import net.minecraft.server.v1_10_R1.NBTTagList;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.craftbukkit.v1_9_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_10_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -109,7 +109,7 @@ public class RegenTicket implements Listener {
         lore.add(ChatColor.RED + "can only be used by " + ChatColor.GOLD + player.getName());
         meta.setLore(lore);
         item.setItemMeta(meta);
-        net.minecraft.server.v1_9_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
+        net.minecraft.server.v1_10_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
         NBTTagCompound tag;
         if (!nmsStack.hasTag())
             tag = new NBTTagCompound();
@@ -136,7 +136,7 @@ public class RegenTicket implements Listener {
     }
 
     private boolean canUse(Player player, ItemStack stack) {
-        net.minecraft.server.v1_9_R2.ItemStack nmsStack = CraftItemStack.asNMSCopy(stack);
+        net.minecraft.server.v1_10_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(stack);
         NBTTagCompound tag = nmsStack.getTag();
         if (tag == null)
             return false;

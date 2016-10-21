@@ -3,7 +3,7 @@ buildscript{
         mavenCentral();
         maven{
             name = "Quarxel"
-            url = "http://repo.thesandwichnetwork.tk/nexus/content/groups/quarxel/"
+            url = "http://repo.mrkirby153.tk/nexus/content/groups/quarxel/"
             credentials{
                 username project.repositoryUsername
                 password project.repositoryPassword
@@ -25,7 +25,7 @@ repositories{
     jcenter();
     maven{
         name = "Quarxel"
-        url = "http://repo.thesandwichnetwork.tk/nexus/content/repositories/quarxel/"
+        url = "http://repo.mrkirby153.tk/nexus/content/repositories/quarxel/"
         credentials{
             username project.repositoryUsername
             password project.repositoryPassword
@@ -50,7 +50,8 @@ configurations{
 }
 
 dependencies{
-    provided name: "spigot-api", group:"org.spigotmc", version: "1.9-R0.1-SNAPSHOT"
+    provided name: "spigot-api", group:"org.spigotmc", version: "1.10.2-R0.1-SNAPSHOT"
+    provided name: "spigot", group:"org.spigotmc", version:"1.10.2-1"
     compile 'commons-io:commons-io:2.4'
     provided 'org.spigotmc:spigot:1.9.4-1'
 }
