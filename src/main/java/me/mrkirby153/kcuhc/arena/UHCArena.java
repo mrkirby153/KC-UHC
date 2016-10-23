@@ -498,6 +498,7 @@ public class UHCArena implements Runnable, Listener {
 
         players.remove(dead);
         dead.sendMessage(UtilChat.message("You have died and are now a spectator"));
+        spectate(dead);
     }
 
     public void initialize() {

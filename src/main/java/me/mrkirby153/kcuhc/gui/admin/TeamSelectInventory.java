@@ -108,6 +108,7 @@ public class TeamSelectInventory extends Shop<UHC> {
             }
             addButton(slot, item, (player, clickType) -> {
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 2F);
+                TeamHandler.leaveTeam(p);
                 TeamHandler.joinTeam(team, p);
                 build();
             });
