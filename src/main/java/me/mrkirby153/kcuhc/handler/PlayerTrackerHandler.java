@@ -39,6 +39,7 @@ public class PlayerTrackerHandler implements Listener, Runnable {
     public void run() {
         if(!UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get()){
             Bukkit.getOnlinePlayers().forEach(p->p.setCompassTarget(p.getBedSpawnLocation()));
+            Bukkit.getOnlinePlayers().forEach(p->updateCompasses(p, null));
             return;
         }
         Iterator<Map.Entry<UUID, UUID>> iterator = targets.entrySet().iterator();
@@ -222,10 +223,19 @@ public class PlayerTrackerHandler implements Listener, Runnable {
             if (item.getType() == Material.COMPASS) {
                 ItemMeta meta = item.getItemMeta();
                 String tracking = (tracked == null) ? "Right Click to select target" : tracked.getName();
-                meta.setDisplayName(ChatColor.AQUA + "Player Tracker (" + ChatColor.GREEN + ChatColor.BOLD + tracking + ChatColor.RESET + ChatColor.AQUA + ")");
-                item.setItemMeta(meta);
-                tracker.getInventory().setItem(i, item);
-                tracker.updateInventory();
+                if(UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get()) {
+                    meta.setDisplayName(ChatColor.AQUA + "Player Tracker (" + ChatColor.GREEN + ChatColor.BOLD + tracking + ChatColor.RESET + ChatColor.AQUA + ")");
+                    item.setItemMeta(meta);
+                    tracker.getInventory().setItem(i, item);
+                    tracker.updateInventory();
+                } else {
+                    if(meta.getDisplayName() != null) {
+                        meta.setDisplayName(null);
+                        item.setItemMeta(meta);
+                        tracker.getInventory().setItem(i, item);
+                        tracker.updateInventory();
+                    }
+                }
             }
         }
     }

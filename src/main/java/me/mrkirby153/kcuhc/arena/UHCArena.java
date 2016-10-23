@@ -1184,7 +1184,7 @@ public class UHCArena implements Runnable, Listener {
                     if (TeamHandler.isSpectator(p))
                         continue;
                     TextComponent bc;
-                    if (p.getInventory().getItemInMainHand().getType() == Material.COMPASS) {
+                    if (p.getInventory().getItemInMainHand().getType() == Material.COMPASS && UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get()) {
                         double distance = UHC.playerTracker.distanceToTarget(p.getUniqueId());
                         if (Double.isInfinite(distance)) {
                             bc = (TextComponent) UtilChat.generateFormattedChat("Right click to find the closest target!", net.md_5.bungee.api.ChatColor.GOLD, 8);
