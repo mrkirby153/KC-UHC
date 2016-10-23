@@ -290,6 +290,8 @@ public class UHCArena implements Runnable, Listener {
                     }
                 }
             }
+        } else {
+            event.getInventory().setResult(null);
         }
     }
 
@@ -532,12 +534,20 @@ public class UHCArena implements Runnable, Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 0.5F);
             player.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "=============================================");
             player.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "You've picked up a player head!");
-            player.sendMessage(ChatColor.WHITE + "You can use this head to craft a Golden Head for healing");
-            player.sendMessage(ChatColor.WHITE + "A golden head will give you 2x the effects of a golden apple!");
-            player.sendRawMessage(ChatColor.GREEN + "To Craft: " + ChatColor.WHITE + "Use the recipe for a Golden Apple, but replace the apple with the head");
-            player.sendMessage("");
-            player.sendMessage(ChatColor.WHITE + "Optionally, right click the player head to eat it");
-            player.sendMessage("");
+            if(properties.ENABLE_HEAD_APPLE.get()) {
+                player.sendMessage(ChatColor.WHITE + "You can use this head to craft a Head Apple for healing");
+                player.sendMessage(ChatColor.WHITE + "A golden head will give you 2x the effects of a golden apple!");
+                player.sendRawMessage(ChatColor.GREEN + "To Craft: " + ChatColor.WHITE + "Use the recipe for a Golden Apple, but replace the apple with the head");
+                player.sendMessage("");
+                player.sendMessage(ChatColor.WHITE + "Optionally, right click the player head to eat it");
+                player.sendMessage("");
+            } else {
+                player.sendMessage("");
+                player.sendMessage("");
+                player.sendMessage(ChatColor.WHITE + "Right click the head to restore some health");
+                player.sendMessage("");
+                player.sendMessage("");
+            }
             player.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "=============================================");
         }
     }
