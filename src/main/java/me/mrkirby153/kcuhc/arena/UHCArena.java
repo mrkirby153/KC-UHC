@@ -132,6 +132,8 @@ public class UHCArena implements Runnable, Listener {
     private long nextTipIn = -1;
     private int runCount = 0;
 
+    private long graceUntil = -1;
+
 
     public UHCArena(String presetFile) {
         if (presetFile == null)
@@ -183,6 +185,28 @@ public class UHCArena implements Runnable, Listener {
                 p.remove(); // Remove old player object
         }
         this.players.add(player);
+    }
+
+    public void announcePvPGrace() {
+        double msRemaining = this.graceUntil - System.currentTimeMillis();
+        double secondsRemaining = Math.floor(msRemaining / 1000D);
+        double minutesRemaining = Math.floor(secondsRemaining / 60D);
+        if (secondsRemaining <= 0) {
+            Bukkit.getOnlinePlayers().forEach(p->p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F));
+            Bukkit.broadcastMessage(UtilChat.message(ChatColor.RED +""+ ChatColor.BOLD+"PVP ENABLED!"));
+            return;
+        }
+        if (minutesRemaining >= 1) {
+            if (secondsRemaining % 60 == 0) {
+                Bukkit.getOnlinePlayers().forEach(p->p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F));
+                Bukkit.broadcastMessage(UtilChat.message(ChatColor.GREEN + "PVP will be enabled in " + UtilTime.format(1, (long) msRemaining, UtilTime.TimeUnit.FIT)));
+            }
+        } else {
+            if (secondsRemaining < 10 || secondsRemaining == 30 || secondsRemaining == 15) {
+                Bukkit.getOnlinePlayers().forEach(p->p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F));
+                Bukkit.broadcastMessage(UtilChat.message(ChatColor.GREEN + ""+ChatColor.BOLD+"PVP will be enabled in " + secondsRemaining + " seconds"));
+            }
+        }
     }
 
     public void bringEveryoneToLobby() {
@@ -557,6 +581,10 @@ public class UHCArena implements Runnable, Listener {
         return players.toArray(new Player[players.size()]);
     }
 
+    public boolean pvpDisabled() {
+        return this.graceUntil != -1 && System.currentTimeMillis() < graceUntil;
+    }
+
     public void removePlayer(Player player) {
         Iterator<Player> players = this.players.iterator();
         while (players.hasNext()) {
@@ -595,6 +623,8 @@ public class UHCArena implements Runnable, Listener {
                 }
                 break;
             case RUNNING:
+                if (pvpDisabled())
+                    announcePvPGrace();
                 MOTDHandler.setMotd(ChatColor.RED + "Game in progress. " + ChatColor.AQUA + "" + (players.size() - getSpectatorCount()) + ChatColor.RED + " alive");
                 for (Player p : players) {
                     p.setGlowing(false);
@@ -788,6 +818,12 @@ public class UHCArena implements Runnable, Listener {
 
         if (UHC.plugin.getConfig().getBoolean("episodes.use"))
             UHC.markerHandler.startTracking();
+
+        if (properties.PVP_GRACE_MINS.get() > 0) {
+            this.graceUntil = System.currentTimeMillis() + (1000 * 60) * properties.PVP_GRACE_MINS.get();
+            Bukkit.broadcastMessage(UtilChat.message(ChatColor.BOLD + "" + ChatColor.GOLD + "PVP is disabled for " +
+                    UtilTime.format(1, graceUntil - System.currentTimeMillis(), UtilTime.TimeUnit.FIT)));
+        }
     }
 
     public void startCountdown() {

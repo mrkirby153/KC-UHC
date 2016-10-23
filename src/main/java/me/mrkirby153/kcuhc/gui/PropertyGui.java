@@ -31,20 +31,20 @@ public abstract class PropertyGui extends Shop<UHC> {
         });
     }
 
-    protected void integerProperty(ArenaProperties.Property<Integer> property, Material item, String name, int slot) {
+    protected void integerProperty(ArenaProperties.Property<Integer> property, Material item, String name, int slot, int...numbers) {
         int current = property.get();
-        ShopItem i = new ShopItem(item, name + ": " + ChatColor.GOLD + current);
+        ShopItem shopIte = new ShopItem(item, name + ": " + ChatColor.GOLD + current);
 
         // -100 -10 -1
-        addButton(slot, i, null);
-        addButton(slot - 1, makeItem(-1), new IntegerAction(property, -1));
-        addButton(slot - 2, makeItem(-10), new IntegerAction(property, -10));
-        addButton(slot - 3, makeItem(-100), new IntegerAction(property, -100));
+        addButton(slot, shopIte, null);
+        for(int i = 0; i < numbers.length; i++){
+            addButton(slot - (i+1), makeItem(numbers[i]*-1), new IntegerAction(property, numbers[i]*-1));
+            addButton(slot + (i+1), makeItem(numbers[i]), new IntegerAction(property, numbers[i]));
+        }
+    }
 
-        // +1 +10 +100
-        addButton(slot + 1, makeItem(1), new IntegerAction(property, 1));
-        addButton(slot + 2, makeItem(10), new IntegerAction(property, 10));
-        addButton(slot + 3, makeItem(100), new IntegerAction(property, 100));
+    protected void integerProperty(ArenaProperties.Property<Integer> property, Material item, String name, int slot){
+        integerProperty(property, item, name, slot, 1, 10, 100);
     }
 
     private ShopItem makeItem(int count) {

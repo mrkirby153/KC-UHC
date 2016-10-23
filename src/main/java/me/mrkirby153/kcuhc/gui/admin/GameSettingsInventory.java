@@ -32,7 +32,7 @@ public class GameSettingsInventory extends PropertyGui {
             new GameAdminInventory(module, player);
         });
 
-        addButton(49, new ShopItem(Material.BARRIER, "Worldborder Settings"), (player, clickType) -> {
+        addButton(53, new ShopItem(Material.BARRIER, "Worldborder Settings"), (player, clickType) -> {
             player.closeInventory();
             new WorldborderSettingsInventory(module, player);
         });
@@ -41,6 +41,7 @@ public class GameSettingsInventory extends PropertyGui {
             player.closeInventory();
             new TeamSelectInventory(module, player);
         });
+        integerProperty(properties.PVP_GRACE_MINS, Material.DIAMOND_HELMET, "PvP Grace (mins)", 49, 1, 3);
     }
 
 }

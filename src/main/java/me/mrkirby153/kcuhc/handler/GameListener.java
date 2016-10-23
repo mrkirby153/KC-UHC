@@ -93,6 +93,9 @@ public class GameListener implements Listener {
         if(!isRunning())
             return;
         if (event.getDamager().getType() == EntityType.PLAYER || event.getEntity().getType() != EntityType.PLAYER) {
+            if(UHC.arena.pvpDisabled()){
+                event.setCancelled(true);
+            }
             return;
         }
         double oldDamage = event.getDamage();
