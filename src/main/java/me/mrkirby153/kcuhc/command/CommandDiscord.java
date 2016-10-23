@@ -1,17 +1,19 @@
 package me.mrkirby153.kcuhc.command;
 
-import com.google.common.io.ByteArrayDataInput;
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.utils.UtilChat;
-import me.mrkirby153.kcuhc.discord.commands.Link;
-import me.mrkirby153.kcuhc.discord.commands.LinkCode;
+import me.mrkirby153.uhc.bot.network.PlayerInfo;
+import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandCreateSpectator;
+import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandLink;
+import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandNewTeam;
+import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandRemoveTeam;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -30,9 +32,8 @@ public class CommandDiscord extends BaseCommand {
         }
         Player player = (Player) sender;
         if (args[0].equalsIgnoreCase("link")) {
-            ByteArrayDataInput response = new LinkCode(player).send();
-            int responseCode = response.readInt();
-            String code = response.readUTF();
+            String code = generateCode(5);
+            setCode(player, code);
             BaseComponent line = UtilChat.generateFormattedChat("=============================================", ChatColor.GREEN, 10);
             BaseComponent padding = new TextComponent(" ");
             BaseComponent info = UtilChat.generateFormattedChat("   Your link code is ", ChatColor.WHITE, 0);
@@ -63,9 +64,6 @@ public class CommandDiscord extends BaseCommand {
                 p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1F, 0.8F);
             }
         }
-        if (args[0].equalsIgnoreCase("reconnect")) {
-            UHC.discordHandler.connect();
-        }
         if (args[0].equalsIgnoreCase("join")) {
             BaseComponent component = UtilChat.generateFormattedChat("To add the discord bot to your server, click ", ChatColor.GREEN);
             component.addExtra(UtilChat.generateHyperlink(UtilChat.generateBoldChat("[HERE]", ChatColor.BLUE),
@@ -77,16 +75,22 @@ public class CommandDiscord extends BaseCommand {
         if (args[0].equalsIgnoreCase("serverlink")) {
             String guildId = args[1];
             String serverId = UHC.plugin.getConfig().getString("discord.serverId");
-            new Link(serverId, guildId).send();
+            new BotCommandLink(serverId, guildId).publishBlocking();
             sender.sendMessage(UtilChat.message("Linked this server to the discord server"));
         }
         if (args[0].equalsIgnoreCase("cinit")) {
             sender.sendMessage(UtilChat.message("Generating discord channels..."));
-            UHC.discordHandler.createAllTeamChannels(() -> sender.sendMessage(UtilChat.message("Discord channels generated!")));
+            new BotCommandCreateSpectator(UHC.plugin.serverId()).publishBlocking();
+            TeamHandler.teams().forEach(t -> {
+                new BotCommandNewTeam(UHC.plugin.serverId(), t.getName()).publishBlocking();
+                System.out.println("Created channel "+t.getName());
+            });
+            UtilChat.message("Discord channels generated!");
         }
         if (args[0].equalsIgnoreCase("shutdown")) {
             sender.sendMessage(UtilChat.message("Removing discord channels..."));
-            UHC.discordHandler.deleteAllTeamChannels(() -> sender.sendMessage(UtilChat.message("Done!")));
+            TeamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getName()).publishBlocking());
+            sender.sendMessage("Done!");
         }
         if (args[0].equalsIgnoreCase("disperse")) {
             sender.sendMessage(UtilChat.message("Sending everyone to their channels..."));
@@ -98,20 +102,14 @@ public class CommandDiscord extends BaseCommand {
         }
         if (args[0].equalsIgnoreCase("linked")) {
             player.sendMessage(ChatColor.GRAY + "" + ChatColor.ITALIC + "Looking up all online player's discord link status");
-            UHC.discordHandler.getAllLinkedPlayers(data -> data.entrySet().forEach(e -> {
-                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(e.getKey());
-                if (offlinePlayer == null)
+            Bukkit.getOnlinePlayers().forEach(p -> {
+                PlayerInfo info = UHC.uhcNetwork.getPlayerInfo(p.getUniqueId());
+                if(info == null || !info.isLinked()){
+                    sender.sendMessage(ChatColor.WHITE+p.getName()+" is not linked!");
                     return;
-                String value = e.getValue();
-                player.sendMessage(ChatColor.WHITE + offlinePlayer.getName());
-                if (value == null) {
-                    player.sendMessage("  + " + ChatColor.RED + ChatColor.BOLD + "Unlinked!");
-                } else {
-                    String discordName = value.split("::")[1].replace("\\:\\:", "::");
-                    String discordId = value.split("::")[0].replace("\\:\\:", "::");
-                    player.sendMessage("  + " + ChatColor.DARK_GREEN + discordName + " (" + discordId + ")");
                 }
-            }));
+                sender.sendMessage(ChatColor.GREEN+p.getName()+" is linked!");
+            });
         }
         return true;
     }
@@ -123,5 +121,17 @@ public class CommandDiscord extends BaseCommand {
             sb.append(validChars.charAt(r.nextInt(validChars.length())));
         }
         return sb.toString();
+    }
+
+    private void setCode(Player player, String code){
+        PlayerInfo info = UHC.uhcNetwork.getPlayerInfo(player.getUniqueId());
+        if(info == null) {
+            info = new PlayerInfo(player.getUniqueId(), player.getName());
+            UHC.uhcNetwork.getDatastore().addElement(info);
+            setCode(player, code);
+            return;
+        }
+        info.setLinkCode(code);
+        info.update();
     }
 }

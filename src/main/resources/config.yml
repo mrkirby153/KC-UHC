@@ -11,8 +11,12 @@ discord:
   serverId: ''
   # Enables discord integration
   useDiscord: false
+  # The host of the redis server
   botHost: 'localhost'
-  botPort: 6969
+  # The redis server's port
+  botPort: 6379
+  # A password for the redis server
+  botPassword: ''
   inviteUrl: ''
 episodes:
   # Enable episode markers

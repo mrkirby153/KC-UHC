@@ -43,6 +43,10 @@ repositories{
         name="bintray"
         url="http://jcenter.bintray.com"
     }
+    maven {
+        name="mrkirby153"
+        url="http://repo.mrkirby153.tk/nexus/snapshots/"
+    }
 }
 configurations{
     provided
@@ -54,6 +58,7 @@ dependencies{
     provided name: "spigot", group:"org.spigotmc", version:"1.10.2-1"
     compile 'commons-io:commons-io:2.4'
     provided 'org.spigotmc:spigot:1.9.4-1'
+    compile 'me.mrkirby153:KC-UHC-Bot-Network:2.0-SNAPSHOT'
 }
 jar {
     dependsOn configurations.runtime

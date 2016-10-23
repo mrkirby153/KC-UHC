@@ -3,9 +3,9 @@ package me.mrkirby153.kcuhc.team;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.UHCArena;
-import me.mrkirby153.kcuhc.discord.commands.AssignSpectator;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.shop.Inventory;
+import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandAssignSpectator;
 import net.md_5.bungee.api.ChatColor;
 import net.minecraft.server.v1_10_R1.EntityPlayer;
 import org.bukkit.Bukkit;
@@ -32,9 +32,9 @@ public class TeamSpectator extends UHCTeam {
         player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0, true, false));
         if (UHC.arena.currentState() == UHCArena.State.RUNNING)
             new SpecInventory(UHC.plugin, player);
-        if (UHC.discordHandler != null) {
+        if (UHC.uhcNetwork != null) {
             System.out.println("Giving " + player.getName() + " the spectator role");
-            new AssignSpectator(player).send();
+            new BotCommandAssignSpectator(UHC.plugin.serverId(), player.getUniqueId()).publish();
         }
         hideFromPlayers(player);
         player.setHealth(player.getMaxHealth());

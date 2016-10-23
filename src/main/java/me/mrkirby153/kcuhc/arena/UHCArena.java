@@ -2,9 +2,6 @@ package me.mrkirby153.kcuhc.arena;
 
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.discord.commands.AssignSpectator;
-import me.mrkirby153.kcuhc.discord.commands.AssignTeams;
-import me.mrkirby153.kcuhc.discord.commands.ToLobby;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
@@ -15,6 +12,12 @@ import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.utils.UtilTime;
 import me.mrkirby153.kcuhc.utils.UtilTitle;
+import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandAssignSpectator;
+import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandCreateSpectator;
+import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandToLobby;
+import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandAssignTeams;
+import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandNewTeam;
+import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandRemoveTeam;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_10_R1.IChatBaseComponent;
@@ -55,7 +58,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static me.mrkirby153.kcuhc.UHC.discordHandler;
+import static me.mrkirby153.kcuhc.UHC.uhcNetwork;
 import static me.mrkirby153.kcuhc.arena.UHCArena.EndgamePhase.NORMALGAME;
 import static me.mrkirby153.kcuhc.arena.UHCArena.EndgamePhase.SHRINKING_WORLDBORDER;
 import static me.mrkirby153.kcuhc.arena.UHCArena.State.*;
@@ -292,8 +295,8 @@ public class UHCArena implements Runnable, Listener {
     public void spectate(Player player, boolean switchRole) {
         TeamHandler.joinTeam(TeamHandler.spectatorsTeam(), player);
         if (switchRole) {
-            if (discordHandler != null) {
-                new AssignSpectator(player).send();
+            if (uhcNetwork != null) {
+                new BotCommandAssignSpectator(UHC.plugin.serverId(), player.getUniqueId()).publish();
             }
         }
     }
@@ -352,8 +355,8 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void essentiallyDisable() {
-        if (UHC.discordHandler != null)
-            UHC.discordHandler.deleteAllTeamChannels(null);
+        if (UHC.uhcNetwork != null)
+            TeamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getName()).publish());
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.setAllowFlight(false);
             p.setGameMode(GameMode.SURVIVAL);
@@ -893,29 +896,27 @@ public class UHCArena implements Runnable, Listener {
 
 
     public void sendEveryoneToTeamChannels() {
-        if (discordHandler == null)
+        if (UHC.uhcNetwork == null)
             return;
         Bukkit.broadcastMessage(UtilChat.message("Creating discord channels..."));
-        UHC.discordHandler.createAllTeamChannels(() -> UHC.discordHandler.processAsync(() -> {
+        /*UHC.discordHandler.createAllTeamChannels(() -> UHC.discordHandler.processAsync(() -> {
             Bukkit.broadcastMessage(UtilChat.message("Moving everyone to their discord channel"));
-/*            ByteArrayDataOutput out = ByteStreams.newDataOutput();
-            out.writeUTF(UHC.plugin.serverId());
-            out.writeUTF("assignTeams");
-            out.writeInt((int) players.stream().filter(p -> TeamHandler.getTeamForPlayer(p) != null).count());
-            players.stream().filter(p -> TeamHandler.getTeamForPlayer(p) != null).forEach(p -> {
-                out.writeUTF(p.getUniqueId().toString());
-                out.writeUTF(TeamHandler.getTeamForPlayer(p).getName());
-            });
-            UHC.discordHandler.sendMessage(out.toByteArray());*/
             new AssignTeams(TeamHandler.teams()).send();
-        }, () -> Bukkit.broadcastMessage(UtilChat.message("Everyone should be moved"))));
+        }, () -> Bukkit.broadcastMessage(UtilChat.message("Everyone should be moved"))));*/
+        new BotCommandCreateSpectator(UHC.plugin.serverId()).publishBlocking();
+        TeamHandler.teams().forEach(t -> new BotCommandNewTeam(UHC.plugin.serverId(), t.getName()).publishBlocking());
+        Bukkit.broadcastMessage(UtilChat.message("Moving everyone into their discord channels"));
+        HashMap<UUID, String> teams = new HashMap<>();
+        TeamHandler.teams().forEach(t->t.getPlayers().forEach(u-> teams.put(u, t.getName())));
+        new BotCommandAssignTeams(UHC.plugin.serverId(), null, teams).publishBlocking();
+        Bukkit.broadcastMessage(UtilChat.message("Everyone should be moved"));
     }
 
     public void bringEveryoneToLobby() {
-        if (discordHandler == null)
-            return;
-        new ToLobby().send();
-        UHC.discordHandler.deleteAllTeamChannels(null);
+        if(UHC.uhcNetwork != null){
+            new BotCommandToLobby(UHC.plugin.serverId()).publish();
+            TeamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getName()).publish());
+        }
     }
 
     public void setEndgamePhase(EndgamePhase endgamePhase) {

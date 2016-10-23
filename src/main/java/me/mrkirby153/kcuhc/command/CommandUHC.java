@@ -122,8 +122,6 @@ public class CommandUHC extends BaseCommand {
                 return true;
             }
             if (args[0].equalsIgnoreCase("singlepersonteams")) {
-                if (UHC.discordHandler != null)
-                    UHC.discordHandler.shutdown();
                 List<ChatColor> usedColors = new ArrayList<>();
                 List<ChatColor> blacklistedColors = Arrays.asList(ChatColor.BOLD, ChatColor.STRIKETHROUGH, ChatColor.RESET, ChatColor.MAGIC, ChatColor.UNDERLINE);
                 HashMap<Player, UHCTeam> teams = new HashMap<>();

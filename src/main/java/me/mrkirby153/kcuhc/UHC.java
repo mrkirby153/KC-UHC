@@ -2,11 +2,12 @@ package me.mrkirby153.kcuhc;
 
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.command.*;
-import me.mrkirby153.kcuhc.discord.DiscordBotConnection;
 import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.scoreboard.ScoreboardManager;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.TeamSpectator;
+import me.mrkirby153.uhc.bot.network.UHCNetwork;
+import me.mrkirby153.uhc.bot.network.data.RedisConnection;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -26,7 +27,10 @@ public class UHC extends JavaPlugin {
     public static SpectateListener spectateListener;
 
 
-    public static DiscordBotConnection discordHandler;
+//    public static DiscordBotConnection discordHandler;
+
+    public static UHCNetwork uhcNetwork;
+
 
     public static PlayerTrackerHandler playerTracker;
 
@@ -56,8 +60,12 @@ public class UHC extends JavaPlugin {
                 e.printStackTrace();
             }*/
             getCommand("discord").setExecutor(new CommandDiscord());
-            discordHandler = new DiscordBotConnection(getConfig().getString("discord.botHost"), getConfig().getInt("discord.botPort"));
-            discordHandler.connect();
+/*            discordHandler = new DiscordBotConnection(getConfig().getString("discord.botHost"), getConfig().getInt("discord.botPort"));
+            discordHandler.connect();*/
+            String botHost = getConfig().getString("discord.botHost");
+            int botPort = getConfig().getInt("discord.botPort");
+            String password = getConfig().getString("discord.botPassword");
+            uhcNetwork = new UHCNetwork(new RedisConnection(botHost, botPort, password.equals("")? null : password));
             if (getConfig().getString("discord.serverId") == null || getConfig().getString("discord.serverId").isEmpty()) {
                 String acceptableChars = "ABCEDFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
                 Random r = new SecureRandom();
@@ -94,8 +102,6 @@ public class UHC extends JavaPlugin {
     @Override
     public void onDisable() {
         TeamHandler.unregisterAll();
-        if (discordHandler != null)
-            discordHandler.shutdown();
     }
 
     public static boolean isAdmin(Player player) {
