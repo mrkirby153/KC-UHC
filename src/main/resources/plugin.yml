@@ -1,5 +1,5 @@
 name: KC-UHC
-version: 1.0-SNAPSHOT
+version: ${project.version}
 author: mrkirby153
 main: me.mrkirby153.kcuhc.UHC
 commands:

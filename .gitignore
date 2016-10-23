@@ -14,17 +14,11 @@
 # Maven
 log/
 target/
+dependency-reduced-pom.xml
 
 # .bak files
 *.bak
 
-# Gradle
-.gradle/
-gradle.properties
-build/
-
-# QuarxelManager
 testServer/
-
 development.ppk
 classes/
