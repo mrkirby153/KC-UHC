@@ -26,8 +26,9 @@ public class CommandUHC extends BaseCommand {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            if (sender instanceof Player)
-                new GameAdminInventory(UHC.plugin, (Player) sender);
+            if (UHC.isAdmin(sender.getName()) || sender.isOp())
+                if (sender instanceof Player)
+                    new GameAdminInventory(UHC.plugin, (Player) sender);
             return true;
         }
         if (args.length == 1) {
@@ -290,7 +291,7 @@ public class CommandUHC extends BaseCommand {
                     sender.sendMessage(UtilChat.message("Loaded property file " + ChatColor.GOLD + propName + ".json"));
                     return true;
                 }
-                if(args[1].equalsIgnoreCase("save")){
+                if (args[1].equalsIgnoreCase("save")) {
                     String propName = args[2];
                     ArenaProperties.saveProperties(UHC.arena.getProperties(), propName);
                     sender.sendMessage(UtilChat.message("Saved property file " + ChatColor.GOLD + propName + ".json"));
