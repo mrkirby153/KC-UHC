@@ -67,30 +67,46 @@ import static me.mrkirby153.kcuhc.utils.UtilChat.generateBoldChat;
 public class UHCArena implements Runnable, Listener {
 
 
-    private ArrayList<Player> players = new ArrayList<>();
+    private static final int WORLDBORDER_WARN_DIST = 50;
+    private static final int TIP_TIME = 30000;
 
-    private State state = State.INITIALIZED;
-    private int generationTaskId;
-    private int countdown;
-    private boolean shouldEndCheck = true;
-    private boolean shouldSpreadPlayers = true;
-    public ScoreboardUpdater scoreboardUpdater;
-
-    protected String winner;
-
+    // Worlds
     private final World world;
     private final World nether;
 
+    // Configuration settings
     private final int startSize;
     private final int endSize;
     private final int duration;
     private final int minX, maxX, minZ, maxZ;
     private final Location center;
 
-    private WorldBorderHandler worldBorderHandler;
-    private static final int WORLDBORDER_WARN_DIST = 50;
-    private int launchedFw = 0;
+    public ScoreboardUpdater scoreboardUpdater;
 
+    protected String winner;
+    protected long startTime = 0;
+    protected long nextEndgamePhaseIn = -1;
+    protected EndgamePhase currentEndgamePhase = EndgamePhase.NORMALGAME;
+    protected EndgamePhase nextEndgamePhase;
+
+    private CountdownBarTask countdownTask;
+    private boolean firstAnnounce = true;
+    private boolean shouldAnnounce = false;
+    private String lastAnnounced = "-1";
+
+    private ArrayList<Player> players = new ArrayList<>();
+
+    private State state = State.INITIALIZED;
+
+    private int generationTaskId;
+    private int countdown;
+
+    private boolean shouldEndCheck = true;
+    private boolean shouldSpreadPlayers = true;
+
+    private WorldBorderHandler worldBorderHandler;
+
+    private int launchedFw = 0;
     private Color winningTeamColor = Color.WHITE;
 
     private List<Player> previouslyOpped = new ArrayList<>();
@@ -98,12 +114,6 @@ public class UHCArena implements Runnable, Listener {
     private HashMap<UUID, String> uuidToStringMap = new HashMap<>();
     private HashMap<UUID, Long> logoutTimes = new HashMap<>();
     private ArrayList<UUID> queuedTeamRemovals = new ArrayList<>();
-
-    protected long startTime = 0;
-
-    protected long nextEndgamePhaseIn = -1;
-    protected EndgamePhase currentEndgamePhase = EndgamePhase.NORMALGAME;
-    protected EndgamePhase nextEndgamePhase;
 
     private int secondsRemaining;
     private double overworldWorldborderSize;
@@ -114,7 +124,6 @@ public class UHCArena implements Runnable, Listener {
     private long frozen_nextEndgamePhaseIn;
 
     private boolean notifiedDisabledSpawn = false;
-
 
     private String[] tips = new String[]{
             ChatColor.GOLD + "Craft a Head Apple by surrounding a player head in gold!",
@@ -134,7 +143,7 @@ public class UHCArena implements Runnable, Listener {
     };
 
     private long nextTipIn = -1;
-    private static final int TIP_TIME = 30000;
+    private int runCount = 0;
 
 
     public UHCArena(World world, int startSize, int endSize, int duration, Location center) {
@@ -146,12 +155,16 @@ public class UHCArena implements Runnable, Listener {
         this.center = world.getHighestBlockAt(center.getBlockX(), center.getBlockZ()).getLocation();
         this.worldBorderHandler = new WorldBorderHandler(UHC.plugin, this, world, nether);
         this.scoreboardUpdater = new ScoreboardUpdater(this, new UHCScoreboard());
+
         minX = center.getBlockX() - startSize;
         maxX = center.getBlockX() + startSize;
         minZ = center.getBlockZ() - startSize;
         maxZ = center.getBlockZ() + startSize;
+
         UHC.plugin.getServer().getPluginManager().registerEvents(new PregameListener(), UHC.plugin);
         UHC.plugin.getServer().getPluginManager().registerEvents(new GameListener(), UHC.plugin);
+        UHC.plugin.getServer().getPluginManager().registerEvents(this, UHC.plugin);
+
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this, 0, 20);
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, scoreboardUpdater::refresh, 0, 1L);
         Thread endgameThread = new Thread() {
@@ -170,8 +183,248 @@ public class UHCArena implements Runnable, Listener {
         endgameThread.setName("Endgame Thread");
         endgameThread.setDaemon(true);
         endgameThread.start();
-        UHC.plugin.getServer().getPluginManager().registerEvents(this, UHC.plugin);
+
         craftingRecipes();
+    }
+
+    public static UHCArena loadFromFile() {
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new File(UHC.plugin.getDataFolder(), "arena.yml"));
+        return new UHCArena(Bukkit.getWorld(cfg.getString("world")), cfg.getInt("startSize"), cfg.getInt("endSize"), cfg.getInt("duration"), (Location) cfg.get("startingPoint"));
+    }
+
+    public void addPlayer(Player player) {
+        Iterator<Player> p = players.iterator();
+        while (p.hasNext()) {
+            if (p.next().getUniqueId().equals(player.getUniqueId()))
+                p.remove(); // Remove old player object
+        }
+        this.players.add(player);
+    }
+
+    public void bringEveryoneToLobby() {
+        if (UHC.uhcNetwork != null) {
+            new BotCommandToLobby(UHC.plugin.serverId()).publish();
+            TeamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getName()).publish());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void chatEvent(AsyncPlayerChatEvent event) {
+        UHCTeam team = TeamHandler.getTeamForPlayer(event.getPlayer());
+        if (team != null) {
+            if (team instanceof TeamSpectator) {
+                event.setFormat(ChatColor.GRAY + "Spectator %s " + ChatColor.WHITE + "%s");
+            } else {
+                event.setFormat(team.getColor() + "%s " + ChatColor.WHITE + "%s");
+            }
+        } else {
+            event.setFormat(ChatColor.GRAY + "%s " + ChatColor.WHITE + "%s");
+        }
+    }
+
+    @EventHandler
+    public void consumeHeadApple(PlayerItemConsumeEvent event) {
+        if (event.getItem().getItemMeta().getDisplayName() == null)
+            return;
+        if (!event.getItem().getItemMeta().getDisplayName().contains("Head"))
+            return;
+        if (!event.getItem().getEnchantments().containsKey(Enchantment.ARROW_DAMAGE))
+            return;
+        if (event.getItem().getType() != Material.GOLDEN_APPLE) {
+            return;
+        }
+
+        event.getPlayer().sendMessage(UtilChat.message("You ate a head apple"));
+
+        UHCTeam team = TeamHandler.getTeamForPlayer(event.getPlayer());
+        if (team != null) {
+            team.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).forEach(p -> {
+                p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
+                p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
+
+                if (p.getUniqueId().equals(event.getPlayer().getUniqueId())) {
+                    p.sendMessage(UtilChat.message("You have given your team Regeneration II and Absorption!"));
+                } else {
+                    p.sendMessage(UtilChat.message(ChatColor.GOLD + event.getPlayer().getName() + ChatColor.GRAY + " ate a head apple, giving you Regeneration II and Absorption!"));
+                }
+            });
+        } else {
+            event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
+            event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
+            event.getPlayer().sendMessage(UtilChat.message("You are not on a team so only you get the effects"));
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void craftGoldenHead(PrepareItemCraftEvent event) {
+        if (event.getRecipe().getResult() == null)
+            return;
+        Material type = event.getRecipe().getResult().getType();
+        if (type != Material.GOLDEN_APPLE)
+            return;
+        if (event.getInventory() == null)
+            return;
+
+        CraftingInventory inv = event.getInventory();
+        for (ItemStack item : inv.getMatrix()) {
+            if (item != null && item.getType() != Material.AIR) {
+                if (item.getType() == Material.SKULL_ITEM || item.getType() == Material.SKULL) {
+                    if (item.getItemMeta() == null)
+                        continue;
+                    ItemStack apple = new ItemStack(Material.GOLDEN_APPLE, 1);
+                    ItemMeta meta = apple.getItemMeta();
+                    meta.setDisplayName(ChatColor.AQUA + "Head Apple");
+                    apple.setItemMeta(meta);
+                    apple.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
+                    inv.setResult(apple);
+                    return;
+                }
+            }
+        }
+    }
+
+    public State currentState() {
+        return this.state;
+    }
+
+    public void distributeTeams(int minRadius) {
+        System.out.println("Worldborder location: +-" + world.getWorldBorder().getSize() / 2);
+        System.out.println("Spreading teams...");
+
+        // Calculate team spawn locations
+        Map<UHCTeam, Location> locations = new HashMap<>();
+        for (UHCTeam team : TeamHandler.teams().stream().filter(t -> !(t instanceof TeamSpectator)).collect(Collectors.toList())) {
+            Location randomSpawn = SpawnUtils.getRandomSpawn(world, startSize);
+            locations.put(team, randomSpawn);
+        }
+
+        // Verify that the teams are spread far enough apart
+        for (UHCTeam team : locations.keySet()) {
+            Location spawnLoc = locations.get(team);
+            // Attempt 1,000 tries
+            for (int i = 0; i < 1000; i++) {
+                boolean clash = false;
+                for (Location oL : locations.values()) {
+                    if (oL.distanceSquared(spawnLoc) < Math.pow(minRadius, 2) && !oL.equals(spawnLoc)) {
+                        System.out.println("CLASH! " + spawnLoc.toString() + " is too close to " + oL.toString());
+                        clash = true;
+                    }
+                    if (!clash)
+                        break;
+                    spawnLoc = SpawnUtils.getRandomSpawn(world, startSize);
+                }
+            }
+            // Teleport everyone on the team to that location
+            System.out.println(String.format("Teleporting players on team around %s to %.2f, %.2f, %.2f", team.getName(), spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ()));
+            for (Player p : team.getPlayers().stream().map(Bukkit::getPlayer).filter(pl -> pl != null).collect(Collectors.toList())) {
+                Location spawnAround = SpawnUtils.getSpawnAround(spawnLoc, 2);
+                System.out.println(String.format("\tTeleporting %s to %.2f, %.2f, %.2f", p.getName(), spawnAround.getX(), spawnAround.getY(), spawnAround.getZ()));
+                p.teleport(spawnAround);
+            }
+        }
+
+        System.out.println("Spread teams!");
+        System.out.println("Despawning players...");
+        // Despawn all the players in attempt to prevent invisible players
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            PacketPlayOutEntityDestroy destroyPacket = new PacketPlayOutEntityDestroy(p.getEntityId());
+            for (Player other : Bukkit.getOnlinePlayers()) {
+                if (other.getUniqueId().equals(p.getUniqueId()))
+                    continue;
+                ((CraftPlayer) other).getHandle().playerConnection.sendPacket(destroyPacket);
+            }
+        }
+
+        // Respawn everyone 5 ticks later
+        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> {
+            System.out.println("Respawning players");
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                PacketPlayOutNamedEntitySpawn spawn = new PacketPlayOutNamedEntitySpawn(((CraftPlayer) p).getHandle());
+                for (Player other : Bukkit.getOnlinePlayers()) {
+                    if (p.getUniqueId().equals(other.getUniqueId()))
+                        continue;
+                    ((CraftPlayer) other).getHandle().playerConnection.sendPacket(spawn);
+                }
+            }
+        }, 5L);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void eatHead(PlayerInteractEvent event) {
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
+            if (event.getItem() != null)
+                if (event.getItem().getType() == Material.SKULL_ITEM && event.getItem().getDurability() == 3) {
+                    event.setCancelled(true);
+
+                    if (event.getItem().getAmount() == 1)
+                        event.getPlayer().getInventory().remove(event.getItem());
+                    else {
+                        event.getItem().setAmount(event.getItem().getAmount() - 1);
+                        event.getPlayer().getInventory().setItemInMainHand(event.getItem());
+                    }
+
+                    Bukkit.getOnlinePlayers().forEach(p -> p.playSound(event.getPlayer().getLocation(), Sound.ENTITY_PLAYER_BURP, 1F, 1F));
+
+                    event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 125, 1));
+                    event.getPlayer().sendMessage(UtilChat.message("You have been given Regeneration"));
+                }
+        }
+    }
+
+    public int endSize() {
+        return endSize;
+    }
+
+    public void essentiallyDisable() {
+        if (UHC.uhcNetwork != null)
+            TeamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getName()).publish());
+
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            p.setAllowFlight(false);
+            p.setGameMode(GameMode.SURVIVAL);
+            p.teleport(p.getLocation().add(0, 10, 0));
+        }
+
+        HandlerList.unregisterAll(UHC.plugin);
+
+        Bukkit.getServer().getScheduler().cancelTasks(UHC.plugin);
+
+        this.worldBorderHandler.setWorldborder(this.worldBorderHandler.getOverworld().getSize() + 150, 0);
+        UHC.plugin.getPluginLoader().disablePlugin(UHC.plugin);
+    }
+
+    public void freeze() {
+        int secondsPassed = Math.toIntExact((System.currentTimeMillis() - startTime) / 1000);
+
+        System.out.println("Duration: " + duration);
+        System.out.println("Seconds passed: " + secondsPassed);
+        this.secondsRemaining = this.duration - secondsPassed;
+
+        System.out.println("Seconds remaining: " + secondsRemaining);
+        overworldWorldborderSize = world.getWorldBorder().getSize();
+        world.getWorldBorder().setSize(overworldWorldborderSize);
+        System.out.println("Worldborder size: " + overworldWorldborderSize);
+
+        frozen_nextEndgamePhase = nextEndgamePhase;
+        frozen_nextEndgamePhaseIn = nextEndgamePhaseIn;
+        nextEndgamePhase = null;
+        nextEndgamePhaseIn = -1;
+        frozen_endgamePhase = currentEndgamePhase;
+        currentEndgamePhase = NORMALGAME;
+        freezeStartTime = System.currentTimeMillis();
+
+        if (nether != null) {
+            netherWorldborderSize = nether.getWorldBorder().getSize();
+            nether.getWorldBorder().setSize(netherWorldborderSize);
+        }
+        this.state = FROZEN;
+        Bukkit.getOnlinePlayers().stream().filter(p -> !TeamHandler.isSpectator(p)).forEach(FreezeHandler::freezePlayer);
+        world.getEntities().stream().filter(e -> e.getType() != EntityType.PLAYER).forEach(e -> FreezeHandler.frozenEntities.put(e, e.getLocation()));
+
+        world.setGameRuleValue("doDaylightCycle", "false");
+        FreezeHandler.pvpEnabled = false;
+
+        Bukkit.broadcastMessage(UtilChat.message("The game is now frozen"));
     }
 
     public void generate() {
@@ -192,11 +445,30 @@ public class UHCArena implements Runnable, Listener {
         initialize();
     }
 
-    //todo: Remove me
-    public void temp_FireworkLaunch(Color color) {
-        this.launchedFw = 0;
-        this.winningTeamColor = color;
-        this.state = ENDGAME;
+    public Location getCenter() {
+        return center;
+    }
+
+    public World getWorld() {
+        return world;
+    }
+
+    public void handleDeathMessage(Player dead, String message) {
+        for (Player p : players) {
+            UtilTitle.title(p, ChatColor.DARK_PURPLE + dead.getDisplayName(), ChatColor.AQUA + message.replace(dead.getName(), ""), 10, 20 * 5, 20);
+            p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_THUNDER, 1, 1);
+        }
+
+        Location playerLoc = dead.getLocation();
+        // Drop the player's head
+        ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
+        ItemMeta m = head.getItemMeta();
+        ((SkullMeta) m).setOwner(dead.getName());
+        head.setItemMeta(m);
+        playerLoc.getWorld().dropItemNaturally(playerLoc, head);
+
+        players.remove(dead);
+        dead.sendMessage(UtilChat.message("You have died and are now a spectator"));
     }
 
     public void initialize() {
@@ -223,220 +495,68 @@ public class UHCArena implements Runnable, Listener {
         previouslyOpped.clear();
     }
 
-    public void start() {
-        GameListener.resetDeaths();
-        currentEndgamePhase = EndgamePhase.NORMALGAME;
-        nextEndgamePhase = null;
-        nextEndgamePhaseIn = -1;
-        this.worldBorderHandler.setWorldborder(startSize);
-        this.worldBorderHandler.setWarningDistance(WORLDBORDER_WARN_DIST);
-        this.worldBorderHandler.setWorldborder(endSize, duration);
-        world.setGameRuleValue("naturalRegeneration", "false");
-        world.setGameRuleValue("doMobSpawning", "true");
-        world.setGameRuleValue("doMobLoot", "true");
-        world.setGameRuleValue("doDaylightCycle", "true");
-        world.setTime(0);
-        PotionEffect resist = new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 6, true, false);
-        PotionEffect regen = new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 10, true, false);
-        PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 30 * 20, 20, true, false);
-        for (Player p : players) {
-            UtilTitle.title(p, null, ChatColor.GOLD + "The game has begun!", 10, 20 * 5, 20);
-            p.sendMessage(UtilChat.message("The game has begun"));
-            if (!TeamHandler.isSpectator(p)) {
-                p.setGameMode(GameMode.SURVIVAL);
-                p.setAllowFlight(false);
-            }
-            p.setHealth(p.getMaxHealth());
-            p.setFoodLevel(20);
-            if (!TeamHandler.isSpectator(p)) {
-                p.getInventory().clear();
-                for (PotionEffect e : p.getActivePotionEffects()) {
-                    p.removePotionEffect(e.getType());
-                }
-            } else
-                new SpecInventory(UHC.plugin, p);
-            p.setBedSpawnLocation(center, true);
-            p.addPotionEffects(Arrays.asList(resist, regen, sat));
-            if (p.isOp()) {
-                p.setOp(false);
-                previouslyOpped.add(p);
-            }
-            p.getInventory().clear();
-            p.closeInventory();
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void itemPickup(PlayerPickupItemEvent event) {
+        // Display player head info
+        if (event.getItem().getItemStack().getType() == Material.SKULL_ITEM && event.getItem().getItemStack().getDurability() == 3) {
+            Player player = event.getPlayer();
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 0.5F);
+            player.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "=============================================");
+            player.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "You've picked up a player head!");
+            player.sendMessage(ChatColor.WHITE + "You can use this head to craft a Golden Head for healing");
+            player.sendMessage(ChatColor.WHITE + "A golden head will give you 2x the effects of a golden apple!");
+            player.sendRawMessage(ChatColor.GREEN + "To Craft: " + ChatColor.WHITE + "Use the recipe for a Golden Apple, but replace the apple with the head");
+            player.sendMessage("");
+            player.sendMessage(ChatColor.WHITE + "Optionally, right click the player head to eat it");
+            player.sendMessage("");
+            player.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "=============================================");
         }
-        if (shouldSpreadPlayers)
-            distributeTeams(50);
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "xp -3000l @a");
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "achievement take * @a");
-        for (Entity e : world.getEntities()) {
-            if (e instanceof Tameable) {
-                ((Tameable) e).setOwner(null);
-                ((Tameable) e).setTamed(false);
-            }
-            if (e.getType() == EntityType.DROPPED_ITEM) {
-                e.remove();
-            }
-        }
-        for (Player p : players()) {
-            RegenTicket.give(p);
-            UHC.playerTracker.giveTracker(p);
-        }
-        sendEveryoneToTeamChannels();
-        state = State.RUNNING;
-        startTime = System.currentTimeMillis();
-        if (UHC.plugin.getConfig().getBoolean("episodes.use"))
-            UHC.markerHandler.startTracking();
-    }
-
-    public void spectate(Player player) {
-        spectate(player, false);
-    }
-
-    public void spectate(Player player, boolean switchRole) {
-        TeamHandler.joinTeam(TeamHandler.spectatorsTeam(), player);
-        if (switchRole) {
-            if (uhcNetwork != null) {
-                new BotCommandAssignSpectator(UHC.plugin.serverId(), player.getUniqueId()).publish();
-            }
-        }
-    }
-
-    public void stop(String winner) {
-        String orig = winner;
-        this.winner = winner;
-        this.nextEndgamePhaseIn = -1;
-        this.nextEndgamePhase = null;
-        RegenTicket.clearRegenTickets();
-        winner = WordUtils.capitalizeFully(winner.replace('_', ' '));
-        this.worldBorderHandler.setWorldborder(60);
-        this.worldBorderHandler.setWarningDistance(0);
-        world.setGameRuleValue("doDaylightCycle", "false");
-        world.setGameRuleValue("doMobSpawning", "false");
-        world.setGameRuleValue("doMobLoot", "false");
-        world.setTime(1200);
-        world.setThundering(false);
-        world.setStorm(false);
-        for (Player p : players) {
-            UtilTitle.title(p, ChatColor.GOLD + winner, ChatColor.GOLD + "has won the game", 10, 20 * 5, 20);
-            p.teleport(center);
-            p.setGameMode(GameMode.SURVIVAL);
-            p.setAllowFlight(true);
-            p.setHealth(p.getMaxHealth());
-            p.setFoodLevel(20);
-            p.getInventory().clear();
-            p.setGlowing(false);
-            p.setFlySpeed(0.1f);
-            p.setWalkSpeed(0.2f);
-            for (PotionEffect f : p.getActivePotionEffects()) {
-                p.removePotionEffect(f.getType());
-            }
-            p.playSound(p.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.5f, 2);
-            p.playSound(p.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.5f, 0.5f);
-            p.playSound(p.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.5f, 1);
-            if (TeamHandler.isSpectator(p)) {
-                for (Player olp : Bukkit.getOnlinePlayers()) {
-                    olp.showPlayer(p);
-                }
-            }
-        }
-        for (Player p : previouslyOpped) {
-            p.setOp(true);
-        }
-        bringEveryoneToLobby();
-        MOTDHandler.setMotd(ChatColor.RESET + "" + ChatColor.RED + ChatColor.MAGIC + "|..|" + ChatColor.RESET + "  " + ChatColor.GOLD + winner + ChatColor.RED + " has won the game!  " + ChatColor.RED + ChatColor.MAGIC + "|..|");
-        launchedFw = 0;
-        UHC.markerHandler.stopTracking();
-        state = ENDGAME;
-    }
-
-    public void startCountdown() {
-        countdown = 10;
-        state = COUNTDOWN;
-    }
-
-    public void essentiallyDisable() {
-        if (UHC.uhcNetwork != null)
-            TeamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getName()).publish());
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            p.setAllowFlight(false);
-            p.setGameMode(GameMode.SURVIVAL);
-            p.teleport(p.getLocation().add(0, 10, 0));
-        }
-        HandlerList.unregisterAll(UHC.plugin);
-        Bukkit.getServer().getScheduler().cancelTasks(UHC.plugin);
-        this.worldBorderHandler.setWorldborder(this.worldBorderHandler.getOverworld().getSize() + 150, 0);
-        UHC.plugin.getPluginLoader().disablePlugin(UHC.plugin);
-    }
-
-    public State currentState() {
-        return this.state;
-    }
-
-    public ArrayList<UHCPlayerTeam> teamsLeft() {
-        ArrayList<UHCPlayerTeam> uniqueTeams = new ArrayList<>();
-        for (Player p : players) {
-/*            System.out.println("//////////////////////");
-            System.out.println(queuedTeamRemovals.toString());
-            System.out.println(logoutTimes.keySet().toString());*/
-            if (queuedTeamRemovals.contains(p.getUniqueId()))
-                continue;
-            UHCTeam team = TeamHandler.getTeamForPlayer(p);
-            if (!(team instanceof UHCPlayerTeam))
-                continue;
-            UHCPlayerTeam pTeam = (UHCPlayerTeam) team;
-            if (pTeam == TeamHandler.getTeamByName(TeamHandler.SPECTATORS_TEAM))
-                continue;
-            if (!uniqueTeams.contains(pTeam)) {
-                uniqueTeams.add(pTeam);
-            }
-        }
-        return uniqueTeams;
-    }
-
-    public int teamCountLeft() {
-        return teamsLeft().size();
     }
 
     public void newTeam(String name, net.md_5.bungee.api.ChatColor color) {
         TeamHandler.registerTeam(name, new UHCPlayerTeam(name, color));
     }
 
-    public void handleDeathMessage(Player dead, String message) {
-        for (Player p : players) {
-            UtilTitle.title(p, ChatColor.DARK_PURPLE + dead.getDisplayName(), ChatColor.AQUA + message.replace(dead.getName(), ""), 10, 20 * 5, 20);
-            p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_THUNDER, 1, 1);
+    public void playerDisconnect(Player player) {
+        UHCTeam teamForPlayer = TeamHandler.getTeamForPlayer(player);
+        if (teamForPlayer == null || teamForPlayer instanceof TeamSpectator) {
+            players.remove(player);
+            return;
         }
-        Location playerLoc = dead.getLocation();
-        ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
-        ItemMeta m = head.getItemMeta();
-        ((SkullMeta) m).setOwner(dead.getName());
-        head.setItemMeta(m);
-        playerLoc.getWorld().dropItemNaturally(playerLoc, head);
-        players.remove(dead);
-        dead.sendMessage(UtilChat.message("You have died and are now a spectator"));
-    }
-
-    public void saveToFile() {
-        FileConfiguration cfg = new YamlConfiguration();
-        // Save general information
-        cfg.set("duration", duration);
-        cfg.set("endSize", endSize);
-        cfg.set("startSize", startSize);
-        cfg.set("world", world.getName());
-        cfg.set("startingPoint", center);
-        try {
-            cfg.save(new File(UHC.plugin.getDataFolder(), "arena.yml"));
-        } catch (IOException e) {
-            e.printStackTrace();
+        uuidToStringMap.put(player.getUniqueId(), player.getName());
+        logoutTimes.put(player.getUniqueId(), System.currentTimeMillis() + (300000));
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + player.getName() + " has disconnected! 5.0 minutes to rejoin!");
         }
     }
 
-    public static UHCArena loadFromFile() {
-        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new File(UHC.plugin.getDataFolder(), "arena.yml"));
-        return new UHCArena(Bukkit.getWorld(cfg.getString("world")), cfg.getInt("startSize"), cfg.getInt("endSize"), cfg.getInt("duration"), (Location) cfg.get("startingPoint"));
+    public void playerJoin(Player player) {
+        if (logoutTimes.containsKey(player.getUniqueId())) {
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                p.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + player.getName() + " has reconnected!");
+            }
+            this.logoutTimes.remove(player.getUniqueId());
+        }
+        if (queuedTeamRemovals.contains(player.getUniqueId())) {
+            queuedTeamRemovals.remove(player.getUniqueId());
+            TeamHandler.leaveTeam(player);
+            players.remove(player);
+            spectate(player);
+            player.sendMessage(UtilChat.message("You have disconnected more than five minutes ago and have been removed from the game"));
+        }
     }
 
-    CountdownBarTask countdownTask;
+    public Player[] players() {
+        return players.toArray(new Player[players.size()]);
+    }
+
+    public void removePlayer(Player player) {
+        Iterator<Player> players = this.players.iterator();
+        while (players.hasNext()) {
+            if (players.next().getUniqueId().equals(player.getUniqueId()))
+                players.remove();
+        }
+    }
 
     @Override
     public void run() {
@@ -535,279 +655,223 @@ public class UHCArena implements Runnable, Listener {
         updateDisconnect();
     }
 
-    private void detonateFirework(Firework firework) {
-        ((CraftWorld) firework.getWorld()).getHandle().broadcastEntityEffect(((CraftEntity) firework).getHandle(), (byte) 17);
-        firework.remove();
+    public void saveToFile() {
+        FileConfiguration cfg = new YamlConfiguration();
+        // Save general information
+        cfg.set("duration", duration);
+        cfg.set("endSize", endSize);
+        cfg.set("startSize", startSize);
+        cfg.set("world", world.getName());
+        cfg.set("startingPoint", center);
+        try {
+            cfg.save(new File(UHC.plugin.getDataFolder(), "arena.yml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    private int runCount = 0;
-
-    private void updateEndgame() {
-        if (state != RUNNING)
+    public void sendEveryoneToTeamChannels() {
+        if (UHC.uhcNetwork == null)
             return;
-        switch (currentEndgamePhase) {
-            case NORMALGAME:
-                if (world.getWorldBorder().getSize() <= endSize) {
-                    if (nextEndgamePhase != EndgamePhase.SHRINKING_WORLDBORDER) {
-                        nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.SHRINKING_WORLDBORDER.getDuration();
-                        nextEndgamePhase = EndgamePhase.SHRINKING_WORLDBORDER;
-                        firstAnnounce = true;
-                    }
-                }
-                break;
-            case SHRINKING_WORLDBORDER:
-                runCount++;
-                if (runCount % 40 == 0) {
-                    runCount = 0;
-                    WorldBorder wb = world.getWorldBorder();
-                    if (wb.getSize() > 1)
-                        wb.setSize(wb.getSize() - 2, 1);
-                }
-                nextEndgamePhase = null;
-                break;
-        }
-        if (nextEndgamePhase != null && currentEndgamePhase != SHRINKING_WORLDBORDER)
-            announcePhase(nextEndgamePhase);
-        if (currentEndgamePhase != SHRINKING_WORLDBORDER)
-            activatePhase();
+        Bukkit.broadcastMessage(UtilChat.message("Creating discord channels..."));
+        new BotCommandCreateSpectator(UHC.plugin.serverId()).publishBlocking();
+        TeamHandler.teams().forEach(t -> new BotCommandNewTeam(UHC.plugin.serverId(), t.getName()).publishBlocking());
+
+        Bukkit.broadcastMessage(UtilChat.message("Moving everyone into their discord channels"));
+        HashMap<UUID, String> teams = new HashMap<>();
+
+        TeamHandler.teams().forEach(t -> t.getPlayers().forEach(u -> teams.put(u, t.getName())));
+        new BotCommandAssignTeams(UHC.plugin.serverId(), null, teams).publishBlocking();
+
+        Bukkit.broadcastMessage(UtilChat.message("Everyone should be moved"));
     }
 
-
-    boolean firstAnnounce = true;
-    boolean announced = false;
-    boolean shouldAnnounce = false;
-    String lastAnnounced = "-1";
-
-    private void announcePhase(EndgamePhase phase) {
-        long time = nextEndgamePhaseIn - System.currentTimeMillis();
-        double nextPhase = UtilTime.trim(1, time / 1000D);
-        String tFormat = UtilTime.format(1, time, UtilTime.TimeUnit.FIT);
-        if (nextPhase > 0) {
-            if (nextPhase >= 60) {
-                shouldAnnounce = (nextPhase % 60) == 0;
-            } else if (nextPhase >= 30) {
-                shouldAnnounce = (nextPhase % 30) == 0;
-            } else if (nextPhase <= 10) {
-                shouldAnnounce = (nextPhase % 1) == 0;
-            }
-        }
-        if ((shouldAnnounce || firstAnnounce) && !lastAnnounced.equalsIgnoreCase(tFormat)) {
-            lastAnnounced = Double.toString(nextPhase);
-            shouldAnnounce = false;
-            firstAnnounce = false;
-            announced = true;
-            lastAnnounced = tFormat;
-            BaseComponent text = generateBoldChat(phase.getName(), net.md_5.bungee.api.ChatColor.LIGHT_PURPLE);
-            text.addExtra(UtilChat.generateBoldChat(" will be applied in " + tFormat, net.md_5.bungee.api.ChatColor.GREEN));
-            for (Player p : players()) {
-                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
-                p.spigot().sendMessage(text);
-            }
-        }
-    }
-
-    private void activatePhase() {
-        if (nextEndgamePhaseIn != -1 && System.currentTimeMillis() > nextEndgamePhaseIn) {
-            activatePhase(nextEndgamePhase);
-        }
-    }
-
-    private void activatePhase(EndgamePhase newPhase) {
-        if (newPhase == null)
-            return;
-        this.currentEndgamePhase = newPhase;
-        firstAnnounce = true;
-        BaseComponent text = generateBoldChat(newPhase.getName(), net.md_5.bungee.api.ChatColor.LIGHT_PURPLE);
-        text.addExtra(UtilChat.generateBoldChat(" active!", net.md_5.bungee.api.ChatColor.DARK_RED));
-        for (Player p : players()) {
-            p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F);
-            p.spigot().sendMessage(text);
-        }
-    }
-
-
-    private void craftingRecipes() {
-        ShapedRecipe headApple = new ShapedRecipe(new ItemStack(Material.GOLDEN_APPLE, 1));
-        headApple.shape("GGG", "GHG", "GGG");
-        headApple.setIngredient('G', Material.GOLD_INGOT);
-        headApple.setIngredient('H', new MaterialData(Material.SKULL_ITEM, (byte) 3));
-        Bukkit.getServer().addRecipe(headApple);
-    }
-
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void craftGoldenHead(PrepareItemCraftEvent event) {
-        if (event.getRecipe().getResult() == null)
-            return;
-        Material type = event.getRecipe().getResult().getType();
-        if (type != Material.GOLDEN_APPLE)
-            return;
-        if (event.getInventory() == null)
-            return;
-        CraftingInventory inv = event.getInventory();
-        for (ItemStack item : inv.getMatrix()) {
-            if (item != null && item.getType() != Material.AIR) {
-                if (item.getType() == Material.SKULL_ITEM || item.getType() == Material.SKULL) {
-                    if (item.getItemMeta() == null)
-                        continue;
-                    ItemStack apple = new ItemStack(Material.GOLDEN_APPLE, 1);
-                    ItemMeta meta = apple.getItemMeta();
-                    meta.setDisplayName(ChatColor.AQUA + "Head Apple");
-                    apple.setItemMeta(meta);
-//                    apple.addEnchantment(new NullEnchantment(), 1);
-                    apple.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
-                    inv.setResult(apple);
-                    return;
-                }
-            }
-        }
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void chatEvent(AsyncPlayerChatEvent event) {
-        UHCTeam team = TeamHandler.getTeamForPlayer(event.getPlayer());
-        if (team != null) {
-            if (team instanceof TeamSpectator) {
-                event.setFormat(ChatColor.GRAY + "Spectator %s " + ChatColor.WHITE + "%s");
-            } else {
-                event.setFormat(team.getColor() + "%s " + ChatColor.WHITE + "%s");
-            }
-        } else {
-            event.setFormat(ChatColor.GRAY + "%s " + ChatColor.WHITE + "%s");
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public void itemPickup(PlayerPickupItemEvent event) {
-        if (event.getItem().getItemStack().getType() == Material.SKULL_ITEM && event.getItem().getItemStack().getDurability() == 3) {
-            Player player = event.getPlayer();
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 0.5F);
-            player.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "=============================================");
-            player.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "You've picked up a player head!");
-            player.sendMessage(ChatColor.WHITE + "You can use this head to craft a Golden Head for healing");
-            player.sendMessage(ChatColor.WHITE + "A golden head will give you 2x the effects of a golden apple!");
-            player.sendRawMessage(ChatColor.GREEN + "To Craft: " + ChatColor.WHITE + "Use the recipe for a Golden Apple, but replace the apple with the head");
-            player.sendMessage("");
-            player.sendMessage(ChatColor.WHITE + "Optionally, right click the player head to eat it");
-            player.sendMessage("");
-            player.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "=============================================");
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGH)
-    public void eatHead(PlayerInteractEvent event) {
-        if (event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR) {
-            if (event.getItem() != null)
-                if (event.getItem().getType() == Material.SKULL_ITEM && event.getItem().getDurability() == 3) {
-                    event.setCancelled(true);
-                    if (event.getItem().getAmount() == 1)
-                        event.getPlayer().getInventory().remove(event.getItem());
-                    else {
-                        event.getItem().setAmount(event.getItem().getAmount() - 1);
-                        event.getPlayer().getInventory().setItemInMainHand(event.getItem());
-                    }
-                    for (Player p : Bukkit.getOnlinePlayers()) {
-                        p.playSound(event.getPlayer().getLocation(), Sound.ENTITY_PLAYER_BURP, 1F, 1F);
-                    }
-                    event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 125, 1));
-                    event.getPlayer().sendMessage(UtilChat.message("You have been given Regeneration"));
-                }
-        }
-    }
-
-    @EventHandler
-    public void consumeHeadApple(PlayerItemConsumeEvent event) {
-        if (event.getItem().getItemMeta().getDisplayName() == null)
-            return;
-        if (!event.getItem().getItemMeta().getDisplayName().contains("Head"))
-            return;
-        if (!event.getItem().getEnchantments().containsKey(Enchantment.ARROW_DAMAGE))
-            return;
-        if (event.getItem().getType() != Material.GOLDEN_APPLE) {
-            return;
-        }
-        event.getPlayer().sendMessage(UtilChat.message("You ate a head apple"));
-        UHCTeam team = TeamHandler.getTeamForPlayer(event.getPlayer());
-        if (team != null) {
-            for (UUID u : team.getPlayers()) {
-                Player p = Bukkit.getPlayer(u);
-                if (p != null) {
-                    p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
-                    p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
-                    if (p.getUniqueId().equals(event.getPlayer().getUniqueId())) {
-                        p.sendMessage(UtilChat.message("You have given your team Regeneration II and Absorption!"));
-                    } else {
-                        p.sendMessage(UtilChat.message(ChatColor.GOLD + event.getPlayer().getName() + ChatColor.GRAY + " ate a head apple, giving you Regeneration II and Absorption!"));
-                    }
-                }
-            }
-        } else {
-            event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
-            event.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
-            event.getPlayer().sendMessage(UtilChat.message("You are not on a team so only you get the effects"));
-        }
-    }
-
-
-    private boolean entityExists(UUID u, World world) {
-        for (Entity e : world.getEntities()) {
-            if (e.getUniqueId().equals(u)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void displayTip() {
-        String tip = tips[new Random().nextInt(tips.length)];
-        if (tip.contains("%NAME%")) {
-            tip = tip.replace("%NAME%", randomPlayer());
-        }
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            p.sendMessage(ChatColor.WHITE + "" + ChatColor.BOLD + "Tip> " + ChatColor.RESET + tip);
-            p.playSound(p.getLocation(), Sound.ENTITY_CHICKEN_EGG, 1F, 1F);
-        }
-        nextTipIn = System.currentTimeMillis() + TIP_TIME;
-    }
-
-    private String randomPlayer() {
-        if (Bukkit.getOnlinePlayers().size() < 1) {
-            return "PLAYERNOTFOUND";
-        }
-        return new ArrayList<>(Bukkit.getOnlinePlayers()).get(new Random().nextInt(Bukkit.getOnlinePlayers().size())).getName();
-    }
-
-    private int playerCount() {
-        return this.players.size() - getSpectatorCount();
-    }
-
-    private int getSpectatorCount() {
-        int count = 0;
-        for (Player p : players) {
-            if (TeamHandler.isSpectator(p))
-                count++;
-        }
-        return count;
-    }
-
-    protected double[] worldborderLoc() {
-        WorldBorder wb = world.getWorldBorder();
-        Location l = wb.getCenter();
-        double locX = (wb.getSize() / 2) + l.getX();
-        double locZ = (wb.getSize() / 2) + l.getZ();
-        return new double[]{locX, locZ};
-    }
-
-    public void addPlayer(Player player) {
-        Iterator<Player> p = players.iterator();
-        while (p.hasNext()) {
-            if (p.next().getUniqueId().equals(player.getUniqueId()))
-                p.remove(); // Remove old player object
-        }
-        this.players.add(player);
+    public void setEndgamePhase(EndgamePhase endgamePhase) {
+        this.currentEndgamePhase = endgamePhase;
     }
 
     public void setState(State state) {
         this.state = state;
+    }
+
+    public void spectate(Player player) {
+        spectate(player, false);
+    }
+
+    public void spectate(Player player, boolean switchRole) {
+        TeamHandler.joinTeam(TeamHandler.spectatorsTeam(), player);
+        if (switchRole) {
+            if (uhcNetwork != null) {
+                new BotCommandAssignSpectator(UHC.plugin.serverId(), player.getUniqueId()).publish();
+            }
+        }
+    }
+
+    public void start() {
+        GameListener.resetDeaths();
+        currentEndgamePhase = EndgamePhase.NORMALGAME;
+        nextEndgamePhase = null;
+        nextEndgamePhaseIn = -1;
+
+        this.worldBorderHandler.setWorldborder(startSize);
+        this.worldBorderHandler.setWarningDistance(WORLDBORDER_WARN_DIST);
+        this.worldBorderHandler.setWorldborder(endSize, duration);
+
+        world.setGameRuleValue("naturalRegeneration", "false");
+        world.setGameRuleValue("doMobSpawning", "true");
+        world.setGameRuleValue("doMobLoot", "true");
+        world.setGameRuleValue("doDaylightCycle", "true");
+        world.setTime(0);
+
+        PotionEffect resist = new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 6, true, false);
+        PotionEffect regen = new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 10, true, false);
+        PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 30 * 20, 20, true, false);
+
+        for (Player p : players) {
+            UtilTitle.title(p, null, ChatColor.GOLD + "The game has begun!", 10, 20 * 5, 20);
+            p.sendMessage(UtilChat.message("The game has begun"));
+            if (!TeamHandler.isSpectator(p)) {
+                p.setGameMode(GameMode.SURVIVAL);
+                p.setAllowFlight(false);
+            }
+            p.setHealth(p.getMaxHealth());
+            p.setFoodLevel(20);
+            if (!TeamHandler.isSpectator(p)) {
+                p.getInventory().clear();
+                for (PotionEffect e : p.getActivePotionEffects()) {
+                    p.removePotionEffect(e.getType());
+                }
+            } else
+                new SpecInventory(UHC.plugin, p);
+            p.setBedSpawnLocation(center, true);
+            p.addPotionEffects(Arrays.asList(resist, regen, sat));
+            if (p.isOp()) {
+                p.setOp(false);
+                previouslyOpped.add(p);
+            }
+            p.getInventory().clear();
+            p.closeInventory();
+        }
+
+        if (shouldSpreadPlayers)
+            distributeTeams(50);
+
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "xp -3000l @a");
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "achievement take * @a");
+
+        for (Entity e : world.getEntities()) {
+            if (e instanceof Tameable) {
+                ((Tameable) e).setOwner(null);
+                ((Tameable) e).setTamed(false);
+            }
+            if (e.getType() == EntityType.DROPPED_ITEM) {
+                e.remove();
+            }
+        }
+
+        for (Player p : players()) {
+            RegenTicket.give(p);
+            UHC.playerTracker.giveTracker(p);
+        }
+
+        sendEveryoneToTeamChannels();
+
+        state = State.RUNNING;
+        startTime = System.currentTimeMillis();
+
+        if (UHC.plugin.getConfig().getBoolean("episodes.use"))
+            UHC.markerHandler.startTracking();
+    }
+
+    public void startCountdown() {
+        countdown = 10;
+        state = COUNTDOWN;
+    }
+
+    public void stop(String winner) {
+        this.winner = winner;
+        this.nextEndgamePhaseIn = -1;
+        this.nextEndgamePhase = null;
+
+        RegenTicket.clearRegenTickets();
+        winner = WordUtils.capitalizeFully(winner.replace('_', ' '));
+
+        this.worldBorderHandler.setWorldborder(60);
+        this.worldBorderHandler.setWarningDistance(0);
+
+        world.setGameRuleValue("doDaylightCycle", "false");
+        world.setGameRuleValue("doMobSpawning", "false");
+        world.setGameRuleValue("doMobLoot", "false");
+
+        world.setTime(1200);
+        world.setThundering(false);
+        world.setStorm(false);
+
+        for (Player p : players) {
+            UtilTitle.title(p, ChatColor.GOLD + winner, ChatColor.GOLD + "has won the game", 10, 20 * 5, 20);
+            p.teleport(center);
+            p.setGameMode(GameMode.SURVIVAL);
+            p.setAllowFlight(true);
+            p.setHealth(p.getMaxHealth());
+            p.setFoodLevel(20);
+            p.getInventory().clear();
+            p.setGlowing(false);
+            p.setFlySpeed(0.1f);
+            p.setWalkSpeed(0.2f);
+            for (PotionEffect f : p.getActivePotionEffects()) {
+                p.removePotionEffect(f.getType());
+            }
+            p.playSound(p.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.5f, 2);
+            p.playSound(p.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.5f, 0.5f);
+            p.playSound(p.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.5f, 1);
+            if (TeamHandler.isSpectator(p)) {
+                for (Player olp : Bukkit.getOnlinePlayers()) {
+                    olp.showPlayer(p);
+                }
+            }
+        }
+
+        for (Player p : previouslyOpped) {
+            p.setOp(true);
+        }
+
+        bringEveryoneToLobby();
+
+        MOTDHandler.setMotd(ChatColor.RESET + "" + ChatColor.RED + ChatColor.MAGIC + "|..|" + ChatColor.RESET + "  " + ChatColor.GOLD + winner + ChatColor.RED + " has won the game!  " + ChatColor.RED + ChatColor.MAGIC + "|..|");
+
+        launchedFw = 0;
+
+        UHC.markerHandler.stopTracking();
+        state = ENDGAME;
+    }
+
+    public int teamCountLeft() {
+        return teamsLeft().size();
+    }
+
+    public ArrayList<UHCPlayerTeam> teamsLeft() {
+        ArrayList<UHCPlayerTeam> uniqueTeams = new ArrayList<>();
+        for (Player p : players) {
+            if (queuedTeamRemovals.contains(p.getUniqueId()))
+                continue;
+            UHCTeam team = TeamHandler.getTeamForPlayer(p);
+            if (!(team instanceof UHCPlayerTeam))
+                continue;
+            UHCPlayerTeam pTeam = (UHCPlayerTeam) team;
+            if (pTeam == TeamHandler.getTeamByName(TeamHandler.SPECTATORS_TEAM))
+                continue;
+            if (!uniqueTeams.contains(pTeam)) {
+                uniqueTeams.add(pTeam);
+            }
+        }
+        return uniqueTeams;
+    }
+
+    //todo: Remove me
+    public void temp_FireworkLaunch(Color color) {
+        this.launchedFw = 0;
+        this.winningTeamColor = color;
+        this.state = ENDGAME;
     }
 
     public void toggleShouldEndCheck() {
@@ -825,193 +889,6 @@ public class UHCArena implements Runnable, Listener {
         } else {
             Bukkit.broadcastMessage(UtilChat.message("No longer spreading players"));
         }
-    }
-
-    public Location getCenter() {
-        return center;
-    }
-
-    public Player[] players() {
-        return players.toArray(new Player[players.size()]);
-    }
-
-    public void playerDisconnect(Player player) {
-        UHCTeam teamForPlayer = TeamHandler.getTeamForPlayer(player);
-        if (teamForPlayer == null || teamForPlayer instanceof TeamSpectator) {
-            players.remove(player);
-            return;
-        }
-        uuidToStringMap.put(player.getUniqueId(), player.getName());
-//        players.remove(player);
-        logoutTimes.put(player.getUniqueId(), System.currentTimeMillis() + (300000));
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + player.getName() + " has disconnected! 5.0 minutes to rejoin!");
-        }
-    }
-
-    public void updateDisconnect() {
-        Iterator<Map.Entry<UUID, Long>> iterator = logoutTimes.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<UUID, Long> entry = iterator.next();
-            if (System.currentTimeMillis() > entry.getValue()) {
-                String playerName = uuidToStringMap.get(entry.getKey());
-                Bukkit.broadcastMessage(generateBoldChat(playerName + " has been eliminated because they logged off 5 minutes ago!", net.md_5.bungee.api.ChatColor.WHITE).toLegacyText());
-                queuedTeamRemovals.add(entry.getKey());
-                iterator.remove();
-                Iterator<Player> uhcPlayerIterator = players.iterator();
-                while (uhcPlayerIterator.hasNext()) {
-                    Player next = uhcPlayerIterator.next();
-                    if (next.getUniqueId().equals(entry.getKey())) {
-                        uhcPlayerIterator.remove();
-                    }
-                }
-                uuidToStringMap.remove(entry.getKey());
-            }
-        }
-    }
-
-    public void playerJoin(Player player) {
-        if (logoutTimes.containsKey(player.getUniqueId())) {
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                p.sendMessage(ChatColor.GREEN + "" + ChatColor.BOLD + player.getName() + " has reconnected!");
-            }
-            this.logoutTimes.remove(player.getUniqueId());
-        }
-        if (queuedTeamRemovals.contains(player.getUniqueId())) {
-            queuedTeamRemovals.remove(player.getUniqueId());
-            TeamHandler.leaveTeam(player);
-            players.remove(player);
-            spectate(player);
-            player.sendMessage(UtilChat.message("You have disconnected more than five minutes ago and have been removed from the game"));
-        }
-    }
-
-    public World getWorld() {
-        return world;
-    }
-
-    public int endSize() {
-        return endSize;
-    }
-
-
-    public void sendEveryoneToTeamChannels() {
-        if (UHC.uhcNetwork == null)
-            return;
-        Bukkit.broadcastMessage(UtilChat.message("Creating discord channels..."));
-        /*UHC.discordHandler.createAllTeamChannels(() -> UHC.discordHandler.processAsync(() -> {
-            Bukkit.broadcastMessage(UtilChat.message("Moving everyone to their discord channel"));
-            new AssignTeams(TeamHandler.teams()).send();
-        }, () -> Bukkit.broadcastMessage(UtilChat.message("Everyone should be moved"))));*/
-        new BotCommandCreateSpectator(UHC.plugin.serverId()).publishBlocking();
-        TeamHandler.teams().forEach(t -> new BotCommandNewTeam(UHC.plugin.serverId(), t.getName()).publishBlocking());
-        Bukkit.broadcastMessage(UtilChat.message("Moving everyone into their discord channels"));
-        HashMap<UUID, String> teams = new HashMap<>();
-        TeamHandler.teams().forEach(t->t.getPlayers().forEach(u-> teams.put(u, t.getName())));
-        new BotCommandAssignTeams(UHC.plugin.serverId(), null, teams).publishBlocking();
-        Bukkit.broadcastMessage(UtilChat.message("Everyone should be moved"));
-    }
-
-    public void bringEveryoneToLobby() {
-        if(UHC.uhcNetwork != null){
-            new BotCommandToLobby(UHC.plugin.serverId()).publish();
-            TeamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getName()).publish());
-        }
-    }
-
-    public void setEndgamePhase(EndgamePhase endgamePhase) {
-        this.currentEndgamePhase = endgamePhase;
-    }
-
-
-    public void distributeTeams(int minRadius) {
-        System.out.println("Worldborder location: +-" + world.getWorldBorder().getSize() / 2);
-        System.out.println("Spreading teams...");
-        Map<UHCTeam, Location> locations = new HashMap<>();
-        for (UHCTeam team : TeamHandler.teams().stream().filter(t -> !(t instanceof TeamSpectator)).collect(Collectors.toList())) {
-            Location randomSpawn = SpawnUtils.getRandomSpawn(world, startSize);
-            locations.put(team, randomSpawn);
-        }
-        // Verify that the teams are spread far enough apart
-        for (UHCTeam team : locations.keySet()) {
-            Location spawnLoc = locations.get(team);
-            // Attempt 1,000 tries
-            for (int i = 0; i < 1000; i++) {
-                boolean clash = false;
-                for (Location oL : locations.values()) {
-                    if (oL.distanceSquared(spawnLoc) < Math.pow(minRadius, 2) && !oL.equals(spawnLoc)) {
-                        System.out.println("CLASH! " + spawnLoc.toString() + " is too close to " + oL.toString());
-                        clash = true;
-                    }
-                    if (!clash)
-                        break;
-                    spawnLoc = SpawnUtils.getRandomSpawn(world, startSize);
-                }
-            }
-            // Teleport everyone on the team to that location
-            System.out.println(String.format("Teleporting players on team around %s to %.2f, %.2f, %.2f", team.getName(), spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ()));
-            for (Player p : team.getPlayers().stream().map(Bukkit::getPlayer).filter(pl -> pl != null).collect(Collectors.toList())) {
-                Location spawnAround = SpawnUtils.getSpawnAround(spawnLoc, 2);
-                System.out.println(String.format("\tTeleporting %s to %.2f, %.2f, %.2f", p.getName(), spawnAround.getX(), spawnAround.getY(), spawnAround.getZ()));
-                p.teleport(spawnAround);
-            }
-        }
-        System.out.println("Spread teams!");
-        System.out.println("Despawning players...");
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            PacketPlayOutEntityDestroy destroyPacket = new PacketPlayOutEntityDestroy(p.getEntityId());
-            for (Player other : Bukkit.getOnlinePlayers()) {
-                if (other.getUniqueId().equals(p.getUniqueId()))
-                    continue;
-                ((CraftPlayer) other).getHandle().playerConnection.sendPacket(destroyPacket);
-            }
-        }
-        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> {
-            System.out.println("Respawning players");
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                PacketPlayOutNamedEntitySpawn spawn = new PacketPlayOutNamedEntitySpawn(((CraftPlayer) p).getHandle());
-                for (Player other : Bukkit.getOnlinePlayers()) {
-                    if (p.getUniqueId().equals(other.getUniqueId()))
-                        continue;
-                    ((CraftPlayer) other).getHandle().playerConnection.sendPacket(spawn);
-                }
-            }
-        }, 5L);
-    }
-
-    public void freeze() {
-        int secondsPassed = Math.toIntExact((System.currentTimeMillis() - startTime) / 1000);
-        System.out.println("Duration: " + duration);
-        System.out.println("Seconds passed: " + secondsPassed);
-        this.secondsRemaining = this.duration - secondsPassed;
-        System.out.println("Seconds remaining: " + secondsRemaining);
-        overworldWorldborderSize = world.getWorldBorder().getSize();
-        world.getWorldBorder().setSize(overworldWorldborderSize);
-        System.out.println("Worldborder size: " + overworldWorldborderSize);
-        frozen_nextEndgamePhase = nextEndgamePhase;
-        frozen_nextEndgamePhaseIn = nextEndgamePhaseIn;
-        nextEndgamePhase = null;
-        nextEndgamePhaseIn = -1;
-        frozen_endgamePhase = currentEndgamePhase;
-        currentEndgamePhase = NORMALGAME;
-        freezeStartTime = System.currentTimeMillis();
-        if (nether != null) {
-            netherWorldborderSize = nether.getWorldBorder().getSize();
-            nether.getWorldBorder().setSize(netherWorldborderSize);
-        }
-        this.state = FROZEN;
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!TeamHandler.isSpectator(p)) {
-                FreezeHandler.freezePlayer(p);
-            }
-        }
-        for (Entity e : world.getEntities()) {
-            if (e.getType() != EntityType.PLAYER)
-                FreezeHandler.frozenEntities.put(e, e.getLocation());
-        }
-        world.setGameRuleValue("doDaylightCycle", "false");
-        FreezeHandler.pvpEnabled = false;
-        Bukkit.broadcastMessage(UtilChat.message("The game is now frozen"));
     }
 
     public void unfreeze() {
@@ -1053,12 +930,163 @@ public class UHCArena implements Runnable, Listener {
         FreezeHandler.frozenEntities.clear();
     }
 
-    public void removePlayer(Player player) {
-        Iterator<Player> players = this.players.iterator();
-        while (players.hasNext()) {
-            if (players.next().getUniqueId().equals(player.getUniqueId()))
-                players.remove();
+    public void updateDisconnect() {
+        Iterator<Map.Entry<UUID, Long>> iterator = logoutTimes.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<UUID, Long> entry = iterator.next();
+            if (System.currentTimeMillis() > entry.getValue()) {
+                String playerName = uuidToStringMap.get(entry.getKey());
+                Bukkit.broadcastMessage(generateBoldChat(playerName + " has been eliminated because they logged off 5 minutes ago!", net.md_5.bungee.api.ChatColor.WHITE).toLegacyText());
+                queuedTeamRemovals.add(entry.getKey());
+                iterator.remove();
+                Iterator<Player> uhcPlayerIterator = players.iterator();
+                while (uhcPlayerIterator.hasNext()) {
+                    Player next = uhcPlayerIterator.next();
+                    if (next.getUniqueId().equals(entry.getKey())) {
+                        uhcPlayerIterator.remove();
+                    }
+                }
+                uuidToStringMap.remove(entry.getKey());
+            }
         }
+    }
+
+    private void activatePhase() {
+        if (nextEndgamePhaseIn != -1 && System.currentTimeMillis() > nextEndgamePhaseIn) {
+            activatePhase(nextEndgamePhase);
+        }
+    }
+
+    private void activatePhase(EndgamePhase newPhase) {
+        if (newPhase == null)
+            return;
+        this.currentEndgamePhase = newPhase;
+        firstAnnounce = true;
+        BaseComponent text = generateBoldChat(newPhase.getName(), net.md_5.bungee.api.ChatColor.LIGHT_PURPLE);
+        text.addExtra(UtilChat.generateBoldChat(" active!", net.md_5.bungee.api.ChatColor.DARK_RED));
+        for (Player p : players()) {
+            p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F);
+            p.spigot().sendMessage(text);
+        }
+    }
+
+    private void announcePhase(EndgamePhase phase) {
+        long time = nextEndgamePhaseIn - System.currentTimeMillis();
+        double nextPhase = UtilTime.trim(1, time / 1000D);
+        String tFormat = UtilTime.format(1, time, UtilTime.TimeUnit.FIT);
+        if (nextPhase > 0) {
+            if (nextPhase >= 60) {
+                shouldAnnounce = (nextPhase % 60) == 0;
+            } else if (nextPhase >= 30) {
+                shouldAnnounce = (nextPhase % 30) == 0;
+            } else if (nextPhase <= 10) {
+                shouldAnnounce = (nextPhase % 1) == 0;
+            }
+        }
+        if ((shouldAnnounce || firstAnnounce) && !lastAnnounced.equalsIgnoreCase(tFormat)) {
+            lastAnnounced = Double.toString(nextPhase);
+            shouldAnnounce = false;
+            firstAnnounce = false;
+            lastAnnounced = tFormat;
+            BaseComponent text = generateBoldChat(phase.getName(), net.md_5.bungee.api.ChatColor.LIGHT_PURPLE);
+            text.addExtra(UtilChat.generateBoldChat(" will be applied in " + tFormat, net.md_5.bungee.api.ChatColor.GREEN));
+            for (Player p : players()) {
+                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
+                p.spigot().sendMessage(text);
+            }
+        }
+    }
+
+    private void craftingRecipes() {
+        ShapedRecipe headApple = new ShapedRecipe(new ItemStack(Material.GOLDEN_APPLE, 1));
+        headApple.shape("GGG", "GHG", "GGG");
+        headApple.setIngredient('G', Material.GOLD_INGOT);
+        headApple.setIngredient('H', new MaterialData(Material.SKULL_ITEM, (byte) 3));
+        Bukkit.getServer().addRecipe(headApple);
+    }
+
+    private void detonateFirework(Firework firework) {
+        ((CraftWorld) firework.getWorld()).getHandle().broadcastEntityEffect(((CraftEntity) firework).getHandle(), (byte) 17);
+        firework.remove();
+    }
+
+    private void displayTip() {
+        String tip = tips[new Random().nextInt(tips.length)];
+        if (tip.contains("%NAME%")) {
+            tip = tip.replace("%NAME%", randomPlayer());
+        }
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            p.sendMessage(ChatColor.WHITE + "" + ChatColor.BOLD + "Tip> " + ChatColor.RESET + tip);
+            p.playSound(p.getLocation(), Sound.ENTITY_CHICKEN_EGG, 1F, 1F);
+        }
+        nextTipIn = System.currentTimeMillis() + TIP_TIME;
+    }
+
+    private boolean entityExists(UUID u, World world) {
+        for (Entity e : world.getEntities()) {
+            if (e.getUniqueId().equals(u)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int getSpectatorCount() {
+        int count = 0;
+        for (Player p : players) {
+            if (TeamHandler.isSpectator(p))
+                count++;
+        }
+        return count;
+    }
+
+    private int playerCount() {
+        return this.players.size() - getSpectatorCount();
+    }
+
+    private String randomPlayer() {
+        if (Bukkit.getOnlinePlayers().size() < 1) {
+            return "PLAYERNOTFOUND";
+        }
+        return new ArrayList<>(Bukkit.getOnlinePlayers()).get(new Random().nextInt(Bukkit.getOnlinePlayers().size())).getName();
+    }
+
+    private void updateEndgame() {
+        if (state != RUNNING)
+            return;
+        switch (currentEndgamePhase) {
+            case NORMALGAME:
+                if (world.getWorldBorder().getSize() <= endSize) {
+                    if (nextEndgamePhase != EndgamePhase.SHRINKING_WORLDBORDER) {
+                        nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.SHRINKING_WORLDBORDER.getDuration();
+                        nextEndgamePhase = EndgamePhase.SHRINKING_WORLDBORDER;
+                        firstAnnounce = true;
+                    }
+                }
+                break;
+            case SHRINKING_WORLDBORDER:
+                runCount++;
+                if (runCount % 40 == 0) {
+                    runCount = 0;
+                    WorldBorder wb = world.getWorldBorder();
+                    if (wb.getSize() > 1)
+                        wb.setSize(wb.getSize() - 2, 1);
+                }
+                nextEndgamePhase = null;
+                break;
+        }
+        if (nextEndgamePhase != null && currentEndgamePhase != SHRINKING_WORLDBORDER)
+            announcePhase(nextEndgamePhase);
+        if (currentEndgamePhase != SHRINKING_WORLDBORDER)
+            activatePhase();
+    }
+
+    protected double[] worldborderLoc() {
+        WorldBorder wb = world.getWorldBorder();
+        Location l = wb.getCenter();
+        double locX = (wb.getSize() / 2) + l.getX();
+        double locZ = (wb.getSize() / 2) + l.getZ();
+        return new double[]{locX, locZ};
     }
 
     public enum State {
@@ -1074,11 +1102,6 @@ public class UHCArena implements Runnable, Listener {
     public enum EndgamePhase {
         NORMALGAME("Normal Game", -1),
         SHRINKING_WORLDBORDER("Shrinking Worldborder", 600000);
-/*
-        NORMALGAME("Normal Game", -1),
-        HUNGER_III("Hunger III", 30000),
-        POISON("Wither", 30000);
-*/
 
         private long duration;
         private String name;
