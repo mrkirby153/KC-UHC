@@ -1,7 +1,9 @@
 package me.mrkirby153.kcuhc.command;
 
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.arena.ArenaProperties;
 import me.mrkirby153.kcuhc.arena.UHCArena;
+import me.mrkirby153.kcuhc.gui.admin.GameAdminInventory;
 import me.mrkirby153.kcuhc.handler.FreezeHandler;
 import me.mrkirby153.kcuhc.handler.GameListener;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
@@ -23,6 +25,11 @@ import java.util.*;
 public class CommandUHC extends BaseCommand {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (args.length == 0) {
+            if (sender instanceof Player)
+                new GameAdminInventory(UHC.plugin, (Player) sender);
+            return true;
+        }
         if (args.length == 1) {
             if (restrictAdmin(sender))
                 return true;
@@ -269,6 +276,26 @@ public class CommandUHC extends BaseCommand {
                     sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
                 }
                 RegenTicket.give(p);
+            }
+        }
+        if (args.length == 3) {
+            if (args[0].equalsIgnoreCase("preset")) {
+                if (args[1].equalsIgnoreCase("load")) {
+                    String propName = args[2];
+                    if (!ArenaProperties.propertyExists(propName)) {
+                        sender.sendMessage(UtilChat.generateLegacyError("That preset does not exist!"));
+                        return true;
+                    }
+                    UHC.arena.setProperties(ArenaProperties.loadProperties(propName));
+                    sender.sendMessage(UtilChat.message("Loaded property file " + ChatColor.GOLD + propName + ".json"));
+                    return true;
+                }
+                if(args[1].equalsIgnoreCase("save")){
+                    String propName = args[2];
+                    ArenaProperties.saveProperties(UHC.arena.getProperties(), propName);
+                    sender.sendMessage(UtilChat.message("Saved property file " + ChatColor.GOLD + propName + ".json"));
+                    return true;
+                }
             }
         }
         //      /uhc create x z world size endSize duration

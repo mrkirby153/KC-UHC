@@ -21,7 +21,7 @@ public class ArenaProperties {
 
     public Property<Integer> WORLDBORDER_START_SIZE = new Property<>("wb_max", 1500);
     public Property<Integer> WORLDBORDER_END_SIZE = new Property<>("wb_min", 60);
-    public Property<Integer> WORLDBORDER_TRAVEL_TIME = new Property<>("wb_travel", 1800);
+    public Property<Integer> WORLDBORDER_TRAVEL_TIME = new Property<>("wb_travel", 30);
     public Property<LocationProperty> WORLDBORDER_CENTER = new Property<>("wb_location", new LocationProperty(0, 0, 0));
     public Property<Boolean> ENABLE_WORLDBORDER_WARNING = new Property<>("wb_warn", true);
     public Property<Integer> WORLDBORDER_WARN_DISTANCE = new Property<>("wb_warn_dist", 50);
@@ -63,6 +63,11 @@ public class ArenaProperties {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static boolean propertyExists(String name){
+        File file = new File(UHC.plugin.getDataFolder(), "presets/" + name + ".json");
+        return file.exists();
     }
 
     public static void saveProperties(ArenaProperties properties, String fileName) {

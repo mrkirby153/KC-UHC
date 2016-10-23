@@ -24,7 +24,7 @@ public abstract class Shop<T extends JavaPlugin> implements Listener {
     private Inventory inventory;
     private Player player;
 
-    private Map<Integer, Action> actions = new HashMap<>();
+    protected Map<Integer, Action> actions = new HashMap<>();
 
     public Shop(T module, Player player, int rows, String title) {
         this.inventory = Bukkit.createInventory(null, rows * 9, title);

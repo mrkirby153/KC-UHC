@@ -378,9 +378,9 @@ public class UHCArena implements Runnable, Listener {
     public void freeze() {
         int secondsPassed = Math.toIntExact((System.currentTimeMillis() - startTime) / 1000);
 
-        System.out.println("Duration: " + properties.WORLDBORDER_TRAVEL_TIME.get());
+        System.out.println("Duration: " + properties.WORLDBORDER_TRAVEL_TIME.get() * 60);
         System.out.println("Seconds passed: " + secondsPassed);
-        this.secondsRemaining = properties.WORLDBORDER_TRAVEL_TIME.get() - secondsPassed;
+        this.secondsRemaining = properties.WORLDBORDER_TRAVEL_TIME.get() * 60 - secondsPassed;
 
         System.out.println("Seconds remaining: " + secondsRemaining);
         overworldWorldborderSize = getWorld().getWorldBorder().getSize();
@@ -444,6 +444,10 @@ public class UHCArena implements Runnable, Listener {
 
     public ArenaProperties getProperties() {
         return properties;
+    }
+
+    public void setProperties(ArenaProperties properties) {
+        this.properties = properties;
     }
 
     public World getWorld() {
@@ -716,7 +720,7 @@ public class UHCArena implements Runnable, Listener {
 
         this.worldBorderHandler.setWorldborder(properties.WORLDBORDER_START_SIZE.get());
         this.worldBorderHandler.setWarningDistance(WORLDBORDER_WARN_DIST);
-        this.worldBorderHandler.setWorldborder(properties.WORLDBORDER_END_SIZE.get(), properties.WORLDBORDER_TRAVEL_TIME.get());
+        this.worldBorderHandler.setWorldborder(properties.WORLDBORDER_END_SIZE.get(), properties.WORLDBORDER_TRAVEL_TIME.get() * 60);
 
         getWorld().setGameRuleValue("naturalRegeneration", "false");
         getWorld().setGameRuleValue("doMobSpawning", "true");
