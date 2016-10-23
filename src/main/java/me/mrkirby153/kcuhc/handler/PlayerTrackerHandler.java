@@ -37,6 +37,10 @@ public class PlayerTrackerHandler implements Listener, Runnable {
 
     @Override
     public void run() {
+        if(!UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get()){
+            Bukkit.getOnlinePlayers().forEach(p->p.setCompassTarget(p.getBedSpawnLocation()));
+            return;
+        }
         Iterator<Map.Entry<UUID, UUID>> iterator = targets.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<UUID, UUID> next = iterator.next();
@@ -60,6 +64,8 @@ public class PlayerTrackerHandler implements Listener, Runnable {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInteract(PlayerInteractEvent event) {
+        if(!UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get())
+            return;
         if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK)
             return;
 
@@ -94,13 +100,17 @@ public class PlayerTrackerHandler implements Listener, Runnable {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void playerDeath(PlayerDeathEvent event) {
+        if(!UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get())
+            return;
         Player dead = event.getEntity();
 
-        // Remove compasses from drops
-        Iterator<ItemStack> drops = event.getDrops().iterator();
-        while (drops.hasNext()) {
-            if (drops.next().getType() == Material.COMPASS)
-                drops.remove();
+        // Remove compasses from drops if given on start
+        if(UHC.arena.getProperties().GIVE_COMPASS_ON_START.get()) {
+            Iterator<ItemStack> drops = event.getDrops().iterator();
+            while (drops.hasNext()) {
+                if (drops.next().getType() == Material.COMPASS)
+                    drops.remove();
+            }
         }
 
         UUID uuid = dead.getUniqueId();
@@ -137,6 +147,8 @@ public class PlayerTrackerHandler implements Listener, Runnable {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void prepareCraft(PrepareItemCraftEvent event) {
+        if(!UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get())
+            return;
         if (event.getRecipe().getResult() == null)
             return;
 

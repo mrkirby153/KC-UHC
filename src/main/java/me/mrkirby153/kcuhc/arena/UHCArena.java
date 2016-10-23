@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static me.mrkirby153.kcuhc.UHC.plugin;
 import static me.mrkirby153.kcuhc.UHC.uhcNetwork;
 import static me.mrkirby153.kcuhc.arena.UHCArena.EndgamePhase.NORMALGAME;
 import static me.mrkirby153.kcuhc.arena.UHCArena.EndgamePhase.SHRINKING_WORLDBORDER;
@@ -69,26 +70,15 @@ public class UHCArena implements Runnable, Listener {
 
     private static final int WORLDBORDER_WARN_DIST = 50;
     private static final int TIP_TIME = 30000;
-
     // Worlds
-    private final World world;
-    private final World nether;
-
-    // Configuration settings
-    private final int startSize;
-    private final int endSize;
-    private final int duration;
-    private final int minX, maxX, minZ, maxZ;
-    private final Location center;
 
     public ScoreboardUpdater scoreboardUpdater;
-
     protected String winner;
     protected long startTime = 0;
     protected long nextEndgamePhaseIn = -1;
     protected EndgamePhase currentEndgamePhase = EndgamePhase.NORMALGAME;
     protected EndgamePhase nextEndgamePhase;
-
+    private ArenaProperties properties;
     private CountdownBarTask countdownTask;
     private boolean firstAnnounce = true;
     private boolean shouldAnnounce = false;
@@ -100,9 +90,6 @@ public class UHCArena implements Runnable, Listener {
 
     private int generationTaskId;
     private int countdown;
-
-    private boolean shouldEndCheck = true;
-    private boolean shouldSpreadPlayers = true;
 
     private WorldBorderHandler worldBorderHandler;
 
@@ -146,20 +133,13 @@ public class UHCArena implements Runnable, Listener {
     private int runCount = 0;
 
 
-    public UHCArena(World world, int startSize, int endSize, int duration, Location center) {
-        this.world = world;
-        this.nether = Bukkit.getWorld(world.getName() + "_nether");
-        this.startSize = startSize;
-        this.endSize = endSize;
-        this.duration = duration;
-        this.center = world.getHighestBlockAt(center.getBlockX(), center.getBlockZ()).getLocation();
-        this.worldBorderHandler = new WorldBorderHandler(UHC.plugin, this, world, nether);
-        this.scoreboardUpdater = new ScoreboardUpdater(this, new UHCScoreboard());
+    public UHCArena(String presetFile) {
+        if (presetFile == null)
+            presetFile = "default";
+        this.properties = ArenaProperties.loadProperties(presetFile);
 
-        minX = center.getBlockX() - startSize;
-        maxX = center.getBlockX() + startSize;
-        minZ = center.getBlockZ() - startSize;
-        maxZ = center.getBlockZ() + startSize;
+        this.worldBorderHandler = new WorldBorderHandler(UHC.plugin, this);
+        this.scoreboardUpdater = new ScoreboardUpdater(this, new UHCScoreboard());
 
         UHC.plugin.getServer().getPluginManager().registerEvents(new PregameListener(), UHC.plugin);
         UHC.plugin.getServer().getPluginManager().registerEvents(new GameListener(), UHC.plugin);
@@ -187,9 +167,13 @@ public class UHCArena implements Runnable, Listener {
         craftingRecipes();
     }
 
+    public UHCArena() {
+        this("default");
+    }
+
     public static UHCArena loadFromFile() {
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new File(UHC.plugin.getDataFolder(), "arena.yml"));
-        return new UHCArena(Bukkit.getWorld(cfg.getString("world")), cfg.getInt("startSize"), cfg.getInt("endSize"), cfg.getInt("duration"), (Location) cfg.get("startingPoint"));
+        return new UHCArena(cfg.getString("preset"));
     }
 
     public void addPlayer(Player player) {
@@ -265,19 +249,21 @@ public class UHCArena implements Runnable, Listener {
         if (event.getInventory() == null)
             return;
 
-        CraftingInventory inv = event.getInventory();
-        for (ItemStack item : inv.getMatrix()) {
-            if (item != null && item.getType() != Material.AIR) {
-                if (item.getType() == Material.SKULL_ITEM || item.getType() == Material.SKULL) {
-                    if (item.getItemMeta() == null)
-                        continue;
-                    ItemStack apple = new ItemStack(Material.GOLDEN_APPLE, 1);
-                    ItemMeta meta = apple.getItemMeta();
-                    meta.setDisplayName(ChatColor.AQUA + "Head Apple");
-                    apple.setItemMeta(meta);
-                    apple.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
-                    inv.setResult(apple);
-                    return;
+        if (properties.ENABLE_HEAD_APPLE.get()) {
+            CraftingInventory inv = event.getInventory();
+            for (ItemStack item : inv.getMatrix()) {
+                if (item != null && item.getType() != Material.AIR) {
+                    if (item.getType() == Material.SKULL_ITEM || item.getType() == Material.SKULL) {
+                        if (item.getItemMeta() == null)
+                            continue;
+                        ItemStack apple = new ItemStack(Material.GOLDEN_APPLE, 1);
+                        ItemMeta meta = apple.getItemMeta();
+                        meta.setDisplayName(ChatColor.AQUA + "Head Apple");
+                        apple.setItemMeta(meta);
+                        apple.addUnsafeEnchantment(Enchantment.ARROW_DAMAGE, 1);
+                        inv.setResult(apple);
+                        return;
+                    }
                 }
             }
         }
@@ -288,13 +274,13 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void distributeTeams(int minRadius) {
-        System.out.println("Worldborder location: +-" + world.getWorldBorder().getSize() / 2);
+        System.out.println("Worldborder location: +-" + getWorld().getWorldBorder().getSize() / 2);
         System.out.println("Spreading teams...");
 
         // Calculate team spawn locations
         Map<UHCTeam, Location> locations = new HashMap<>();
         for (UHCTeam team : TeamHandler.teams().stream().filter(t -> !(t instanceof TeamSpectator)).collect(Collectors.toList())) {
-            Location randomSpawn = SpawnUtils.getRandomSpawn(world, startSize);
+            Location randomSpawn = SpawnUtils.getRandomSpawn(getWorld(), properties.WORLDBORDER_START_SIZE.get());
             locations.put(team, randomSpawn);
         }
 
@@ -311,7 +297,7 @@ public class UHCArena implements Runnable, Listener {
                     }
                     if (!clash)
                         break;
-                    spawnLoc = SpawnUtils.getRandomSpawn(world, startSize);
+                    spawnLoc = SpawnUtils.getRandomSpawn(getWorld(), properties.WORLDBORDER_START_SIZE.get());
                 }
             }
             // Teleport everyone on the team to that location
@@ -371,10 +357,6 @@ public class UHCArena implements Runnable, Listener {
         }
     }
 
-    public int endSize() {
-        return endSize;
-    }
-
     public void essentiallyDisable() {
         if (UHC.uhcNetwork != null)
             TeamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getName()).publish());
@@ -396,13 +378,13 @@ public class UHCArena implements Runnable, Listener {
     public void freeze() {
         int secondsPassed = Math.toIntExact((System.currentTimeMillis() - startTime) / 1000);
 
-        System.out.println("Duration: " + duration);
+        System.out.println("Duration: " + properties.WORLDBORDER_TRAVEL_TIME.get());
         System.out.println("Seconds passed: " + secondsPassed);
-        this.secondsRemaining = this.duration - secondsPassed;
+        this.secondsRemaining = properties.WORLDBORDER_TRAVEL_TIME.get() - secondsPassed;
 
         System.out.println("Seconds remaining: " + secondsRemaining);
-        overworldWorldborderSize = world.getWorldBorder().getSize();
-        world.getWorldBorder().setSize(overworldWorldborderSize);
+        overworldWorldborderSize = getWorld().getWorldBorder().getSize();
+        getWorld().getWorldBorder().setSize(overworldWorldborderSize);
         System.out.println("Worldborder size: " + overworldWorldborderSize);
 
         frozen_nextEndgamePhase = nextEndgamePhase;
@@ -413,15 +395,15 @@ public class UHCArena implements Runnable, Listener {
         currentEndgamePhase = NORMALGAME;
         freezeStartTime = System.currentTimeMillis();
 
-        if (nether != null) {
-            netherWorldborderSize = nether.getWorldBorder().getSize();
-            nether.getWorldBorder().setSize(netherWorldborderSize);
+        if (getNether() != null) {
+            netherWorldborderSize = getNether().getWorldBorder().getSize();
+            getNether().getWorldBorder().setSize(netherWorldborderSize);
         }
         this.state = FROZEN;
         Bukkit.getOnlinePlayers().stream().filter(p -> !TeamHandler.isSpectator(p)).forEach(FreezeHandler::freezePlayer);
-        world.getEntities().stream().filter(e -> e.getType() != EntityType.PLAYER).forEach(e -> FreezeHandler.frozenEntities.put(e, e.getLocation()));
+        getWorld().getEntities().stream().filter(e -> e.getType() != EntityType.PLAYER).forEach(e -> FreezeHandler.frozenEntities.put(e, e.getLocation()));
 
-        world.setGameRuleValue("doDaylightCycle", "false");
+        getWorld().setGameRuleValue("doDaylightCycle", "false");
         FreezeHandler.pvpEnabled = false;
 
         Bukkit.broadcastMessage(UtilChat.message("The game is now frozen"));
@@ -430,8 +412,15 @@ public class UHCArena implements Runnable, Listener {
     public void generate() {
         MOTDHandler.setMotd(ChatColor.DARK_RED + "Pregenerating world, come back soon!");
         state = State.GENERATING_WORLD;
+
+        Integer worldborderSize = properties.WORLDBORDER_START_SIZE.get();
+        int minX = getCenter().getBlockX() - worldborderSize;
+        int maxX = getCenter().getBlockX() + worldborderSize;
+        int minZ = getCenter().getBlockZ() - worldborderSize;
+        int maxZ = getCenter().getBlockZ() + worldborderSize;
+
         generationTaskId = UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin,
-                new GenerationTask(UHC.plugin, this, world, minX / 512, minZ / 512, maxX / 512, maxZ / 512), 1L, 1L);
+                new GenerationTask(UHC.plugin, this, getWorld(), minX / 512, minZ / 512, maxX / 512, maxZ / 512), 1L, 1L);
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.kickPlayer(net.md_5.bungee.api.ChatColor.RED + "We are pregenerating the world, come back later");
         }
@@ -446,11 +435,19 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public Location getCenter() {
-        return center;
+        return getWorld().getHighestBlockAt((int) properties.WORLDBORDER_CENTER.get().getX(), (int) properties.WORLDBORDER_CENTER.get().getZ()).getLocation();
+    }
+
+    public World getNether() {
+        return Bukkit.getWorld(getWorld().getName() + "_nether");
+    }
+
+    public ArenaProperties getProperties() {
+        return properties;
     }
 
     public World getWorld() {
-        return world;
+        return Bukkit.getWorld(properties.WORLD.get());
     }
 
     public void handleDeathMessage(Player dead, String message) {
@@ -459,13 +456,15 @@ public class UHCArena implements Runnable, Listener {
             p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_THUNDER, 1, 1);
         }
 
-        Location playerLoc = dead.getLocation();
-        // Drop the player's head
-        ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
-        ItemMeta m = head.getItemMeta();
-        ((SkullMeta) m).setOwner(dead.getName());
-        head.setItemMeta(m);
-        playerLoc.getWorld().dropItemNaturally(playerLoc, head);
+        if (properties.DROP_PLAYER_HEAD.get()) {
+            Location playerLoc = dead.getLocation();
+            // Drop the player's head
+            ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
+            ItemMeta m = head.getItemMeta();
+            ((SkullMeta) m).setOwner(dead.getName());
+            head.setItemMeta(m);
+            playerLoc.getWorld().dropItemNaturally(playerLoc, head);
+        }
 
         players.remove(dead);
         dead.sendMessage(UtilChat.message("You have died and are now a spectator"));
@@ -478,10 +477,10 @@ public class UHCArena implements Runnable, Listener {
         scoreboardUpdater.getScoreboard().createTeams();
         this.worldBorderHandler.setWorldborder(60);
         this.worldBorderHandler.setWarningDistance(0);
-        world.setGameRuleValue("doDaylightCycle", "false");
-        world.setGameRuleValue("doMobSpawning", "false");
-        world.setGameRuleValue("doMobLoot", "false");
-        world.setTime(1200);
+        getWorld().setGameRuleValue("doDaylightCycle", "false");
+        getWorld().setGameRuleValue("doMobSpawning", "false");
+        getWorld().setGameRuleValue("doMobLoot", "false");
+        getWorld().setTime(1200);
         Bukkit.broadcastMessage(UtilChat.message("Initialized"));
         MOTDHandler.setMotd(ChatColor.GREEN + "Ready");
         players = new ArrayList<>();
@@ -498,6 +497,8 @@ public class UHCArena implements Runnable, Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void itemPickup(PlayerPickupItemEvent event) {
         // Display player head info
+        if (!properties.DROP_PLAYER_HEAD.get())
+            return;
         if (event.getItem().getItemStack().getType() == Material.SKULL_ITEM && event.getItem().getItemStack().getDurability() == 3) {
             Player player = event.getPlayer();
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 0.5F);
@@ -524,9 +525,11 @@ public class UHCArena implements Runnable, Listener {
             return;
         }
         uuidToStringMap.put(player.getUniqueId(), player.getName());
-        logoutTimes.put(player.getUniqueId(), System.currentTimeMillis() + (300000));
+        int reconnectMinutes = properties.REJOIN_MINUTES.get();
+        int reconnectMs = 1000 * 60 * reconnectMinutes;
+        logoutTimes.put(player.getUniqueId(), System.currentTimeMillis() + reconnectMs);
         for (Player p : Bukkit.getOnlinePlayers()) {
-            p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + player.getName() + " has disconnected! 5.0 minutes to rejoin!");
+            p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + player.getName() + " has disconnected! " + UtilTime.format(1, reconnectMs, UtilTime.TimeUnit.FIT) + " to rejoin!");
         }
     }
 
@@ -592,7 +595,7 @@ public class UHCArena implements Runnable, Listener {
                 for (Player p : players) {
                     p.setGlowing(false);
                 }
-                if (teamCountLeft() <= 1 && shouldEndCheck) {
+                if (teamCountLeft() <= 1 && properties.CHECK_ENDING.get()) {
                     if (teamsLeft().size() > 0) {
                         UHCPlayerTeam team = teamsLeft().get(0);
                         this.winningTeamColor = team.toColor();
@@ -600,7 +603,7 @@ public class UHCArena implements Runnable, Listener {
                     }
                     state = ENDGAME;
                 }
-                if (worldBorderHandler.getOverworld().getSize() <= endSize) {
+                if (worldBorderHandler.getOverworld().getSize() <= properties.WORLDBORDER_END_SIZE.get()) {
                     if (!notifiedDisabledSpawn) {
                         for (Player p : Bukkit.getOnlinePlayers()) {
                             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
@@ -609,11 +612,11 @@ public class UHCArena implements Runnable, Listener {
 
                         notifiedDisabledSpawn = true;
                     }
-                    world.getWorldBorder().setWarningDistance(0);
+                    getWorld().getWorldBorder().setWarningDistance(0);
                 }
-                if (nether != null)
+                if (getNether() != null)
                     if (worldBorderHandler.netherTravelComplete())
-                        nether.getWorldBorder().setWarningDistance(0);
+                        getWorld().getWorldBorder().setWarningDistance(0);
                 break;
             case ENDGAME:
                 for (Player p : Bukkit.getOnlinePlayers()) {
@@ -623,16 +626,16 @@ public class UHCArena implements Runnable, Listener {
                 }
                 if (this.launchedFw++ < 8) {
                     int distFromWB = 16;
-                    double worldborderRadius = world.getWorldBorder().getSize() / 2d;
-                    Location pZX = center.clone().add(worldborderRadius - distFromWB + (5 * Math.random()), 20, worldborderRadius - distFromWB + (5 * Math.random()));
-                    Location pXnZ = center.clone().add(worldborderRadius - distFromWB + (5 * Math.random()), 20, -(worldborderRadius - distFromWB + (5 * Math.random())));
-                    Location pZnX = center.clone().add(-(worldborderRadius - distFromWB) + (5 * Math.random()), 20, worldborderRadius - distFromWB + (5 * Math.random()));
-                    Location nXZ = center.clone().add(-(worldborderRadius - distFromWB) + (5 * Math.random()), 20, -(worldborderRadius - distFromWB + (5 * Math.random())));
+                    double worldborderRadius = getWorld().getWorldBorder().getSize() / 2d;
+                    Location pZX = getCenter().clone().add(worldborderRadius - distFromWB + (5 * Math.random()), 20, worldborderRadius - distFromWB + (5 * Math.random()));
+                    Location pXnZ = getCenter().clone().add(worldborderRadius - distFromWB + (5 * Math.random()), 20, -(worldborderRadius - distFromWB + (5 * Math.random())));
+                    Location pZnX = getCenter().clone().add(-(worldborderRadius - distFromWB) + (5 * Math.random()), 20, worldborderRadius - distFromWB + (5 * Math.random()));
+                    Location nXZ = getCenter().clone().add(-(worldborderRadius - distFromWB) + (5 * Math.random()), 20, -(worldborderRadius - distFromWB + (5 * Math.random())));
 
-                    Firework fw_pZX = (Firework) world.spawnEntity(pZX, EntityType.FIREWORK);
-                    Firework fw_pXnZ = (Firework) world.spawnEntity(pXnZ, EntityType.FIREWORK);
-                    Firework fw_pZnX = (Firework) world.spawnEntity(pZnX, EntityType.FIREWORK);
-                    Firework fw_nXZ = (Firework) world.spawnEntity(nXZ, EntityType.FIREWORK);
+                    Firework fw_pZX = (Firework) getWorld().spawnEntity(pZX, EntityType.FIREWORK);
+                    Firework fw_pXnZ = (Firework) getWorld().spawnEntity(pXnZ, EntityType.FIREWORK);
+                    Firework fw_pZnX = (Firework) getWorld().spawnEntity(pZnX, EntityType.FIREWORK);
+                    Firework fw_nXZ = (Firework) getWorld().spawnEntity(nXZ, EntityType.FIREWORK);
 
                     FireworkMeta meta = fw_pZX.getFireworkMeta();
                     FireworkEffect.Type type = FireworkEffect.Type.BALL_LARGE;
@@ -658,11 +661,7 @@ public class UHCArena implements Runnable, Listener {
     public void saveToFile() {
         FileConfiguration cfg = new YamlConfiguration();
         // Save general information
-        cfg.set("duration", duration);
-        cfg.set("endSize", endSize);
-        cfg.set("startSize", startSize);
-        cfg.set("world", world.getName());
-        cfg.set("startingPoint", center);
+        cfg.set("preset", properties.name);
         try {
             cfg.save(new File(UHC.plugin.getDataFolder(), "arena.yml"));
         } catch (IOException e) {
@@ -673,17 +672,19 @@ public class UHCArena implements Runnable, Listener {
     public void sendEveryoneToTeamChannels() {
         if (UHC.uhcNetwork == null)
             return;
-        Bukkit.broadcastMessage(UtilChat.message("Creating discord channels..."));
-        new BotCommandCreateSpectator(UHC.plugin.serverId()).publishBlocking();
-        TeamHandler.teams().forEach(t -> new BotCommandNewTeam(UHC.plugin.serverId(), t.getName()).publishBlocking());
+        Bukkit.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
+            Bukkit.broadcastMessage(UtilChat.message("Creating discord channels..."));
+            new BotCommandCreateSpectator(UHC.plugin.serverId()).publishBlocking();
+            TeamHandler.teams().forEach(t -> new BotCommandNewTeam(UHC.plugin.serverId(), t.getName()).publishBlocking());
 
-        Bukkit.broadcastMessage(UtilChat.message("Moving everyone into their discord channels"));
-        HashMap<UUID, String> teams = new HashMap<>();
+            Bukkit.broadcastMessage(UtilChat.message("Moving everyone into their discord channels"));
+            HashMap<UUID, String> teams = new HashMap<>();
 
-        TeamHandler.teams().forEach(t -> t.getPlayers().forEach(u -> teams.put(u, t.getName())));
-        new BotCommandAssignTeams(UHC.plugin.serverId(), null, teams).publishBlocking();
+            TeamHandler.teams().forEach(t -> t.getPlayers().forEach(u -> teams.put(u, t.getName())));
+            new BotCommandAssignTeams(UHC.plugin.serverId(), null, teams).publishBlocking();
 
-        Bukkit.broadcastMessage(UtilChat.message("Everyone should be moved"));
+            Bukkit.broadcastMessage(UtilChat.message("Everyone should be moved"));
+        });
     }
 
     public void setEndgamePhase(EndgamePhase endgamePhase) {
@@ -713,15 +714,15 @@ public class UHCArena implements Runnable, Listener {
         nextEndgamePhase = null;
         nextEndgamePhaseIn = -1;
 
-        this.worldBorderHandler.setWorldborder(startSize);
+        this.worldBorderHandler.setWorldborder(properties.WORLDBORDER_START_SIZE.get());
         this.worldBorderHandler.setWarningDistance(WORLDBORDER_WARN_DIST);
-        this.worldBorderHandler.setWorldborder(endSize, duration);
+        this.worldBorderHandler.setWorldborder(properties.WORLDBORDER_END_SIZE.get(), properties.WORLDBORDER_TRAVEL_TIME.get());
 
-        world.setGameRuleValue("naturalRegeneration", "false");
-        world.setGameRuleValue("doMobSpawning", "true");
-        world.setGameRuleValue("doMobLoot", "true");
-        world.setGameRuleValue("doDaylightCycle", "true");
-        world.setTime(0);
+        getWorld().setGameRuleValue("naturalRegeneration", "false");
+        getWorld().setGameRuleValue("doMobSpawning", "true");
+        getWorld().setGameRuleValue("doMobLoot", "true");
+        getWorld().setGameRuleValue("doDaylightCycle", "true");
+        getWorld().setTime(0);
 
         PotionEffect resist = new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 6, true, false);
         PotionEffect regen = new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 10, true, false);
@@ -743,7 +744,7 @@ public class UHCArena implements Runnable, Listener {
                 }
             } else
                 new SpecInventory(UHC.plugin, p);
-            p.setBedSpawnLocation(center, true);
+            p.setBedSpawnLocation(getCenter(), true);
             p.addPotionEffects(Arrays.asList(resist, regen, sat));
             if (p.isOp()) {
                 p.setOp(false);
@@ -753,13 +754,13 @@ public class UHCArena implements Runnable, Listener {
             p.closeInventory();
         }
 
-        if (shouldSpreadPlayers)
-            distributeTeams(50);
+        if (properties.SPREAD_PLAYERS.get())
+            distributeTeams(properties.MIN_DISTANCE_BETWEEN_TEAMS.get());
 
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "xp -3000l @a");
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "achievement take * @a");
 
-        for (Entity e : world.getEntities()) {
+        for (Entity e : getWorld().getEntities()) {
             if (e instanceof Tameable) {
                 ((Tameable) e).setOwner(null);
                 ((Tameable) e).setTamed(false);
@@ -770,8 +771,10 @@ public class UHCArena implements Runnable, Listener {
         }
 
         for (Player p : players()) {
-            RegenTicket.give(p);
-            UHC.playerTracker.giveTracker(p);
+            if (properties.REGEN_TICKET_ENABLE.get())
+                RegenTicket.give(p);
+            if (properties.GIVE_COMPASS_ON_START.get())
+                UHC.playerTracker.giveTracker(p);
         }
 
         sendEveryoneToTeamChannels();
@@ -799,17 +802,17 @@ public class UHCArena implements Runnable, Listener {
         this.worldBorderHandler.setWorldborder(60);
         this.worldBorderHandler.setWarningDistance(0);
 
-        world.setGameRuleValue("doDaylightCycle", "false");
-        world.setGameRuleValue("doMobSpawning", "false");
-        world.setGameRuleValue("doMobLoot", "false");
+        getWorld().setGameRuleValue("doDaylightCycle", "false");
+        getWorld().setGameRuleValue("doMobSpawning", "false");
+        getWorld().setGameRuleValue("doMobLoot", "false");
 
-        world.setTime(1200);
-        world.setThundering(false);
-        world.setStorm(false);
+        getWorld().setTime(1200);
+        getWorld().setThundering(false);
+        getWorld().setStorm(false);
 
         for (Player p : players) {
             UtilTitle.title(p, ChatColor.GOLD + winner, ChatColor.GOLD + "has won the game", 10, 20 * 5, 20);
-            p.teleport(center);
+            p.teleport(getCenter());
             p.setGameMode(GameMode.SURVIVAL);
             p.setAllowFlight(true);
             p.setHealth(p.getMaxHealth());
@@ -875,16 +878,16 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void toggleShouldEndCheck() {
-        this.shouldEndCheck = !this.shouldEndCheck;
-        if (shouldEndCheck)
+        this.properties.CHECK_ENDING.setValue(!this.properties.CHECK_ENDING.get());
+        if (this.properties.CHECK_ENDING.get())
             Bukkit.broadcastMessage(UtilChat.message("Checking if the game should end"));
         else
             Bukkit.broadcastMessage(UtilChat.message("No longer checking if the game should end"));
     }
 
     public void toggleSpreadingPlayers() {
-        this.shouldSpreadPlayers = !this.shouldSpreadPlayers;
-        if (shouldSpreadPlayers) {
+        this.properties.SPREAD_PLAYERS.setValue(!this.properties.SPREAD_PLAYERS.get());
+        if (this.properties.SPREAD_PLAYERS.get()) {
             Bukkit.broadcastMessage(UtilChat.message("Spreading players once the game starts"));
         } else {
             Bukkit.broadcastMessage(UtilChat.message("No longer spreading players"));
@@ -893,11 +896,11 @@ public class UHCArena implements Runnable, Listener {
 
     public void unfreeze() {
         if (secondsRemaining > 0) {
-            world.getWorldBorder().setSize(overworldWorldborderSize);
-            world.getWorldBorder().setSize(endSize, secondsRemaining);
-            if (nether != null) {
-                nether.getWorldBorder().setSize(netherWorldborderSize);
-                nether.getWorldBorder().setSize(endSize * 2, secondsRemaining);
+            getWorld().getWorldBorder().setSize(overworldWorldborderSize);
+            getWorld().getWorldBorder().setSize(properties.WORLDBORDER_END_SIZE.get(), secondsRemaining);
+            if (getNether() != null) {
+                getNether().getWorldBorder().setSize(netherWorldborderSize);
+                getNether().getWorldBorder().setSize(properties.WORLDBORDER_END_SIZE.get() * 2, secondsRemaining);
             }
         }
         this.state = RUNNING;
@@ -924,7 +927,7 @@ public class UHCArena implements Runnable, Listener {
             FreezeHandler.pvpEnabled = true;
             Bukkit.broadcastMessage(UtilChat.message("Damage enabled"));
         }, 100);
-        world.setGameRuleValue("doDaylightCycle", "true");
+        getWorld().setGameRuleValue("doDaylightCycle", "true");
         Bukkit.broadcastMessage(UtilChat.message("The game was frozen for " + ChatColor.GOLD + UtilTime.format(1, frozenFor, UtilTime.TimeUnit.FIT)));
         Bukkit.broadcastMessage(UtilChat.message("PvP will be enabled in 5 seconds"));
         FreezeHandler.frozenEntities.clear();
@@ -1052,11 +1055,13 @@ public class UHCArena implements Runnable, Listener {
     }
 
     private void updateEndgame() {
+        if (!properties.ENABLE_ENDGAME.get())
+            return;
         if (state != RUNNING)
             return;
         switch (currentEndgamePhase) {
             case NORMALGAME:
-                if (world.getWorldBorder().getSize() <= endSize) {
+                if (getWorld().getWorldBorder().getSize() <= properties.WORLDBORDER_END_SIZE.get()) {
                     if (nextEndgamePhase != EndgamePhase.SHRINKING_WORLDBORDER) {
                         nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.SHRINKING_WORLDBORDER.getDuration();
                         nextEndgamePhase = EndgamePhase.SHRINKING_WORLDBORDER;
@@ -1068,7 +1073,7 @@ public class UHCArena implements Runnable, Listener {
                 runCount++;
                 if (runCount % 40 == 0) {
                     runCount = 0;
-                    WorldBorder wb = world.getWorldBorder();
+                    WorldBorder wb = getWorld().getWorldBorder();
                     if (wb.getSize() > 1)
                         wb.setSize(wb.getSize() - 2, 1);
                 }
@@ -1082,7 +1087,7 @@ public class UHCArena implements Runnable, Listener {
     }
 
     protected double[] worldborderLoc() {
-        WorldBorder wb = world.getWorldBorder();
+        WorldBorder wb = getWorld().getWorldBorder();
         Location l = wb.getCenter();
         double locX = (wb.getSize() / 2) + l.getX();
         double locZ = (wb.getSize() / 2) + l.getZ();

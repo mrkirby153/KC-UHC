@@ -246,7 +246,7 @@ public class GameListener implements Listener {
             return;
         if (event.getSpawnReason() != CreatureSpawnEvent.SpawnReason.NATURAL)
             return;
-        if (UHC.arena.endSize() <= UHC.arena.getWorld().getWorldBorder().getSize()) {
+        if (UHC.arena.getProperties().WORLDBORDER_END_SIZE.get() <= UHC.arena.getWorld().getWorldBorder().getSize()) {
             int num = random.nextInt(100);
             if (num < 75) {
                 event.setCancelled(true);

@@ -12,10 +12,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class WorldBorderHandler implements Runnable, Listener {
 
-    private static final int WORLDBORDER_WARN_DISTANCE = 50;
-
-    private WorldBorder overworldBorder;
-    private WorldBorder netherBorder;
 
     private double overworldStartSize;
     private double overworldEndSize;
@@ -26,15 +22,15 @@ public class WorldBorderHandler implements Runnable, Listener {
 
     private BossBar worldborderWarning;
 
-    public WorldBorderHandler(JavaPlugin plugin, UHCArena arena, World world, World nether) {
+    public WorldBorderHandler(JavaPlugin plugin, UHCArena arena) {
         plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 20L);
-        this.overworldBorder = world.getWorldBorder();
-        this.netherBorder = nether.getWorldBorder();
         this.arena = arena;
         this.worldborderWarning = Bukkit.createBossBar(ChatColor.RED + "You are close to the world border!", BarColor.PINK, BarStyle.SOLID);
     }
 
     public void setWorldborder(double size, int time) {
+        WorldBorder overworldBorder = arena.getWorld().getWorldBorder();
+        WorldBorder netherBorder = arena.getNether().getWorldBorder();
         overworldStartSize = overworldBorder.getSize();
         overworldEndSize = size;
         overworldBorder.setSize(size, time);
@@ -50,11 +46,11 @@ public class WorldBorderHandler implements Runnable, Listener {
     }
 
     public WorldBorder getOverworld() {
-        return overworldBorder;
+        return arena.getWorld().getWorldBorder();
     }
 
     public WorldBorder getNether() {
-        return netherBorder;
+        return arena.getNether().getWorldBorder();
     }
 
     public boolean overworldTravelComplete() {
@@ -76,7 +72,9 @@ public class WorldBorderHandler implements Runnable, Listener {
 
     @Override
     public void run() {
-        if (arena.currentState() != UHCArena.State.RUNNING || arena.getWorld().getWorldBorder().getSize() <= arena.endSize()) {
+        if(!arena.getProperties().ENABLE_WORLDBORDER_WARNING.get())
+            return;
+        if (arena.currentState() != UHCArena.State.RUNNING || arena.getWorld().getWorldBorder().getSize() <= arena.getProperties().WORLDBORDER_END_SIZE.get()) {
             worldborderWarning.removeAll();
             return;
         }
@@ -94,7 +92,7 @@ public class WorldBorderHandler implements Runnable, Listener {
             double distZ = worldBorderZ - playerZ;
 
             if (distX < distZ) {
-                if (playerX > (worldBorderX - WORLDBORDER_WARN_DISTANCE)) {
+                if (playerX > (worldBorderX - arena.getProperties().WORLDBORDER_WARN_DISTANCE.get())) {
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, scaleSound(distX), 0.5F);
                     if (!worldborderWarning.getPlayers().contains(player)) {
                         worldborderWarning.addPlayer(player);
@@ -103,7 +101,7 @@ public class WorldBorderHandler implements Runnable, Listener {
                     worldborderWarning.removePlayer(player);
                 }
             } else {
-                if (playerZ > (worldBorderZ - WORLDBORDER_WARN_DISTANCE)) {
+                if (playerZ > (worldBorderZ - arena.getProperties().WORLDBORDER_WARN_DISTANCE.get())) {
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, scaleSound(distZ), 2F);
                     if (!worldborderWarning.getPlayers().contains(player)) {
                         worldborderWarning.addPlayer(player);
@@ -117,11 +115,12 @@ public class WorldBorderHandler implements Runnable, Listener {
     }
 
     private float scaleSound(double distance) {
-        if (distance > WORLDBORDER_WARN_DISTANCE) {
-            distance = WORLDBORDER_WARN_DISTANCE;
+        Integer warnDistance = arena.getProperties().WORLDBORDER_WARN_DISTANCE.get();
+        if (distance > warnDistance) {
+            distance = warnDistance;
         }
         if (distance < 0)
             distance = 0;
-        return (float) (2.0 - (2.0F / WORLDBORDER_WARN_DISTANCE) * distance);
+        return (float) (2.0 - (2.0F / warnDistance) * distance);
     }
 }

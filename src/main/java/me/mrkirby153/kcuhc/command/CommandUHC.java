@@ -13,8 +13,6 @@ import me.mrkirby153.kcuhc.utils.UtilTime;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -76,29 +74,21 @@ public class CommandUHC extends BaseCommand {
                 return true;
             }
             if (args[0].equalsIgnoreCase("debugStart")) {
-                try {
-                    Field endCheck = UHCArena.class.getDeclaredField("shouldEndCheck");
-                    Field spreadPlayers = UHCArena.class.getDeclaredField("shouldSpreadPlayers");
-                    endCheck.setAccessible(true);
-                    spreadPlayers.setAccessible(true);
-                    if ((Boolean) endCheck.get(UHC.arena))
-                        UHC.arena.toggleShouldEndCheck();
-                    if ((Boolean) spreadPlayers.get(UHC.arena))
-                        UHC.arena.toggleSpreadingPlayers();
-                    if (TeamHandler.getTeamByName("debug") == null)
-                        UHC.arena.newTeam("debug", ChatColor.GOLD);
-                    for (Player p : Bukkit.getOnlinePlayers())
-                        TeamHandler.joinTeam(TeamHandler.getTeamByName("debug"), p);
-                    Bukkit.getScheduler().runTaskLater(UHC.plugin, () -> {
-                        sender.setOp(true);
-                        sender.sendMessage(UtilChat.message("You are now op"));
-                    }, 220);
-                    UHC.arena.startCountdown();
-                    sender.sendMessage(UtilChat.message("Debug starting"));
-                    return true;
-                } catch (IllegalAccessException | NoSuchFieldException e) {
-                    e.printStackTrace();
-                }
+                if (UHC.arena.getProperties().CHECK_ENDING.get())
+                    UHC.arena.toggleShouldEndCheck();
+                if (UHC.arena.getProperties().SPREAD_PLAYERS.get())
+                    UHC.arena.toggleSpreadingPlayers();
+                if (TeamHandler.getTeamByName("debug") == null)
+                    UHC.arena.newTeam("debug", ChatColor.GOLD);
+                for (Player p : Bukkit.getOnlinePlayers())
+                    TeamHandler.joinTeam(TeamHandler.getTeamByName("debug"), p);
+                Bukkit.getScheduler().runTaskLater(UHC.plugin, () -> {
+                    sender.setOp(true);
+                    sender.sendMessage(UtilChat.message("You are now op"));
+                }, 220);
+                UHC.arena.startCountdown();
+                sender.sendMessage(UtilChat.message("Debug starting"));
+                return true;
             }
             if (args[0].equalsIgnoreCase("toggleending")) {
                 UHC.arena.toggleShouldEndCheck();
@@ -282,30 +272,6 @@ public class CommandUHC extends BaseCommand {
             }
         }
         //      /uhc create x z world size endSize duration
-        if (args.length == 7) {
-            if (args[0].equalsIgnoreCase("create")) {
-                if (restrictAdmin(sender))
-                    return true;
-                if (!isNumber(args[1])) {
-                    sender.sendMessage(UtilChat.generateError("X coord must be a number").toLegacyText());
-                    return true;
-                }
-                if (!isNumber(args[2])) {
-                    sender.sendMessage(UtilChat.generateError("Z coord must be a number").toLegacyText());
-                    return true;
-                }
-                int x = Integer.parseInt(args[1]);
-                int z = Integer.parseInt(args[2]);
-                World w = Bukkit.getWorld(args[3]);
-                int size = Integer.parseInt(args[4]);
-                int endSize = Integer.parseInt(args[5]);
-                int duration = Integer.parseInt(args[6]);
-                UHC.arena = new UHCArena(w, size, endSize, duration, new Location(w, x, 0, z));
-                UHC.arena.saveToFile();
-                sender.sendMessage(UtilChat.message("Arena created"));
-                return true;
-            }
-        }
         if (args.length >= 2) {
             if (args[0].equalsIgnoreCase("closeServer")) {
                 String msg = "";
