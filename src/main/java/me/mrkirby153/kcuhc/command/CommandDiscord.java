@@ -53,8 +53,22 @@ public class CommandDiscord extends BaseCommand {
         if (restrictAdmin(sender)) {
             return true;
         }
+        if (args[0].equalsIgnoreCase("forcelink")) {
+            String username = args[1];
+            String discordId = args[2];
+            Player p = Bukkit.getPlayer(username);
+            if(p == null){
+                player.sendMessage(UtilChat.generateLegacyError("That user was not found"));
+            }
+            PlayerInfo info = new PlayerInfo(p.getUniqueId(), p.getName());
+            info.setDiscordUser(discordId);
+            info.setLinked(true);
+            UHC.uhcNetwork.getDatastore().addElement(info);
+            p.sendMessage(UtilChat.message("Your account has been linked to discord by "+sender.getName()));
+            player.sendMessage(UtilChat.message("Linked user " + username + " to the discord id " + discordId));
+        }
         if (args[0].equalsIgnoreCase("invite")) {
-            for(Player p : Bukkit.getOnlinePlayers()) {
+            for (Player p : Bukkit.getOnlinePlayers()) {
                 BaseComponent line = UtilChat.generateFormattedChat("=============================================", ChatColor.GREEN, 10);
                 BaseComponent padding = new TextComponent(" ");
                 BaseComponent message = UtilChat.generateFormattedChat("             >>> Click here to join the discord server <<<", ChatColor.GRAY, 0);
@@ -83,7 +97,7 @@ public class CommandDiscord extends BaseCommand {
             new BotCommandCreateSpectator(UHC.plugin.serverId()).publishBlocking();
             TeamHandler.teams().forEach(t -> {
                 new BotCommandNewTeam(UHC.plugin.serverId(), t.getName()).publishBlocking();
-                System.out.println("Created channel "+t.getName());
+                System.out.println("Created channel " + t.getName());
             });
             UtilChat.message("Discord channels generated!");
         }
@@ -104,11 +118,11 @@ public class CommandDiscord extends BaseCommand {
             player.sendMessage(ChatColor.GRAY + "" + ChatColor.ITALIC + "Looking up all online player's discord link status");
             Bukkit.getOnlinePlayers().forEach(p -> {
                 PlayerInfo info = UHC.uhcNetwork.getPlayerInfo(p.getUniqueId());
-                if(info == null || !info.isLinked()){
-                    sender.sendMessage(ChatColor.WHITE+p.getName()+" is not linked!");
+                if (info == null || !info.isLinked()) {
+                    sender.sendMessage(ChatColor.WHITE + p.getName() + " is not linked!");
                     return;
                 }
-                sender.sendMessage(ChatColor.GREEN+p.getName()+" is linked!");
+                sender.sendMessage(ChatColor.GREEN + p.getName() + " is linked!");
             });
         }
         return true;
@@ -123,9 +137,9 @@ public class CommandDiscord extends BaseCommand {
         return sb.toString();
     }
 
-    private void setCode(Player player, String code){
+    private void setCode(Player player, String code) {
         PlayerInfo info = UHC.uhcNetwork.getPlayerInfo(player.getUniqueId());
-        if(info == null) {
+        if (info == null) {
             info = new PlayerInfo(player.getUniqueId(), player.getName());
             UHC.uhcNetwork.getDatastore().addElement(info);
             setCode(player, code);
