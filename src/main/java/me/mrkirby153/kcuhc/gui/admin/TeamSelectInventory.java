@@ -4,8 +4,6 @@ import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.shop.Shop;
 import me.mrkirby153.kcuhc.shop.item.ShopItem;
 import me.mrkirby153.kcuhc.team.TeamHandler;
-import me.mrkirby153.kcuhc.team.TeamSpectator;
-import me.mrkirby153.kcuhc.team.UHCPlayerTeam;
 import me.mrkirby153.kcuhc.team.UHCTeam;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.WordUtils;
@@ -20,7 +18,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class TeamSelectInventory extends Shop<UHC> {
 
@@ -57,17 +54,17 @@ public class TeamSelectInventory extends Shop<UHC> {
         });
         addButton(3, new ShopItem(Material.DIAMOND_SWORD, "Two Teams"), (player, clickType) -> {
             // Create two random teams
-            ArrayList<UHCTeam> te = new ArrayList<>(TeamHandler.teams().stream().filter(t -> t instanceof UHCPlayerTeam).collect(Collectors.toList()));
+            ArrayList<UHCTeam> te = new ArrayList<>(TeamHandler.teams());
             te.forEach(TeamHandler::unregisterTeam);
-            UHC.arena.newTeam("Red", ChatColor.RED);
-            UHC.arena.newTeam("Blue", ChatColor.BLUE);
+            TeamHandler.registerTeam("Red", ChatColor.RED);
+           TeamHandler.registerTeam("Blue", ChatColor.BLUE);
 
             int playersOnline = Bukkit.getOnlinePlayers().size();
             double playersPerTeam = Math.floor(playersOnline / 2D);
             Player[] players = Bukkit.getOnlinePlayers().toArray(new Player[Bukkit.getOnlinePlayers().size()]);
             ArrayList<UUID> assignedAlready = new ArrayList<>();
             Random random = new Random();
-            TeamHandler.teams().stream().filter(t -> t instanceof UHCPlayerTeam).forEach(t -> {
+            TeamHandler.teams().forEach(t -> {
                 for (int i = 0; i < playersPerTeam; i++) {
                     Player p;
                     do {
@@ -81,13 +78,13 @@ public class TeamSelectInventory extends Shop<UHC> {
         });
         addButton(5, new ShopItem(Material.GOLD_SWORD, "Single Person Teams"), (player, clickType) -> {
             // Create one team per player
-            ArrayList<UHCTeam> te = new ArrayList<>(TeamHandler.teams().stream().filter(t -> t instanceof UHCPlayerTeam).collect(Collectors.toList()));
+            ArrayList<UHCTeam> te = new ArrayList<>(TeamHandler.teams());
             te.forEach(TeamHandler::unregisterTeam);
 
             String charCodes = "0123456789abcde";
             Random random = new Random();
             for (Player p : Bukkit.getOnlinePlayers()) {
-                UHC.arena.newTeam(p.getName().toLowerCase(), ChatColor.getByChar(charCodes.charAt(random.nextInt(charCodes.length()))));
+                TeamHandler.registerTeam(p.getName().toLowerCase(), ChatColor.getByChar(charCodes.charAt(random.nextInt(charCodes.length()))));
                 TeamHandler.joinTeam(TeamHandler.getTeamByName(p.getName().toLowerCase()), p);
             }
             build();
@@ -125,8 +122,6 @@ public class TeamSelectInventory extends Shop<UHC> {
         int col = 2;
 
         for (UHCTeam team : TeamHandler.teams()) {
-            if (team instanceof TeamSpectator)
-                continue;
             int slot = (9 * (row - 1)) + col - 1;
             addButton(slot, new ShopItem(Material.WOOL, getDye(team).getData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]),
                     (player, clickType) -> setTeam(team));

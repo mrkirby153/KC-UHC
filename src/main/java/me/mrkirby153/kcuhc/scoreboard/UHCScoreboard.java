@@ -41,7 +41,7 @@ public class UHCScoreboard {
 
     public void createTeams() {
         System.out.println("Creating scoreboard teams...");
-        for (UHCTeam t : TeamHandler.teams()) {
+        for (UHCTeam t : TeamHandler.teams(true)) {
             System.out.println("Creating team " + t.getName());
             Team sbTeam = null;
             if (scoreboard.getTeam(parseTeam(t.getName())) != null) {

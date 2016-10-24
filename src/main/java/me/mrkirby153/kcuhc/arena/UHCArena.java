@@ -305,7 +305,7 @@ public class UHCArena implements Runnable, Listener {
 
         // Calculate team spawn locations
         Map<UHCTeam, Location> locations = new HashMap<>();
-        for (UHCTeam team : TeamHandler.teams().stream().filter(t -> !(t instanceof TeamSpectator)).collect(Collectors.toList())) {
+        for (UHCTeam team : TeamHandler.teams()) {
             Location randomSpawn = SpawnUtils.getRandomSpawn(getWorld(), properties.WORLDBORDER_START_SIZE.get());
             locations.put(team, randomSpawn);
         }

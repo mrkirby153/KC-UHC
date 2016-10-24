@@ -87,7 +87,7 @@ public class CommandUHC extends BaseCommand {
                 if (UHC.arena.getProperties().SPREAD_PLAYERS.get())
                     UHC.arena.toggleSpreadingPlayers();
                 if (TeamHandler.getTeamByName("debug") == null)
-                    UHC.arena.newTeam("debug", ChatColor.GOLD);
+                   TeamHandler.registerTeam("debug", ChatColor.GOLD);
                 for (Player p : Bukkit.getOnlinePlayers())
                     TeamHandler.joinTeam(TeamHandler.getTeamByName("debug"), p);
                 Bukkit.getScheduler().runTaskLater(UHC.plugin, () -> {
@@ -117,31 +117,6 @@ public class CommandUHC extends BaseCommand {
             if (args[0].equalsIgnoreCase("freezebypass")) {
                 Player player = (Player) sender;
                 FreezeHandler.freezebypass(player);
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("singlepersonteams")) {
-                List<ChatColor> usedColors = new ArrayList<>();
-                List<ChatColor> blacklistedColors = Arrays.asList(ChatColor.BOLD, ChatColor.STRIKETHROUGH, ChatColor.RESET, ChatColor.MAGIC, ChatColor.UNDERLINE);
-                HashMap<Player, UHCTeam> teams = new HashMap<>();
-                for (Player p : Bukkit.getOnlinePlayers()) {
-                    if (TeamHandler.isSpectator(p)) {
-                        continue;
-                    }
-                    ChatColor[] colors = ChatColor.values();
-                    Random r = new Random();
-                    ChatColor chosenColor = colors[r.nextInt(colors.length)];
-                    while (usedColors.contains(chosenColor) && !blacklistedColors.contains(chosenColor))
-                        chosenColor = colors[r.nextInt(colors.length)];
-                    usedColors.add(chosenColor);
-                    sender.sendMessage(UtilChat.message(chosenColor + "Created team " + p.getName()));
-                    UHC.arena.newTeam(p.getName(), chosenColor);
-                    teams.put(p, TeamHandler.getTeamByName(p.getName()));
-                    TeamHandler.leaveTeam(p);
-                }
-                for (Map.Entry<Player, UHCTeam> e : teams.entrySet()) {
-                    TeamHandler.joinTeam(e.getValue(), e.getKey());
-                }
-                sender.sendMessage(UtilChat.message("Created and assigned teams"));
                 return true;
             }
         }

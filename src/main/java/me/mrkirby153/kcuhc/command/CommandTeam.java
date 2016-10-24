@@ -1,10 +1,10 @@
 package me.mrkirby153.kcuhc.command;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.utils.UtilChat;
-import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.arena.UHCArena;
+import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCTeam;
+import me.mrkirby153.kcuhc.utils.UtilChat;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -37,8 +37,6 @@ public class CommandTeam extends BaseCommand {
         if (args.length == 1) {
             if (args[0].equalsIgnoreCase("list")) {
                 for (UHCTeam t : TeamHandler.teams()) {
-                    if (t.getName().equalsIgnoreCase(TeamHandler.SPECTATORS_TEAM))
-                        continue;
                     String teamMembers = "";
                     for (UUID u : t.getPlayers()) {
                         boolean online = Bukkit.getPlayer(u) != null;
@@ -217,7 +215,7 @@ public class CommandTeam extends BaseCommand {
                     sender.sendMessage(UtilChat.generateLegacyError("That chat color does not exist!"));
                     return true;
                 }
-                UHC.arena.newTeam(teamName, color);
+                TeamHandler.registerTeam(teamName, color);
                 sender.sendMessage(UtilChat.generateFormattedChat("Added team!", ChatColor.GREEN, 0).toLegacyText());
                 sender.sendMessage(UtilChat.message("Created team " + ChatColor.GOLD + teamName + ChatColor.GRAY + " (" + color + args[2] + ChatColor.GRAY + ")"));
                 return true;

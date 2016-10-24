@@ -76,7 +76,7 @@ public class ScoreboardUpdater{
                         }
                     }
                 } else {
-                    List<UHCTeam> teamsIngame = TeamHandler.teams().stream().filter(t -> t != TeamHandler.spectatorsTeam()).filter(t -> t.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count() > 0).collect(Collectors.toList());
+                    List<UHCTeam> teamsIngame = TeamHandler.teams().stream().filter(team -> team.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count() > 0).collect(Collectors.toList());
                     teamsIngame.sort((t1, t2) -> t1.getPlayers().size() - t2.getPlayers().size());
                     scoreboard.add(ChatColor.AQUA + "Teams: ");
                     if (teamsIngame.size() > 9) {
