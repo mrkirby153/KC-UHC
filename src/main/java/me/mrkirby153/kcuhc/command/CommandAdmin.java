@@ -25,6 +25,7 @@ public class CommandAdmin extends BaseCommand {
             return true;
         if (args.length == 0) {
             commandSender.sendMessage(UtilChat.generateLegacyError("Please provide a message!"));
+            return true;
         }
         if (args[0].equalsIgnoreCase("ban") && UHC.admins.contains(commandSender.getName()) && args.length == 3) {
             Player p = Bukkit.getPlayer(args[1]);
