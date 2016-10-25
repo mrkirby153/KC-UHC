@@ -11,7 +11,6 @@ import me.mrkirby153.kcuhc.handler.RegenTicket;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.utils.UtilChat;
-import me.mrkirby153.kcuhc.utils.UtilTime;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
@@ -20,7 +19,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.UUID;
 
 public class CommandUHC extends BaseCommand {
     @Override
@@ -174,29 +173,6 @@ public class CommandUHC extends BaseCommand {
                 } catch (IllegalArgumentException e) {
                     sender.sendMessage(UtilChat.generateLegacyError("Invalid state!"));
                     return true;
-                }
-            }
-            if (args[0].equalsIgnoreCase("endgamestate")) {
-                try {
-                    UHCArena.EndgamePhase p = UHCArena.EndgamePhase.valueOf(args[1].toUpperCase());
-                    UHC.arena.setEndgamePhase(p);
-                    sender.sendMessage(UtilChat.message("Set endgame state to " + ChatColor.GOLD + p.toString()));
-                    return true;
-                } catch (IllegalArgumentException e) {
-                    sender.sendMessage(UtilChat.generateLegacyError("Invalid state!"));
-                    return true;
-                }
-            }
-            if (args[0].equalsIgnoreCase("endgametime")) {
-                long newTime = Long.parseLong(args[1]) + System.currentTimeMillis();
-                try {
-                    Field f = UHCArena.class.getDeclaredField("nextEndgamePhaseIn");
-                    f.setAccessible(true);
-                    f.set(UHC.arena, newTime);
-                    sender.sendMessage(UtilChat.message("Next endgame phase in " + ChatColor.GOLD + UtilTime.format(1, Long.parseLong(args[1]), UtilTime.TimeUnit.FIT)));
-                    return true;
-                } catch (NoSuchFieldException | IllegalAccessException e) {
-                    sender.sendMessage(UtilChat.generateLegacyError("Could not set the endgame time!"));
                 }
             }
             if (args[0].equalsIgnoreCase("winner")) {

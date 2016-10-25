@@ -2,6 +2,7 @@ package me.mrkirby153.kcuhc.arena;
 
 
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.arena.handler.EndgameHandler;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
@@ -18,7 +19,6 @@ import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandToLobby;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandAssignTeams;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandNewTeam;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandRemoveTeam;
-import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.TextComponent;
 import net.minecraft.server.v1_10_R1.IChatBaseComponent;
 import net.minecraft.server.v1_10_R1.PacketPlayOutChat;
@@ -60,8 +60,6 @@ import java.util.stream.Collectors;
 
 import static me.mrkirby153.kcuhc.UHC.plugin;
 import static me.mrkirby153.kcuhc.UHC.uhcNetwork;
-import static me.mrkirby153.kcuhc.arena.UHCArena.EndgamePhase.NORMALGAME;
-import static me.mrkirby153.kcuhc.arena.UHCArena.EndgamePhase.SHRINKING_WORLDBORDER;
 import static me.mrkirby153.kcuhc.arena.UHCArena.State.*;
 import static me.mrkirby153.kcuhc.utils.UtilChat.generateBoldChat;
 
@@ -75,9 +73,8 @@ public class UHCArena implements Runnable, Listener {
     public ScoreboardUpdater scoreboardUpdater;
     protected String winner;
     protected long startTime = 0;
-    protected long nextEndgamePhaseIn = -1;
-    protected EndgamePhase currentEndgamePhase = EndgamePhase.NORMALGAME;
-    protected EndgamePhase nextEndgamePhase;
+
+    private EndgameHandler endgameHandler;
     private ArenaProperties properties;
     private CountdownBarTask countdownTask;
     private boolean firstAnnounce = true;
@@ -106,9 +103,6 @@ public class UHCArena implements Runnable, Listener {
     private double overworldWorldborderSize;
     private double netherWorldborderSize;
     private long freezeStartTime;
-    private EndgamePhase frozen_endgamePhase;
-    private EndgamePhase frozen_nextEndgamePhase;
-    private long frozen_nextEndgamePhaseIn;
 
     private boolean notifiedDisabledSpawn = false;
 
@@ -142,6 +136,7 @@ public class UHCArena implements Runnable, Listener {
 
         this.worldBorderHandler = new WorldBorderHandler(UHC.plugin, this);
         this.scoreboardUpdater = new ScoreboardUpdater(this, new UHCScoreboard());
+        this.endgameHandler = new EndgameHandler(this);
 
         UHC.plugin.getServer().getPluginManager().registerEvents(new PregameListener(), UHC.plugin);
         UHC.plugin.getServer().getPluginManager().registerEvents(new GameListener(), UHC.plugin);
@@ -149,33 +144,13 @@ public class UHCArena implements Runnable, Listener {
 
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this, 0, 20);
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, scoreboardUpdater::refresh, 0, 1L);
-        Thread endgameThread = new Thread() {
-            @Override
-            public void run() {
-                while (true) {
-                    updateEndgame();
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        };
-        endgameThread.setName("Endgame Thread");
-        endgameThread.setDaemon(true);
-        endgameThread.start();
+        UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, endgameHandler, 0, 1);
 
         craftingRecipes();
     }
 
     public UHCArena() {
         this("default");
-    }
-
-    public static UHCArena loadFromFile() {
-        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new File(UHC.plugin.getDataFolder(), "arena.yml"));
-        return new UHCArena(cfg.getString("preset"));
     }
 
     public void addPlayer(Player player) {
@@ -192,19 +167,19 @@ public class UHCArena implements Runnable, Listener {
         double secondsRemaining = Math.floor(msRemaining / 1000D);
         double minutesRemaining = Math.floor(secondsRemaining / 60D);
         if (secondsRemaining <= 0) {
-            Bukkit.getOnlinePlayers().forEach(p->p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F));
-            Bukkit.broadcastMessage(UtilChat.message(ChatColor.RED +""+ ChatColor.BOLD+"PVP ENABLED!"));
+            Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F));
+            Bukkit.broadcastMessage(UtilChat.message(ChatColor.RED + "" + ChatColor.BOLD + "PVP ENABLED!"));
             return;
         }
         if (minutesRemaining >= 1) {
             if (secondsRemaining % 60 == 0) {
-                Bukkit.getOnlinePlayers().forEach(p->p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F));
+                Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F));
                 Bukkit.broadcastMessage(UtilChat.message(ChatColor.GREEN + "PVP will be enabled in " + UtilTime.format(1, (long) msRemaining, UtilTime.TimeUnit.FIT)));
             }
         } else {
             if (secondsRemaining < 10 || secondsRemaining == 30 || secondsRemaining == 15) {
-                Bukkit.getOnlinePlayers().forEach(p->p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F));
-                Bukkit.broadcastMessage(UtilChat.message(ChatColor.GREEN + ""+ChatColor.BOLD+"PVP will be enabled in " + secondsRemaining + " seconds"));
+                Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F));
+                Bukkit.broadcastMessage(UtilChat.message(ChatColor.GREEN + "" + ChatColor.BOLD + "PVP will be enabled in " + secondsRemaining + " seconds"));
             }
         }
     }
@@ -413,12 +388,6 @@ public class UHCArena implements Runnable, Listener {
         getWorld().getWorldBorder().setSize(overworldWorldborderSize);
         System.out.println("Worldborder size: " + overworldWorldborderSize);
 
-        frozen_nextEndgamePhase = nextEndgamePhase;
-        frozen_nextEndgamePhaseIn = nextEndgamePhaseIn;
-        nextEndgamePhase = null;
-        nextEndgamePhaseIn = -1;
-        frozen_endgamePhase = currentEndgamePhase;
-        currentEndgamePhase = NORMALGAME;
         freezeStartTime = System.currentTimeMillis();
 
         if (getNether() != null) {
@@ -464,6 +433,10 @@ public class UHCArena implements Runnable, Listener {
         return getWorld().getHighestBlockAt((int) properties.WORLDBORDER_CENTER.get().getX(), (int) properties.WORLDBORDER_CENTER.get().getZ()).getLocation();
     }
 
+    public EndgameHandler getEndgameHandler() {
+        return endgameHandler;
+    }
+
     public World getNether() {
         return Bukkit.getWorld(getWorld().getName() + "_nether");
     }
@@ -502,9 +475,7 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void initialize() {
-        currentEndgamePhase = EndgamePhase.NORMALGAME;
-        nextEndgamePhase = null;
-        nextEndgamePhaseIn = -1;
+        this.endgameHandler.reset();
         scoreboardUpdater.getScoreboard().createTeams();
         this.worldBorderHandler.setWorldborder(60);
         this.worldBorderHandler.setWarningDistance(0);
@@ -535,7 +506,7 @@ public class UHCArena implements Runnable, Listener {
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 0.5F);
             player.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + ChatColor.BOLD + "=============================================");
             player.sendMessage(ChatColor.YELLOW + "" + ChatColor.BOLD + "You've picked up a player head!");
-            if(properties.ENABLE_HEAD_APPLE.get()) {
+            if (properties.ENABLE_HEAD_APPLE.get()) {
                 player.sendMessage(ChatColor.WHITE + "You can use this head to craft a Head Apple for healing");
                 player.sendMessage(ChatColor.WHITE + "A golden head will give you 2x the effects of a golden apple!");
                 player.sendRawMessage(ChatColor.GREEN + "To Craft: " + ChatColor.WHITE + "Use the recipe for a Golden Apple, but replace the apple with the head");
@@ -732,10 +703,6 @@ public class UHCArena implements Runnable, Listener {
         });
     }
 
-    public void setEndgamePhase(EndgamePhase endgamePhase) {
-        this.currentEndgamePhase = endgamePhase;
-    }
-
     public void setState(State state) {
         this.state = state;
     }
@@ -755,9 +722,7 @@ public class UHCArena implements Runnable, Listener {
 
     public void start() {
         GameListener.resetDeaths();
-        currentEndgamePhase = EndgamePhase.NORMALGAME;
-        nextEndgamePhase = null;
-        nextEndgamePhaseIn = -1;
+        this.endgameHandler.reset();
 
         this.worldBorderHandler.setWorldborder(properties.WORLDBORDER_START_SIZE.get());
         this.worldBorderHandler.setWarningDistance(WORLDBORDER_WARN_DIST);
@@ -844,8 +809,7 @@ public class UHCArena implements Runnable, Listener {
 
     public void stop(String winner) {
         this.winner = winner;
-        this.nextEndgamePhaseIn = -1;
-        this.nextEndgamePhase = null;
+        this.endgameHandler.reset();
 
         RegenTicket.clearRegenTickets();
         winner = WordUtils.capitalizeFully(winner.replace('_', ' '));
@@ -963,16 +927,6 @@ public class UHCArena implements Runnable, Listener {
         long frozenFor = System.currentTimeMillis() - freezeStartTime;
         System.out.println("Frozen for: " + frozenFor);
         this.startTime -= frozenFor;
-        this.nextEndgamePhase = frozen_nextEndgamePhase;
-        this.currentEndgamePhase = frozen_endgamePhase;
-
-        if (frozen_nextEndgamePhaseIn != -1) {
-            long timeRemainingOnEndgamePhase = Math.abs(freezeStartTime - frozen_nextEndgamePhaseIn);
-            System.out.println("Freeze started on " + freezeStartTime);
-            System.out.println("Frozen phase on " + frozen_nextEndgamePhaseIn);
-            System.out.println("Time remaining on EG phase: " + timeRemainingOnEndgamePhase);
-            nextEndgamePhaseIn = System.currentTimeMillis() + timeRemainingOnEndgamePhase;
-        }
         Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> {
             FreezeHandler.restoreBlocks();
             FreezeHandler.pvpEnabled = true;
@@ -1001,52 +955,6 @@ public class UHCArena implements Runnable, Listener {
                     }
                 }
                 uuidToStringMap.remove(entry.getKey());
-            }
-        }
-    }
-
-    private void activatePhase() {
-        if (nextEndgamePhaseIn != -1 && System.currentTimeMillis() > nextEndgamePhaseIn) {
-            activatePhase(nextEndgamePhase);
-        }
-    }
-
-    private void activatePhase(EndgamePhase newPhase) {
-        if (newPhase == null)
-            return;
-        this.currentEndgamePhase = newPhase;
-        firstAnnounce = true;
-        BaseComponent text = generateBoldChat(newPhase.getName(), net.md_5.bungee.api.ChatColor.LIGHT_PURPLE);
-        text.addExtra(UtilChat.generateBoldChat(" active!", net.md_5.bungee.api.ChatColor.DARK_RED));
-        for (Player p : players()) {
-            p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F);
-            p.spigot().sendMessage(text);
-        }
-    }
-
-    private void announcePhase(EndgamePhase phase) {
-        long time = nextEndgamePhaseIn - System.currentTimeMillis();
-        double nextPhase = UtilTime.trim(1, time / 1000D);
-        String tFormat = UtilTime.format(1, time, UtilTime.TimeUnit.FIT);
-        if (nextPhase > 0) {
-            if (nextPhase >= 60) {
-                shouldAnnounce = (nextPhase % 60) == 0;
-            } else if (nextPhase >= 30) {
-                shouldAnnounce = (nextPhase % 30) == 0;
-            } else if (nextPhase <= 10) {
-                shouldAnnounce = (nextPhase % 1) == 0;
-            }
-        }
-        if ((shouldAnnounce || firstAnnounce) && !lastAnnounced.equalsIgnoreCase(tFormat)) {
-            lastAnnounced = Double.toString(nextPhase);
-            shouldAnnounce = false;
-            firstAnnounce = false;
-            lastAnnounced = tFormat;
-            BaseComponent text = generateBoldChat(phase.getName(), net.md_5.bungee.api.ChatColor.LIGHT_PURPLE);
-            text.addExtra(UtilChat.generateBoldChat(" will be applied in " + tFormat, net.md_5.bungee.api.ChatColor.GREEN));
-            for (Player p : players()) {
-                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
-                p.spigot().sendMessage(text);
             }
         }
     }
@@ -1105,38 +1013,6 @@ public class UHCArena implements Runnable, Listener {
         return new ArrayList<>(Bukkit.getOnlinePlayers()).get(new Random().nextInt(Bukkit.getOnlinePlayers().size())).getName();
     }
 
-    private void updateEndgame() {
-        if (!properties.ENABLE_ENDGAME.get())
-            return;
-        if (state != RUNNING)
-            return;
-        switch (currentEndgamePhase) {
-            case NORMALGAME:
-                if (getWorld().getWorldBorder().getSize() <= properties.WORLDBORDER_END_SIZE.get()) {
-                    if (nextEndgamePhase != EndgamePhase.SHRINKING_WORLDBORDER) {
-                        nextEndgamePhaseIn = System.currentTimeMillis() + EndgamePhase.SHRINKING_WORLDBORDER.getDuration();
-                        nextEndgamePhase = EndgamePhase.SHRINKING_WORLDBORDER;
-                        firstAnnounce = true;
-                    }
-                }
-                break;
-            case SHRINKING_WORLDBORDER:
-                runCount++;
-                if (runCount % 40 == 0) {
-                    runCount = 0;
-                    WorldBorder wb = getWorld().getWorldBorder();
-                    if (wb.getSize() > 1)
-                        wb.setSize(wb.getSize() - 2, 1);
-                }
-                nextEndgamePhase = null;
-                break;
-        }
-        if (nextEndgamePhase != null && currentEndgamePhase != SHRINKING_WORLDBORDER)
-            announcePhase(nextEndgamePhase);
-        if (currentEndgamePhase != SHRINKING_WORLDBORDER)
-            activatePhase();
-    }
-
     protected double[] worldborderLoc() {
         WorldBorder wb = getWorld().getWorldBorder();
         Location l = wb.getCenter();
@@ -1153,27 +1029,6 @@ public class UHCArena implements Runnable, Listener {
         RUNNING,
         FROZEN,
         ENDGAME
-    }
-
-    public enum EndgamePhase {
-        NORMALGAME("Normal Game", -1),
-        SHRINKING_WORLDBORDER("Shrinking Worldborder", 600000);
-
-        private long duration;
-        private String name;
-
-        EndgamePhase(String friendlyName, long duration) {
-            this.duration = duration;
-            this.name = friendlyName;
-        }
-
-        public long getDuration() {
-            return duration;
-        }
-
-        public String getName() {
-            return name;
-        }
     }
 
     public static class PlayerActionBarUpdater implements Runnable {

@@ -1,5 +1,6 @@
 package me.mrkirby153.kcuhc.arena;
 
+import me.mrkirby153.kcuhc.arena.handler.EndgameHandler;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCTeam;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class ScoreboardUpdater{
+public class ScoreboardUpdater {
 
     private final UHCScoreboard scoreboard;
     private final UHCArena arena;
@@ -89,18 +90,33 @@ public class ScoreboardUpdater{
                     }
                 }
                 scoreboard.add(" ");
-                if (arena.nextEndgamePhase == null && (arena.currentEndgamePhase == UHCArena.EndgamePhase.NORMALGAME || arena.currentEndgamePhase == UHCArena.EndgamePhase.SHRINKING_WORLDBORDER)) {
+                // TODO: Reimplement endgame display
+//                if (arena.nextEndgamePhase == null && (arena.currentEndgamePhase == UHCArena.EndgamePhase.NORMALGAME || arena.currentEndgamePhase == UHCArena.EndgamePhase.SHRINKING_WORLDBORDER)) {
+                if (arena.getWorld().getWorldBorder().getSize() > arena.getProperties().WORLDBORDER_END_SIZE.get()) {
                     scoreboard.add(ChatColor.YELLOW + "" + ChatColor.BOLD + "World Border:");
                     double[] wbPos = arena.worldborderLoc();
                     scoreboard.add("from -" + UtilTime.trim(1, wbPos[0]) + " to +" + UtilTime.trim(1, wbPos[0]));
                     scoreboard.add(" ");
-                } else if (arena.nextEndgamePhase != null && arena.nextEndgamePhaseIn != -1) {
+                }
+                if (arena.getEndgameHandler().getNextEndgamePhaseOn() != -1) {
+                    scoreboard.add(ChatColor.RED + "" + ChatColor.BOLD + "" +
+                            ((arena.getEndgameHandler().getNextEndgamePhase() == EndgameHandler.EndgamePhase.UNKNOWN) ? arena.getEndgameHandler().getCurrentEndgamePhase().getName() :
+                                    arena.getEndgameHandler().getNextEndgamePhase().getName()));
+                    if (arena.getEndgameHandler().getNextEndgamePhase() == EndgameHandler.EndgamePhase.UNKNOWN) {
+                        scoreboard.add("   ACTIVE");
+                    } else {
+                        scoreboard.add("  in " + UtilTime.format(1, arena.getEndgameHandler().getNextEndgamePhaseOn() - System.currentTimeMillis(), UtilTime.TimeUnit.FIT));
+                    }
+                    scoreboard.add(" ");
+                }
+
+               /* } else if (arena.nextEndgamePhase != null && arena.nextEndgamePhaseIn != -1) {
                     scoreboard.add(ChatColor.DARK_RED + "" + ChatColor.BOLD + arena.nextEndgamePhase.getName());
                     if (System.currentTimeMillis() < arena.nextEndgamePhaseIn) {
                         scoreboard.add(" in " + UtilTime.format(1, arena.nextEndgamePhaseIn - System.currentTimeMillis(), UtilTime.TimeUnit.FIT));
                     }
                     scoreboard.add(" ");
-                }
+                }*/
                 scoreboard.add(ChatColor.GREEN + "" + ChatColor.BOLD + "Time Elapsed");
                 scoreboard.add(" " + UtilTime.format(1, System.currentTimeMillis() - arena.startTime, UtilTime.TimeUnit.FIT));
                 break;

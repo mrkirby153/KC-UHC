@@ -46,7 +46,7 @@ public class UHC extends JavaPlugin {
         plugin = this;
         admins = (ArrayList<String>) getConfig().getStringList("admins");
         if (new File(getDataFolder(), "arena.yml").exists()) {
-            arena = UHCArena.loadFromFile();
+            arena = new UHCArena();
             arena.initialize();
         }
         if (getConfig().getBoolean("discord.useDiscord")) {
