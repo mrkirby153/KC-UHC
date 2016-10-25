@@ -148,5 +148,7 @@ public class SpectateListener implements Listener {
 
     @EventHandler
     public void onRespawn(final PlayerRespawnEvent event) {
+        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> earlyPickup.remove(event.getPlayer().getUniqueId()), 10L);
+
     }
 }

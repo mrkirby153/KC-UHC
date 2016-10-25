@@ -110,7 +110,8 @@ public class GameListener implements Listener {
     public void onRespawn(PlayerRespawnEvent event) {
         if(!isRunning())
             return;
-        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> UHC.arena.spectate(event.getPlayer()), 10L);
+        SpectateListener.addEarlyPickup(event.getPlayer());
+        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> UHC.arena.spectate(event.getPlayer(), true), 1L);
     }
 
     @EventHandler
