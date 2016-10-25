@@ -57,7 +57,8 @@ public class TeamSelectInventory extends Shop<UHC> {
             ArrayList<UHCTeam> te = new ArrayList<>(TeamHandler.teams());
             te.forEach(TeamHandler::unregisterTeam);
             TeamHandler.registerTeam("Red", ChatColor.RED);
-           TeamHandler.registerTeam("Blue", ChatColor.BLUE);
+            TeamHandler.registerTeam("Blue", ChatColor.BLUE);
+
 
             int playersOnline = Bukkit.getOnlinePlayers().size();
             double playersPerTeam = Math.floor(playersOnline / 2D);
@@ -73,6 +74,15 @@ public class TeamSelectInventory extends Shop<UHC> {
                     TeamHandler.joinTeam(t, p);
                     assignedAlready.add(p.getUniqueId());
                 }
+            });
+            // Assign everyone who's not on a team to a team
+            Bukkit.getOnlinePlayers().forEach(p -> {
+                if(TeamHandler.getTeamForPlayer(p) != null)
+                    return;
+                if(random.nextBoolean())
+                    TeamHandler.joinTeam(TeamHandler.getTeamByName("Red"), p);
+                else
+                    TeamHandler.joinTeam(TeamHandler.getTeamByName("Blue"), p);
             });
             build();
         });
