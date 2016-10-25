@@ -1,10 +1,11 @@
 package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCTeam;
+import me.mrkirby153.kcuhc.utils.UtilChat;
+import me.mrkirby153.kcuhc.utils.UtilTitle;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.io.FileUtils;
 import org.bukkit.*;
@@ -24,6 +25,8 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -41,12 +44,25 @@ public class GameListener implements Listener {
     public void death(PlayerDeathEvent event) {
         if(!isRunning())
             return;
-        savePlayerData(event.getEntity());
-        event.getEntity().setGlowing(false);
-        TeamHandler.leaveTeam(event.getEntity());
-        UHC.arena.handleDeathMessage(event.getEntity(), event.getDeathMessage());
-        event.getEntity().getWorld().strikeLightningEffect(event.getEntity().getLocation());
-        killTamedHorses(event.getEntity());
+        Player dead = event.getEntity();
+        savePlayerData(dead);
+        dead.setGlowing(false);
+        TeamHandler.leaveTeam(dead);
+        for(Player p : UHC.arena.players()){
+            UtilTitle.title(p, ChatColor.DARK_PURPLE+ dead.getDisplayName(), ChatColor.AQUA+event.getDeathMessage().replace(dead.getName(), ""),
+                    10, 20 * 5, 20);
+        }
+        if (UHC.arena.getProperties().DROP_PLAYER_HEAD.get()) {
+            Location playerLoc = dead.getLocation();
+            // Drop the player's head
+            ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
+            ItemMeta m = head.getItemMeta();
+            ((SkullMeta) m).setOwner(dead.getName());
+            head.setItemMeta(m);
+            playerLoc.getWorld().dropItemNaturally(playerLoc, head);
+        }
+        dead.getWorld().strikeLightningEffect(dead.getLocation());
+        killTamedHorses(dead);
     }
 
     @EventHandler
@@ -85,7 +101,6 @@ public class GameListener implements Listener {
         if (newDamage < 1)
             newDamage = 1;
         event.setDamage(newDamage);
-        System.out.println(String.format("[DMG] OLD: [%.2f] NEW: [%.2f]", oldDamage, newDamage));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -103,7 +118,6 @@ public class GameListener implements Listener {
         if (newDamage < 1)
             newDamage = 1;
         event.setDamage(newDamage);
-        System.out.println(String.format("[DMG] OLD: [%.2f] NEW: [%.2f]", oldDamage, newDamage));
     }
 
     @EventHandler
@@ -129,7 +143,6 @@ public class GameListener implements Listener {
                     horse.setCustomName(event.getOwner().getName() + "' Horse");
                 else
                     horse.setCustomName(event.getOwner().getName() + "'s Horse");
-//                horse.setCustomNameVisible(true);
             }
         }
     }

@@ -48,7 +48,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -451,27 +450,6 @@ public class UHCArena implements Runnable, Listener {
 
     public World getWorld() {
         return Bukkit.getWorld(properties.WORLD.get());
-    }
-
-    public void handleDeathMessage(Player dead, String message) {
-        for (Player p : players) {
-            UtilTitle.title(p, ChatColor.DARK_PURPLE + dead.getDisplayName(), ChatColor.AQUA + message.replace(dead.getName(), ""), 10, 20 * 5, 20);
-            p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_THUNDER, 1, 1);
-        }
-
-        if (properties.DROP_PLAYER_HEAD.get()) {
-            Location playerLoc = dead.getLocation();
-            // Drop the player's head
-            ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
-            ItemMeta m = head.getItemMeta();
-            ((SkullMeta) m).setOwner(dead.getName());
-            head.setItemMeta(m);
-            playerLoc.getWorld().dropItemNaturally(playerLoc, head);
-        }
-
-        players.remove(dead);
-        dead.sendMessage(UtilChat.message("You have died and are now a spectator"));
-        spectate(dead);
     }
 
     public void initialize() {
