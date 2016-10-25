@@ -151,6 +151,8 @@ public class CommandTeam extends BaseCommand {
         if (args.length == 2) {
             /// --- END TEMP
             if (args[0].equalsIgnoreCase("remove")) {
+                if(restrictAdmin(sender))
+                    return true;
                 UHCTeam teamByName = TeamHandler.getTeamByName(args[1]);
                 if (teamByName == null) {
                     sender.sendMessage(UtilChat.generateLegacyError("That team does not exist!"));
