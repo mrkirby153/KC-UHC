@@ -1,6 +1,7 @@
 package me.mrkirby153.kcuhc;
 
 import me.mrkirby153.kcuhc.arena.UHCArena;
+import me.mrkirby153.kcuhc.arena.handler.BosssBarHandler;
 import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.scoreboard.ScoreboardManager;
@@ -88,6 +89,7 @@ public class UHC extends JavaPlugin {
         getServer().getPluginManager().registerEvents(spectateListener = new SpectateListener(), this);
         getServer().getPluginManager().registerEvents(new ScoreboardManager(), this);
         getServer().getPluginManager().registerEvents(new RegenTicket(), this);
+        getServer().getPluginManager().registerEvents(new BosssBarHandler(), this);
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new BorderBumper(),0, 1);
         TeamHandler.registerTeam(TeamHandler.SPECTATORS_TEAM, new TeamSpectator());
         TeamHandler.loadFromFile();
@@ -103,6 +105,8 @@ public class UHC extends JavaPlugin {
     @Override
     public void onDisable() {
         TeamHandler.unregisterAll();
+        // Remove everyone's boss bar in case of a reload
+        BosssBarHandler.removeAll();
     }
 
     public static boolean isAdmin(Player player) {

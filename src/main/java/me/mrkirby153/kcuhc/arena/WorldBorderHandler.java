@@ -1,11 +1,12 @@
 package me.mrkirby153.kcuhc.arena;
 
+import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.arena.handler.BosssBarHandler;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import net.md_5.bungee.api.ChatColor;
-import org.bukkit.*;
-import org.bukkit.boss.BarColor;
-import org.bukkit.boss.BarStyle;
-import org.bukkit.boss.BossBar;
+import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.WorldBorder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -20,12 +21,10 @@ public class WorldBorderHandler implements Runnable, Listener {
 
     private UHCArena arena;
 
-    private BossBar worldborderWarning;
 
     public WorldBorderHandler(JavaPlugin plugin, UHCArena arena) {
         plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 20L);
         this.arena = arena;
-        this.worldborderWarning = Bukkit.createBossBar(ChatColor.RED + "You are close to the world border!", BarColor.PINK, BarStyle.SOLID);
     }
 
     public void setWorldborder(double size, int time) {
@@ -75,7 +74,11 @@ public class WorldBorderHandler implements Runnable, Listener {
         if(!arena.getProperties().ENABLE_WORLDBORDER_WARNING.get())
             return;
         if (arena.currentState() != UHCArena.State.RUNNING || arena.getWorld().getWorldBorder().getSize() <= arena.getProperties().WORLDBORDER_END_SIZE.get()) {
-            worldborderWarning.removeAll();
+            if(arena.currentState() == UHCArena.State.COUNTDOWN)
+                return;
+            for(Player p : UHC.arena.players()){
+                BosssBarHandler.removeBar(p);
+            }
             return;
         }
         for (Player player : arena.players()) {
@@ -94,20 +97,20 @@ public class WorldBorderHandler implements Runnable, Listener {
             if (distX < distZ) {
                 if (playerX > (worldBorderX - arena.getProperties().WORLDBORDER_WARN_DISTANCE.get())) {
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, scaleSound(distX), 0.5F);
-                    if (!worldborderWarning.getPlayers().contains(player)) {
-                        worldborderWarning.addPlayer(player);
-                    }
+                    BosssBarHandler.setBossBarText(player, ChatColor.RED+"You are close to the world border!");
+                    double percent = 1 - (worldBorderX - playerX)/ arena.getProperties().WORLDBORDER_WARN_DISTANCE.get();
+                    BosssBarHandler.setBossBarProgress(player, percent);
                 } else {
-                    worldborderWarning.removePlayer(player);
+                    BosssBarHandler.removeBar(player);
                 }
             } else {
                 if (playerZ > (worldBorderZ - arena.getProperties().WORLDBORDER_WARN_DISTANCE.get())) {
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, scaleSound(distZ), 2F);
-                    if (!worldborderWarning.getPlayers().contains(player)) {
-                        worldborderWarning.addPlayer(player);
-                    }
+                    BosssBarHandler.setBossBarText(player, ChatColor.RED + "You are close to the world border!");
+                    double percent = 1 - (worldBorderZ - playerZ)/ arena.getProperties().WORLDBORDER_WARN_DISTANCE.get();
+                    BosssBarHandler.setBossBarProgress(player, percent);
                 } else {
-                    worldborderWarning.removePlayer(player);
+                    BosssBarHandler.removeBar(player);
                 }
             }
 

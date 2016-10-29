@@ -73,10 +73,9 @@ public class UHCArena implements Runnable, Listener {
     public ScoreboardUpdater scoreboardUpdater;
     protected String winner;
     protected long startTime = 0;
-
+    CountdownBarTask countdownTask;
     private EndgameHandler endgameHandler;
     private ArenaProperties properties;
-    private CountdownBarTask countdownTask;
     private boolean firstAnnounce = true;
     private boolean shouldAnnounce = false;
     private String lastAnnounced = "-1";
