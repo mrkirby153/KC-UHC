@@ -39,6 +39,7 @@ public class ArenaProperties {
     public Property<Boolean> REGEN_TICKET_ENABLE = new Property<>("regen_ticket", true);
 
     public Property<Integer> PVP_GRACE_MINS = new Property<>("pvp_grace", 10);
+    public Property<Boolean> TEAM_INV_ENABLED = new Property<>("team_inv", true);
 
     public static ArenaProperties loadProperties(String fileName) {
         File file = new File(UHC.plugin.getDataFolder(), "presets/" + fileName + ".json");

@@ -15,10 +15,10 @@ commands:
   spectate:
     usage: /spectate
     description: Toggles spectating or not. Cannot be used while ingame
-  music:
-    aliases: ['song']
-    usage: /<command>
-    description: Music commands
+  teaminventory:
+    aliases: ['teaminv']
+    usage: /teaminventory
+    description: Opens your team's shared inventory
   admin:
     aliases: ['a']
     usage: /a <message>

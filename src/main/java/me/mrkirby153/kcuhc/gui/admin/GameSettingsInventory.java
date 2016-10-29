@@ -23,6 +23,7 @@ public class GameSettingsInventory extends PropertyGui {
         booleanButton(properties.ENABLE_HEAD_APPLE, new ShopItem(Material.GOLDEN_APPLE, "Head Apples"), 6);
         booleanButton(properties.GIVE_COMPASS_ON_START, new ShopItem(Material.COMPASS, "Give Compass on Start"), 8);
 
+        booleanButton(properties.TEAM_INV_ENABLED, new ShopItem(Material.CHEST, "Team Inventories"), 27);
         booleanButton(properties.COMPASS_PLAYER_TRACKER, new ShopItem(Material.EYE_OF_ENDER, "Compass Tracks Players"), 29);
         booleanButton(properties.ENABLE_ENDGAME, new ShopItem(Material.TNT, "Endgame"), 31);
         booleanButton(properties.REGEN_TICKET_ENABLE, new ShopItem(Material.PAPER, "Regen Tickets"), 33);

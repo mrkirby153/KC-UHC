@@ -3,6 +3,7 @@ package me.mrkirby153.kcuhc.arena;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.handler.EndgameHandler;
+import me.mrkirby153.kcuhc.arena.handler.TeamInventoryHandler;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
@@ -118,7 +119,8 @@ public class UHCArena implements Runnable, Listener {
             ChatColor.BLUE + "Hey! Isn't this tip supposed to be yellow or gold?",
             ChatColor.GOLD + "Was I supposed to write legitimate tips? Oops.",
             ChatColor.YELLOW + "You mean whatever I write here will show up as a tip? HI MOM",
-            ChatColor.GOLD + "In the event of an emergency, do not panic! Use /a <message> to contact an admin!"
+            ChatColor.GOLD + "In the event of an emergency, do not panic! Use /a <message> to contact an admin!",
+            ChatColor.YELLOW + "Access your team-specific inventory with " + ChatColor.GREEN + "/teaminv"
 
     };
 
@@ -126,6 +128,8 @@ public class UHCArena implements Runnable, Listener {
     private int runCount = 0;
 
     private long graceUntil = -1;
+
+    private TeamInventoryHandler teamInventoryHandler;
 
 
     public UHCArena(String presetFile) {
@@ -136,6 +140,7 @@ public class UHCArena implements Runnable, Listener {
         this.worldBorderHandler = new WorldBorderHandler(UHC.plugin, this);
         this.scoreboardUpdater = new ScoreboardUpdater(this, new UHCScoreboard());
         this.endgameHandler = new EndgameHandler(this);
+        this.teamInventoryHandler = new TeamInventoryHandler();
 
         UHC.plugin.getServer().getPluginManager().registerEvents(new PregameListener(), UHC.plugin);
         UHC.plugin.getServer().getPluginManager().registerEvents(new GameListener(), UHC.plugin);
@@ -446,6 +451,10 @@ public class UHCArena implements Runnable, Listener {
 
     public void setProperties(ArenaProperties properties) {
         this.properties = properties;
+    }
+
+    public TeamInventoryHandler getTeamInventoryHandler() {
+        return teamInventoryHandler;
     }
 
     public World getWorld() {
@@ -788,6 +797,7 @@ public class UHCArena implements Runnable, Listener {
     public void stop(String winner) {
         this.winner = winner;
         this.endgameHandler.reset();
+        this.teamInventoryHandler.reset();
 
         RegenTicket.clearRegenTickets();
         winner = WordUtils.capitalizeFully(winner.replace('_', ' '));

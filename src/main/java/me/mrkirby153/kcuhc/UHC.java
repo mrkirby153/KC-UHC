@@ -95,6 +95,7 @@ public class UHC extends JavaPlugin {
         getCommand("team").setExecutor(new CommandTeam());
         getCommand("spectate").setExecutor(new CommandSpectate());
         getCommand("admin").setExecutor(new CommandAdmin());
+        getCommand("teaminventory").setExecutor(new CommandTeamInv());
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new UHCArena.PlayerActionBarUpdater(), 0, 1);
     }
 

@@ -45,6 +45,7 @@ public class GameListener implements Listener {
         if(!isRunning())
             return;
         Player dead = event.getEntity();
+        UHCTeam team = TeamHandler.getTeamForPlayer(dead);
         savePlayerData(dead);
         dead.setGlowing(false);
         TeamHandler.leaveTeam(dead);
@@ -63,6 +64,10 @@ public class GameListener implements Listener {
         }
         dead.getWorld().strikeLightningEffect(dead.getLocation());
         killTamedHorses(dead);
+        if(team != null && team.getPlayers().size() < 1){
+            System.out.println("--- TEAM ELIMINATED, DROPPING INVENTORY AT " + dead.getLocation() + " ---");
+            UHC.arena.getTeamInventoryHandler().dropInventory(team, dead.getLocation());
+        }
     }
 
     @EventHandler
