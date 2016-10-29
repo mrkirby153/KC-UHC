@@ -580,8 +580,14 @@ public class UHCArena implements Runnable, Listener {
                 }
                 if (countdown > 0) {
                     for (Player p : players) {
-                        p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1, 1);
-                        UtilTitle.title(p, ChatColor.GOLD + "Starting in", ChatColor.RED + "" + countdown, 0, 25, 0);
+
+                        if (countdown <= 3) {
+                            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1, 0.5F);
+                            UtilTitle.title(p, ChatColor.RED + String.valueOf(countdown), "", 0, 25, 0);
+                        } else {
+                            UtilTitle.title(p, ChatColor.GOLD + "Starting in", ChatColor.RED + "" + countdown, 0, 25, 0);
+                            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1, 1);
+                        }
                         p.sendMessage(UtilChat.message("Starting in " + ChatColor.GOLD + countdown));
                     }
                     MOTDHandler.setMotd(ChatColor.YELLOW + "Starting in " + countdown);
