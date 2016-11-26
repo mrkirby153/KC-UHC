@@ -15,7 +15,6 @@ import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.utils.UtilTime;
 import me.mrkirby153.kcuhc.utils.UtilTitle;
 import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandAssignSpectator;
-import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandCreateSpectator;
 import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandToLobby;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandAssignTeams;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandNewTeam;
@@ -682,7 +681,7 @@ public class UHCArena implements Runnable, Listener {
             return;
         Bukkit.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
             Bukkit.broadcastMessage(UtilChat.message("Creating discord channels..."));
-            new BotCommandCreateSpectator(UHC.plugin.serverId()).publishBlocking();
+//            new BotCommandCreateSpectator(UHC.plugin.serverId()).publishBlocking();
             TeamHandler.teams().forEach(t -> new BotCommandNewTeam(UHC.plugin.serverId(), t.getName()).publishBlocking());
 
             Bukkit.broadcastMessage(UtilChat.message("Moving everyone into their discord channels"));

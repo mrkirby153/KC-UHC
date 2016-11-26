@@ -4,7 +4,6 @@ import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.uhc.bot.network.PlayerInfo;
-import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandCreateSpectator;
 import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandLink;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandNewTeam;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandRemoveTeam;
@@ -94,7 +93,6 @@ public class CommandDiscord extends BaseCommand {
         }
         if (args[0].equalsIgnoreCase("cinit")) {
             sender.sendMessage(UtilChat.message("Generating discord channels..."));
-            new BotCommandCreateSpectator(UHC.plugin.serverId()).publishBlocking();
             TeamHandler.teams().forEach(t -> {
                 new BotCommandNewTeam(UHC.plugin.serverId(), t.getName()).publishBlocking();
                 System.out.println("Created channel " + t.getName());
