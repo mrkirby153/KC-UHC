@@ -80,7 +80,7 @@ public class CommandDiscord extends BaseCommand {
         if (args[0].equalsIgnoreCase("join")) {
             BaseComponent component = UtilChat.generateFormattedChat("To add the discord bot to your server, click ", ChatColor.GREEN);
             component.addExtra(UtilChat.generateHyperlink(UtilChat.generateBoldChat("[HERE]", ChatColor.BLUE),
-                    "https://discordapp.com/oauth2/authorize?&client_id=169671604131856384&scope=bot&permissions=66202682", new BaseComponent[]{
+                    "https://discordapp.com/oauth2/authorize?&client_id=169671604131856384&scope=bot&permissions=285223952", new BaseComponent[]{
                             UtilChat.generateFormattedChat("Click to add the Discord bot to your server!", ChatColor.WHITE)
                     }));
             player.spigot().sendMessage(component);
