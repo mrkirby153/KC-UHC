@@ -5,6 +5,9 @@
     <artifactId>KC-UHC</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>KC UHC</name>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
     <repositories>
         <repository>
             <id>spigot</id>
