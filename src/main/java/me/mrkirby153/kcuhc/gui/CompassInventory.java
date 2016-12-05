@@ -105,7 +105,7 @@ public class CompassInventory extends Shop<UHC> implements Runnable {
     }
 
     private void setTeamWool(int row, UHCTeam team) {
-        getInventory().setItem(row * 9, new ShopItem(Material.WOOL, getDye(team).getData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]));
+        getInventory().setItem(row * 9, new ShopItem(Material.WOOL, getDye(team).getWoolData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]));
     }
 
     private ShopItem playerItem(Player player) {

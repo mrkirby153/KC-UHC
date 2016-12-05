@@ -104,7 +104,7 @@ public class TeamSelectInventory extends Shop<UHC> {
     private void buildPlayerSelect() {
         int row = 2;
         int col = 2;
-        addButton(4, new ShopItem(Material.WOOL, getDye(team).getData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]), null);
+        addButton(4, new ShopItem(Material.WOOL, getDye(team).getWoolData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]), null);
         for (Player p : Bukkit.getOnlinePlayers()) {
             int slot = (9 * (row - 1)) + col - 1;
             ShopItem item = playerItem(p);
@@ -133,7 +133,7 @@ public class TeamSelectInventory extends Shop<UHC> {
 
         for (UHCTeam team : TeamHandler.teams()) {
             int slot = (9 * (row - 1)) + col - 1;
-            addButton(slot, new ShopItem(Material.WOOL, getDye(team).getData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]),
+            addButton(slot, new ShopItem(Material.WOOL, getDye(team).getWoolData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]),
                     (player, clickType) -> setTeam(team));
             col++;
             if (col > 8) {
@@ -197,7 +197,7 @@ public class TeamSelectInventory extends Shop<UHC> {
     }
 
     private void setTeamWool(int row, UHCTeam team) {
-        getInventory().setItem(row * 9, new ShopItem(Material.WOOL, getDye(team).getData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]));
+        getInventory().setItem(row * 9, new ShopItem(Material.WOOL, getDye(team).getWoolData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]));
     }
 
     enum Mode {
