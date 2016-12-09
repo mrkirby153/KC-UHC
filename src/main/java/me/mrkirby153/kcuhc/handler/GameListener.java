@@ -12,10 +12,7 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Horse;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -112,9 +109,20 @@ public class GameListener implements Listener {
     public void entityDamage(EntityDamageByEntityEvent event) {
         if(!isRunning())
             return;
-        if (event.getDamager().getType() == EntityType.PLAYER || event.getEntity().getType() != EntityType.PLAYER) {
+        // If a player hits a player
+        if (event.getDamager().getType() == EntityType.PLAYER && event.getEntity().getType() == EntityType.PLAYER) {
             if(UHC.arena.pvpDisabled()){
                 event.setCancelled(true);
+            }
+            return;
+        }
+        // If an arrow hits a player
+        if(event.getDamager().getType() == EntityType.ARROW && event.getEntity().getType() == EntityType.PLAYER){
+            Arrow arrow = (Arrow) event.getDamager();
+            if(arrow.getShooter() instanceof Player){
+                if(UHC.arena.pvpDisabled()){
+                    event.setCancelled(true);
+                }
             }
             return;
         }
