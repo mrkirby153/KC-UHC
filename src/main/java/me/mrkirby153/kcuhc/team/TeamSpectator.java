@@ -7,10 +7,8 @@ import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.shop.Inventory;
 import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandAssignSpectator;
 import net.md_5.bungee.api.ChatColor;
-import net.minecraft.server.v1_11_R1.EntityPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.craftbukkit.v1_11_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -21,6 +19,19 @@ public class TeamSpectator extends UHCTeam {
 
     public TeamSpectator() {
         super(TeamHandler.SPECTATORS_TEAM, ChatColor.GRAY);
+    }
+
+    public void hideFromPlayers(Player player) {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            p.hidePlayer(player);
+        }
+        for (UUID u : TeamHandler.spectatorsTeam().getPlayers()) {
+            Player p = Bukkit.getPlayer(u);
+            if (p != null) {
+                player.showPlayer(p);
+                p.showPlayer(player);
+            }
+        }
     }
 
     @Override
@@ -39,21 +50,7 @@ public class TeamSpectator extends UHCTeam {
         hideFromPlayers(player);
         player.setHealth(player.getMaxHealth());
         player.setFoodLevel(20);
-        EntityPlayer ep = ((CraftPlayer) player).getHandle();
-        ep.collides = false;
-    }
-
-    public void hideFromPlayers(Player player) {
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            p.hidePlayer(player);
-        }
-        for (UUID u : TeamHandler.spectatorsTeam().getPlayers()) {
-            Player p = Bukkit.getPlayer(u);
-            if (p != null) {
-                player.showPlayer(p);
-                p.showPlayer(player);
-            }
-        }
+        player.setCollidable(false);
     }
 
     @Override
@@ -70,9 +67,8 @@ public class TeamSpectator extends UHCTeam {
         if (UHC.arena != null && (UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.INITIALIZED
                 || UHC.arena.currentState() == UHCArena.State.ENDGAME))
             player.setAllowFlight(true);
-        EntityPlayer ep = ((CraftPlayer) player).getHandle();
-        ep.collides = true;
         Inventory.closeInventory(player);
+        player.setCollidable(true);
     }
 
     public void showToPlayers(Player player) {
