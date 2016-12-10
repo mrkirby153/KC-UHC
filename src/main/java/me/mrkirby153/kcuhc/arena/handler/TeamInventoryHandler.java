@@ -31,7 +31,7 @@ public class TeamInventoryHandler {
         if (inv == null) {
             String name = team.getFriendlyName();
             if (name == null)
-                name = WordUtils.capitalizeFully(team.getName().replace('_', ' '));
+                name = WordUtils.capitalizeFully(team.getTeamName().replace('_', ' '));
             teamInventories.put(team, inv = Bukkit.createInventory(null, 9 * 3, "Team Inventory: " + name));
         }
         return inv;

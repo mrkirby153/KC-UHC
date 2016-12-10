@@ -1,59 +1,29 @@
 package me.mrkirby153.kcuhc.team;
 
 import me.mrkirby153.kcuhc.utils.UtilChat;
+import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.Color;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.UUID;
+public abstract class UHCTeam extends ScoreboardTeam {
 
-public abstract class UHCTeam {
-
-    private String name;
     private ChatColor color;
 
     private String friendlyName;
 
-    private ArrayList<UUID> players = new ArrayList<>();
-
     public UHCTeam(String name, ChatColor color) {
-        this.name = name;
+        super(name, color);
         this.friendlyName = WordUtils.capitalize(name.replace("_", " "));
         this.color = color;
     }
 
+    @Override
     public void addPlayer(Player player) {
-        if (!players.contains(player.getUniqueId()))
-            players.add(player.getUniqueId());
-/*        TextComponent message = new TextComponent("You are now on team ");
-        message.setColor(ChatColor.GREEN);
-        TextComponent team = new TextComponent(friendlyName);
-        team.setColor(color);
-        message.addExtra(team);*/
+        super.addPlayer(player);
         player.sendMessage(UtilChat.message("You are now on team " + color + friendlyName));
         onJoin(player);
-    }
-
-    public void removePlayer(Player player) {
-        players.remove(player.getUniqueId());
-    }
-
-    public abstract void onJoin(Player player);
-
-    public abstract void onLeave(Player player);
-
-    public boolean onTeam(Player player) {
-        return players.contains(player.getUniqueId());
-    }
-
-    public ArrayList<UUID> getPlayers() {
-        return this.players;
-    }
-
-    public String getName() {
-        return this.name;
     }
 
     public String getFriendlyName() {
@@ -64,21 +34,9 @@ public abstract class UHCTeam {
         this.friendlyName = name;
     }
 
-    public String getScoreboardName() {
-        if (this.name.length() >= 16) {
-            return this.name.substring(0, 16);
-        } else {
-            return this.name;
-        }
-    }
+    public abstract void onJoin(Player player);
 
-    public ChatColor getColor() {
-        return this.color;
-    }
-
-    public void addUUID(UUID uuid) {
-        this.players.add(uuid);
-    }
+    public abstract void onLeave(Player player);
 
     public Color toColor() {
         switch (getColor()) {

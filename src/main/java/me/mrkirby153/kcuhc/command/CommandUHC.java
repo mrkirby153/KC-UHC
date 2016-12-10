@@ -9,6 +9,7 @@ import me.mrkirby153.kcuhc.handler.GameListener;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
 import me.mrkirby153.kcuhc.handler.RegenTicket;
 import me.mrkirby153.kcuhc.team.TeamHandler;
+import me.mrkirby153.kcuhc.team.UHCPlayerTeam;
 import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import net.md_5.bungee.api.ChatColor;
@@ -22,6 +23,13 @@ import java.lang.reflect.Field;
 import java.util.UUID;
 
 public class CommandUHC extends BaseCommand {
+
+    private TeamHandler teamHandler;
+
+    public CommandUHC(TeamHandler teamHandler) {
+        this.teamHandler = teamHandler;
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
@@ -44,7 +52,7 @@ public class CommandUHC extends BaseCommand {
             }
             if (args[0].equalsIgnoreCase("whitelistTeams")) {
                 Bukkit.getServer().setWhitelist(true);
-                for (UHCTeam t : TeamHandler.teams()) {
+                for (UHCTeam t : teamHandler.teams()) {
                     for (UUID u : t.getPlayers()) {
                         Bukkit.getServer().getOfflinePlayer(u).setWhitelisted(true);
                     }
@@ -85,10 +93,10 @@ public class CommandUHC extends BaseCommand {
                     UHC.arena.toggleShouldEndCheck();
                 if (UHC.arena.getProperties().SPREAD_PLAYERS.get())
                     UHC.arena.toggleSpreadingPlayers();
-                if (TeamHandler.getTeamByName("debug") == null)
-                   TeamHandler.registerTeam("debug", ChatColor.GOLD);
+                if (teamHandler.getTeamByName("debug") == null)
+                   teamHandler.registerTeam(new UHCPlayerTeam("Debug", ChatColor.GOLD));
                 for (Player p : Bukkit.getOnlinePlayers())
-                    TeamHandler.joinTeam(TeamHandler.getTeamByName("debug"), p);
+                    teamHandler.joinTeam(teamHandler.getTeamByName("debug"), p);
                 Bukkit.getScheduler().runTaskLater(UHC.plugin, () -> {
                     sender.setOp(true);
                     sender.sendMessage(UtilChat.message("You are now op"));

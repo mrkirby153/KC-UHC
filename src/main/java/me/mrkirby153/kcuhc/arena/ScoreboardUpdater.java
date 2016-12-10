@@ -20,9 +20,11 @@ public class ScoreboardUpdater {
 
     private final UHCScoreboard scoreboard;
     private final UHCArena arena;
+    private final TeamHandler teamHandler;
 
-    public ScoreboardUpdater(UHCArena arena, UHCScoreboard scoreboard) {
+    public ScoreboardUpdater(UHCArena arena, TeamHandler teamHandler, UHCScoreboard scoreboard) {
         this.scoreboard = scoreboard;
+        this.teamHandler = teamHandler;
         this.arena = arena;
     }
 
@@ -48,7 +50,7 @@ public class ScoreboardUpdater {
                 scoreboard.add(" ");
                 break;
             case RUNNING:
-                List<UUID> players = Arrays.asList(arena.players()).stream().map(Entity::getUniqueId).filter(u -> !TeamHandler.spectatorsTeam().getPlayers().contains(u)).collect(Collectors.toList());
+                List<UUID> players = Arrays.stream(arena.players()).map(Entity::getUniqueId).filter(u -> !teamHandler.spectatorsTeam().getPlayers().contains(u)).collect(Collectors.toList());
                 players.sort((o1, o2) -> {
                     Player p1 = Bukkit.getPlayer(o1);
                     Player p2 = Bukkit.getPlayer(o2);
@@ -65,7 +67,7 @@ public class ScoreboardUpdater {
                         Player onlinePlayer = null;
                         UHCTeam team;
                         if (op instanceof Player) {
-                            team = TeamHandler.getTeamForPlayer((Player) op);
+                            team = teamHandler.getTeamForPlayer((Player) op);
                             onlinePlayer = (Player) op;
                         } else {
                             team = null;
@@ -77,7 +79,7 @@ public class ScoreboardUpdater {
                         }
                     }
                 } else {
-                    List<UHCTeam> teamsIngame = TeamHandler.teams().stream().filter(team -> team.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count() > 0).collect(Collectors.toList());
+                    List<UHCTeam> teamsIngame = teamHandler.teams().stream().filter(team -> team.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count() > 0).collect(Collectors.toList());
                     teamsIngame.sort((t1, t2) -> t1.getPlayers().size() - t2.getPlayers().size());
                     scoreboard.add(ChatColor.AQUA + "Teams: ");
                     if (teamsIngame.size() > 9) {

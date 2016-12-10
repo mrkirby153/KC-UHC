@@ -1,11 +1,11 @@
 package me.mrkirby153.kcuhc.gui;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.team.TeamHandler;
-import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.shop.Shop;
 import me.mrkirby153.kcuhc.shop.item.Action;
 import me.mrkirby153.kcuhc.shop.item.ShopItem;
+import me.mrkirby153.kcuhc.team.TeamHandler;
+import me.mrkirby153.kcuhc.team.UHCTeam;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
@@ -28,14 +28,16 @@ public class CompassInventory extends Shop<UHC> implements Runnable {
 
     private static final int ROWS_PER_PAGE = 5;
 
+    private TeamHandler teamHandler;
 
-    public CompassInventory(Player player) {
-        this(player, 1);
+    public CompassInventory(Player player, TeamHandler teamHandler) {
+        this(player, 1, teamHandler);
     }
 
-    public CompassInventory(Player player, int page) {
+    public CompassInventory(Player player, int page, TeamHandler teamHandler) {
         super(UHC.plugin, player, 6, "Spectate");
         this.page = page;
+        this.teamHandler = teamHandler;
         open();
     }
 
@@ -49,7 +51,7 @@ public class CompassInventory extends Shop<UHC> implements Runnable {
         for (int i = 0; i < getInventory().getSize(); i++) {
             getInventory().setItem(i, null);
         }
-        ArrayList<UHCTeam> teams = new ArrayList<>(TeamHandler.teams());
+        ArrayList<UHCTeam> teams = new ArrayList<>(teamHandler.teams());
         int pages = (int) (teams.size() / ROWS_PER_PAGE == 0 ? 1.0D : Math.ceil((double) teams.size() / (double) ROWS_PER_PAGE));
         int currentRow = 0;
         int startIndex = ROWS_PER_PAGE * page - ROWS_PER_PAGE;
@@ -61,7 +63,7 @@ public class CompassInventory extends Shop<UHC> implements Runnable {
             return o2.getPlayers().size() - o1.getPlayers().size();
         });
         for (UHCTeam team : uhcTeams) {
-            if (team == TeamHandler.spectatorsTeam())
+            if (team == teamHandler.spectatorsTeam())
                 continue;
             setTeamWool(currentRow, team);
             int slot = 1;
@@ -82,7 +84,7 @@ public class CompassInventory extends Shop<UHC> implements Runnable {
                     continue;
                 int newSlot = currentRow * 9 + slot;
                 if (op instanceof Player) {
-                    if (team != TeamHandler.getTeamForPlayer((Player) op))
+                    if (team != teamHandler.getTeamForPlayer((Player) op))
                         continue;
                     addButton(newSlot, playerItem((Player) op), new TeleportToPlayer((Player) op));
                     slot++;

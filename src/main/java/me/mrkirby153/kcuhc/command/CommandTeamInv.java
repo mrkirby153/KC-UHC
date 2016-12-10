@@ -12,12 +12,19 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
 public class CommandTeamInv extends BaseCommand{
+
+    private TeamHandler teamHandler;
+
+    public CommandTeamInv(TeamHandler teamHandler) {
+        this.teamHandler = teamHandler;
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String s, String[] args) {
         if(restrictPlayer(sender))
             return true;
         Player player = (Player) sender;
-        UHCTeam team = TeamHandler.getTeamForPlayer(player);
+        UHCTeam team = teamHandler.getTeamForPlayer(player);
 
         if(team == null || !(team instanceof UHCPlayerTeam)){
             sender.sendMessage(UtilChat.generateLegacyError("You are not on a team!"));

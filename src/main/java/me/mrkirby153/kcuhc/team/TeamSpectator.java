@@ -17,15 +17,19 @@ import java.util.UUID;
 
 public class TeamSpectator extends UHCTeam {
 
-    public TeamSpectator() {
-        super(TeamHandler.SPECTATORS_TEAM, ChatColor.GRAY);
+    private TeamHandler teamHandler;
+    public TeamSpectator(TeamHandler teamHandler) {
+        super(TeamHandler.SPECTATOR_TEAM_NAME, ChatColor.GRAY);
+        this.teamHandler = teamHandler;
+        setSeeInvisible(true);
+        setFriendlyFire(false);
     }
 
     public void hideFromPlayers(Player player) {
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.hidePlayer(player);
         }
-        for (UUID u : TeamHandler.spectatorsTeam().getPlayers()) {
+        for (UUID u : teamHandler.spectatorsTeam().getPlayers()) {
             Player p = Bukkit.getPlayer(u);
             if (p != null) {
                 player.showPlayer(p);
@@ -42,7 +46,7 @@ public class TeamSpectator extends UHCTeam {
         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, true, false));
         player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0, true, false));
         if (UHC.arena.currentState() == UHCArena.State.RUNNING)
-            new SpecInventory(UHC.plugin, player);
+            new SpecInventory(UHC.plugin, player, teamHandler);
         if (UHC.uhcNetwork != null) {
             System.out.println("Giving " + player.getName() + " the spectator role");
             new BotCommandAssignSpectator(UHC.plugin.serverId(), player.getUniqueId()).publish();
@@ -77,7 +81,7 @@ public class TeamSpectator extends UHCTeam {
             p.showPlayer(player);
         }
         // Hide all the spectators
-        for (UUID u : TeamHandler.spectatorsTeam().getPlayers()) {
+        for (UUID u : UHC.plugin.teamHandler.spectatorsTeam().getPlayers()) {
             Player p = Bukkit.getPlayer(u);
             if (p != null) {
                 player.hidePlayer(p);

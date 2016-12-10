@@ -2,7 +2,7 @@ package me.mrkirby153.kcuhc.team;
 
 import com.google.common.base.Throwables;
 import me.mrkirby153.kcuhc.UHC;
-import net.md_5.bungee.api.ChatColor;
+import me.mrkirby153.kcutils.Module;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
@@ -11,11 +11,120 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.spigotmc.SpigotConfig.config;
+public class TeamHandler extends Module<UHC> {
 
-public class TeamHandler {
+    public static final String SPECTATOR_TEAM_NAME = "spectators";
 
-    public static final String SPECTATORS_TEAM = "spectators";
+    private HashMap<UUID, UHCTeam> playerToTeamMap = new HashMap<>();
+    private Set<UHCTeam> teams = new HashSet<>();
+    private TeamSpectator spectatorTeam;
+
+    public TeamHandler(UHC plugin) {
+        super("Team Handler", "1.0", plugin);
+    }
+
+    public UHCTeam getTeamByName(String name) {
+        List<UHCTeam> array = teams.stream().filter(team -> team.getTeamName().equalsIgnoreCase(name)).collect(Collectors.toList());
+        if(array.size() > 0)
+            return array.get(0);
+        else
+            return null;
+    }
+
+    public UHCTeam getTeamForPlayer(Player player) {
+        return playerToTeamMap.get(player.getUniqueId());
+    }
+
+    public boolean isSpectator(Player player) {
+        return getTeamForPlayer(player) == spectatorTeam;
+    }
+
+    public void joinTeam(UHCTeam team, Player player) {
+        if (getTeamForPlayer(player) != null) {
+            teams.stream().filter(t -> t.getPlayers().contains(player.getUniqueId())).forEach(t -> {
+                t.removePlayer(player);
+            });
+        }
+        team.addPlayer(player);
+        playerToTeamMap.put(player.getUniqueId(), team);
+        UHC.arena.addPlayer(player);
+    }
+
+    public void leaveTeam(Player player) {
+        UHCTeam team = playerToTeamMap.remove(player.getUniqueId());
+        if (team != null) {
+            team.removePlayer(player);
+            team.onLeave(player);
+        }
+    }
+
+    public void registerTeam(UHCTeam team) {
+        teams.add(team);
+    }
+
+    public synchronized void saveTeam(UHCTeam team) {
+        File file = new File(UHC.plugin.getDataFolder(), "teams.yml");
+        YamlConfiguration config;
+        if (!file.exists())
+            config = new YamlConfiguration();
+        else
+            config = YamlConfiguration.loadConfiguration(file);
+        config.set(team.getTeamName(), team);
+        try {
+            config.save(file);
+        } catch (IOException e) {
+            Throwables.propagate(e);
+        }
+    }
+
+    public synchronized void saveToFile() {
+        for (UHCTeam t : teams()) {
+            if (t == spectatorsTeam()) {
+                continue;
+            }
+            saveTeam(t);
+        }
+    }
+
+    public Collection<UHCTeam> teams(boolean spectator) {
+        return teams.stream().filter(t -> spectator || t instanceof UHCPlayerTeam).collect(Collectors.toList());
+    }
+
+    public Collection<UHCTeam> teams() {
+        return teams(true);
+    }
+
+    public void unregisterAll() {
+        Set<UHCTeam> teams = new HashSet<>(this.teams);
+        teams.forEach(this::unregisterTeam);
+    }
+
+    public void unregisterTeam(String name) {
+        teams.removeIf(uhcTeam -> uhcTeam.getTeamName().equals(name));
+    }
+
+    public void unregisterTeam(UHCTeam team) {
+        teams.removeIf(uhcTeam -> uhcTeam == team);
+    }
+
+    public TeamSpectator spectatorsTeam() {
+        return spectatorTeam;
+    }
+
+    @Override
+    protected void init() {
+        // Register the spectators team
+        loadFromFile();
+        registerTeam(spectatorTeam = new TeamSpectator(this));
+    }
+    public void loadFromFile() {
+        unregisterAll();
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(new File(UHC.plugin.getDataFolder(), "teams.yml"));
+        for (String s : config.getKeys(false)) {
+            registerTeam((UHCPlayerTeam) config.get(s));
+        }
+    }
+    /*public static final String SPECTATORS_TEAM = "spectators";
 
     private static HashMap<UUID, UHCTeam> playerToTeamMap = new HashMap<>();
     private static HashMap<String, UHCTeam> teamNameToTeamMap = new HashMap<>();
@@ -129,5 +238,5 @@ public class TeamHandler {
 
     public static void unregisterTeam(UHCTeam teamByName) {
         unregisterTeam(teamByName.getName());
-    }
+    }*/
 }

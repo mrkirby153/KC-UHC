@@ -20,11 +20,13 @@ public class WorldBorderHandler implements Runnable, Listener {
     private double netherEndSize;
 
     private UHCArena arena;
+    private TeamHandler teamHandler;
 
 
-    public WorldBorderHandler(JavaPlugin plugin, UHCArena arena) {
+    public WorldBorderHandler(JavaPlugin plugin, UHCArena arena, TeamHandler teamHandler) {
         plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 20L);
         this.arena = arena;
+        this.teamHandler = teamHandler;
     }
 
     public void setWorldborder(double size, int time) {
@@ -82,7 +84,7 @@ public class WorldBorderHandler implements Runnable, Listener {
             return;
         }
         for (Player player : arena.players()) {
-            if (TeamHandler.isSpectator(player))
+            if (teamHandler.isSpectator(player))
                 continue;
             WorldBorder worldborder = player.getWorld().getWorldBorder();
             Location worldBorderCenter = worldborder.getCenter();

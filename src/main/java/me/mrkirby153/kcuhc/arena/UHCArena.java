@@ -129,19 +129,21 @@ public class UHCArena implements Runnable, Listener {
 
     private TeamInventoryHandler teamInventoryHandler;
 
+    private TeamHandler teamHandler;
 
-    public UHCArena(String presetFile) {
+    public UHCArena(TeamHandler teamHandler, String presetFile) {
         if (presetFile == null)
             presetFile = "default";
+        this.teamHandler = teamHandler;
         this.properties = ArenaProperties.loadProperties(presetFile);
 
-        this.worldBorderHandler = new WorldBorderHandler(UHC.plugin, this);
-        this.scoreboardUpdater = new ScoreboardUpdater(this, new UHCScoreboard());
+        this.worldBorderHandler = new WorldBorderHandler(UHC.plugin, this, teamHandler);
+        this.scoreboardUpdater = new ScoreboardUpdater(this, teamHandler, new UHCScoreboard());
         this.endgameHandler = new EndgameHandler(this);
         this.teamInventoryHandler = new TeamInventoryHandler();
 
         UHC.plugin.getServer().getPluginManager().registerEvents(new PregameListener(), UHC.plugin);
-        UHC.plugin.getServer().getPluginManager().registerEvents(new GameListener(), UHC.plugin);
+        UHC.plugin.getServer().getPluginManager().registerEvents(new GameListener(teamHandler), UHC.plugin);
         UHC.plugin.getServer().getPluginManager().registerEvents(this, UHC.plugin);
 
         UHC.plugin.getServer().getScheduler().scheduleSyncRepeatingTask(UHC.plugin, this, 0, 20);
@@ -151,8 +153,8 @@ public class UHCArena implements Runnable, Listener {
         craftingRecipes();
     }
 
-    public UHCArena() {
-        this("default");
+    public UHCArena(TeamHandler teamHandler) {
+        this(teamHandler, "default");
     }
 
     public void addPlayer(Player player) {
@@ -189,13 +191,13 @@ public class UHCArena implements Runnable, Listener {
     public void bringEveryoneToLobby() {
         if (UHC.uhcNetwork != null) {
             new BotCommandToLobby(UHC.plugin.serverId()).publish();
-            TeamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getName()).publish());
+            teamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getTeamName()).publish());
         }
     }
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void chatEvent(AsyncPlayerChatEvent event) {
-        UHCTeam team = TeamHandler.getTeamForPlayer(event.getPlayer());
+        UHCTeam team = teamHandler.getTeamForPlayer(event.getPlayer());
         if (team != null) {
             if (team instanceof TeamSpectator) {
                 event.setFormat(ChatColor.GRAY + "Spectator %s " + ChatColor.WHITE + "%s");
@@ -221,7 +223,7 @@ public class UHCArena implements Runnable, Listener {
 
         event.getPlayer().sendMessage(UtilChat.message("You ate a head apple"));
 
-        UHCTeam team = TeamHandler.getTeamForPlayer(event.getPlayer());
+        UHCTeam team = teamHandler.getTeamForPlayer(event.getPlayer());
         if (team != null) {
             team.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).forEach(p -> {
                 p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
@@ -282,7 +284,7 @@ public class UHCArena implements Runnable, Listener {
 
         // Calculate team spawn locations
         Map<UHCTeam, Location> locations = new HashMap<>();
-        for (UHCTeam team : TeamHandler.teams()) {
+        for (UHCTeam team : teamHandler.teams()) {
             Location randomSpawn = SpawnUtils.getRandomSpawn(getWorld(), properties.WORLDBORDER_START_SIZE.get());
             locations.put(team, randomSpawn);
         }
@@ -304,7 +306,7 @@ public class UHCArena implements Runnable, Listener {
                 }
             }
             // Teleport everyone on the team to that location
-            System.out.println(String.format("Teleporting players on team around %s to %.2f, %.2f, %.2f", team.getName(), spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ()));
+            System.out.println(String.format("Teleporting players on team around %s to %.2f, %.2f, %.2f", team.getTeamName(), spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ()));
             for (Player p : team.getPlayers().stream().map(Bukkit::getPlayer).filter(pl -> pl != null).collect(Collectors.toList())) {
                 Location spawnAround = SpawnUtils.getSpawnAround(spawnLoc, 2);
                 System.out.println(String.format("\tTeleporting %s to %.2f, %.2f, %.2f", p.getName(), spawnAround.getX(), spawnAround.getY(), spawnAround.getZ()));
@@ -362,7 +364,7 @@ public class UHCArena implements Runnable, Listener {
 
     public void essentiallyDisable() {
         if (UHC.uhcNetwork != null)
-            TeamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getName()).publish());
+            teamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getTeamName()).publish());
 
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.setAllowFlight(false);
@@ -397,7 +399,7 @@ public class UHCArena implements Runnable, Listener {
             getNether().getWorldBorder().setSize(netherWorldborderSize);
         }
         this.state = FROZEN;
-        Bukkit.getOnlinePlayers().stream().filter(p -> !TeamHandler.isSpectator(p)).forEach(FreezeHandler::freezePlayer);
+        Bukkit.getOnlinePlayers().stream().filter(p -> !teamHandler.isSpectator(p)).forEach(FreezeHandler::freezePlayer);
         getWorld().getEntities().stream().filter(e -> e.getType() != EntityType.PLAYER).forEach(e -> FreezeHandler.frozenEntities.put(e, e.getLocation()));
 
         getWorld().setGameRuleValue("doDaylightCycle", "false");
@@ -461,7 +463,6 @@ public class UHCArena implements Runnable, Listener {
 
     public void initialize() {
         this.endgameHandler.reset();
-        scoreboardUpdater.getScoreboard().createTeams();
         this.worldBorderHandler.setWorldborder(60);
         this.worldBorderHandler.setWarningDistance(0);
         getWorld().setGameRuleValue("doDaylightCycle", "false");
@@ -509,12 +510,8 @@ public class UHCArena implements Runnable, Listener {
         }
     }
 
-    public void newTeam(String name, net.md_5.bungee.api.ChatColor color) {
-        TeamHandler.registerTeam(name, new UHCPlayerTeam(name, color));
-    }
-
     public void playerDisconnect(Player player) {
-        UHCTeam teamForPlayer = TeamHandler.getTeamForPlayer(player);
+        UHCTeam teamForPlayer = teamHandler.getTeamForPlayer(player);
         if (teamForPlayer == null || teamForPlayer instanceof TeamSpectator) {
             players.remove(player);
             return;
@@ -537,7 +534,7 @@ public class UHCArena implements Runnable, Listener {
         }
         if (queuedTeamRemovals.contains(player.getUniqueId())) {
             queuedTeamRemovals.remove(player.getUniqueId());
-            TeamHandler.leaveTeam(player);
+            teamHandler.leaveTeam(player);
             players.remove(player);
             spectate(player);
             player.sendMessage(UtilChat.message("You have disconnected more than five minutes ago and have been removed from the game"));
@@ -629,7 +626,7 @@ public class UHCArena implements Runnable, Listener {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     p.setAllowFlight(true);
                     p.getInventory().clear();
-                    TeamHandler.leaveTeam(p);
+                    teamHandler.leaveTeam(p);
                 }
                 if (this.launchedFw++ < 8) {
                     int distFromWB = 16;
@@ -682,12 +679,12 @@ public class UHCArena implements Runnable, Listener {
         Bukkit.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
             Bukkit.broadcastMessage(UtilChat.message("Creating discord channels..."));
 //            new BotCommandCreateSpectator(UHC.plugin.serverId()).publishBlocking();
-            TeamHandler.teams().forEach(t -> new BotCommandNewTeam(UHC.plugin.serverId(), t.getName()).publishBlocking());
+            teamHandler.teams().forEach(t -> new BotCommandNewTeam(UHC.plugin.serverId(), t.getTeamName()).publishBlocking());
 
             Bukkit.broadcastMessage(UtilChat.message("Moving everyone into their discord channels"));
             HashMap<UUID, String> teams = new HashMap<>();
 
-            TeamHandler.teams().forEach(t -> t.getPlayers().forEach(u -> teams.put(u, t.getName())));
+            teamHandler.teams().forEach(t -> t.getPlayers().forEach(u -> teams.put(u, t.getTeamName())));
             new BotCommandAssignTeams(UHC.plugin.serverId(), null, teams).publishBlocking();
 
             Bukkit.broadcastMessage(UtilChat.message("Everyone should be moved"));
@@ -703,7 +700,7 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void spectate(Player player, boolean switchRole) {
-        TeamHandler.joinTeam(TeamHandler.spectatorsTeam(), player);
+        teamHandler.joinTeam(teamHandler.spectatorsTeam(), player);
         if (switchRole) {
             if (uhcNetwork != null) {
                 new BotCommandAssignSpectator(UHC.plugin.serverId(), player.getUniqueId()).publish();
@@ -712,6 +709,7 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void start() {
+        RegenTicket.setTeamHandler(teamHandler);
         GameListener.resetDeaths();
         this.endgameHandler.reset();
 
@@ -732,19 +730,19 @@ public class UHCArena implements Runnable, Listener {
         for (Player p : players) {
             UtilTitle.title(p, null, ChatColor.GOLD + "The game has begun!", 10, 20 * 5, 20);
             p.sendMessage(UtilChat.message("The game has begun"));
-            if (!TeamHandler.isSpectator(p)) {
+            if (!teamHandler.isSpectator(p)) {
                 p.setGameMode(GameMode.SURVIVAL);
                 p.setAllowFlight(false);
             }
             p.setHealth(p.getMaxHealth());
             p.setFoodLevel(20);
-            if (!TeamHandler.isSpectator(p)) {
+            if (!teamHandler.isSpectator(p)) {
                 p.getInventory().clear();
                 for (PotionEffect e : p.getActivePotionEffects()) {
                     p.removePotionEffect(e.getType());
                 }
             } else
-                new SpecInventory(UHC.plugin, p);
+                new SpecInventory(UHC.plugin, p, teamHandler);
             p.setBedSpawnLocation(getCenter(), true);
             p.addPotionEffects(Arrays.asList(resist, regen, sat));
             if (p.isOp()) {
@@ -796,6 +794,8 @@ public class UHCArena implements Runnable, Listener {
     public void startCountdown() {
         countdown = 10;
         state = COUNTDOWN;
+
+        teamHandler.teams().forEach(t->scoreboardUpdater.getScoreboard().addTeam(t));
     }
 
     public void stop(String winner) {
@@ -834,7 +834,7 @@ public class UHCArena implements Runnable, Listener {
             p.playSound(p.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.5f, 2);
             p.playSound(p.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.5f, 0.5f);
             p.playSound(p.getLocation(), Sound.BLOCK_PORTAL_TRAVEL, 0.5f, 1);
-            if (TeamHandler.isSpectator(p)) {
+            if (teamHandler.isSpectator(p)) {
                 for (Player olp : Bukkit.getOnlinePlayers()) {
                     olp.showPlayer(p);
                 }
@@ -864,11 +864,11 @@ public class UHCArena implements Runnable, Listener {
         for (Player p : players) {
             if (queuedTeamRemovals.contains(p.getUniqueId()))
                 continue;
-            UHCTeam team = TeamHandler.getTeamForPlayer(p);
+            UHCTeam team = teamHandler.getTeamForPlayer(p);
             if (!(team instanceof UHCPlayerTeam))
                 continue;
             UHCPlayerTeam pTeam = (UHCPlayerTeam) team;
-            if (pTeam == TeamHandler.getTeamByName(TeamHandler.SPECTATORS_TEAM))
+            if (pTeam == teamHandler.getTeamByName(TeamHandler.SPECTATOR_TEAM_NAME))
                 continue;
             if (!uniqueTeams.contains(pTeam)) {
                 uniqueTeams.add(pTeam);
@@ -912,7 +912,7 @@ public class UHCArena implements Runnable, Listener {
         }
         this.state = RUNNING;
         for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!TeamHandler.isSpectator(p)) {
+            if (!teamHandler.isSpectator(p)) {
                 FreezeHandler.unfreeze(p);
             }
         }
@@ -988,7 +988,7 @@ public class UHCArena implements Runnable, Listener {
     private int getSpectatorCount() {
         int count = 0;
         for (Player p : players) {
-            if (TeamHandler.isSpectator(p))
+            if (teamHandler.isSpectator(p))
                 count++;
         }
         return count;
@@ -1025,11 +1025,17 @@ public class UHCArena implements Runnable, Listener {
 
     public static class PlayerActionBarUpdater implements Runnable {
 
+        private TeamHandler teamHandler;
+
+        public PlayerActionBarUpdater(TeamHandler teamHandler){
+            this.teamHandler = teamHandler;
+        }
+
         @Override
         public void run() {
             if (UHC.arena.state == State.RUNNING) {
                 for (Player p : Bukkit.getOnlinePlayers()) {
-                    if (TeamHandler.isSpectator(p))
+                    if (teamHandler.isSpectator(p))
                         continue;
                     TextComponent bc;
                     if (p.getInventory().getItemInMainHand().getType() == Material.COMPASS && UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get()) {

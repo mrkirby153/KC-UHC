@@ -24,8 +24,11 @@ public class UHCScoreboard {
     private ArrayList<String> scoreboardElements = new ArrayList<>();
     private String[] current = new String[15];
 
+    private TeamHandler teamHandler;
 
-    public UHCScoreboard() {
+
+    public UHCScoreboard(TeamHandler teamHandler) {
+        this.teamHandler = teamHandler;
         scoreboard = Bukkit.getScoreboardManager().getNewScoreboard();
         Random r = new Random();
         sideObjective = scoreboard.registerNewObjective("Obj-" + r.nextInt(99999999), "dummy");
@@ -41,15 +44,15 @@ public class UHCScoreboard {
 
     public void createTeams() {
         System.out.println("Creating scoreboard teams...");
-        for (UHCTeam t : TeamHandler.teams(true)) {
-            System.out.println("Creating team " + t.getName());
+        for (UHCTeam t : teamHandler.teams(true)) {
+            System.out.println("Creating team " + t.getTeamName());
             Team sbTeam = null;
-            if (scoreboard.getTeam(parseTeam(t.getName())) != null) {
-                System.out.println("Team " + t.getName() + " already exists updating information!");
-                sbTeam = scoreboard.getTeam(parseTeam(t.getName()));
+            if (scoreboard.getTeam(parseTeam(t.getTeamName())) != null) {
+                System.out.println("Team " + t.getTeamName() + " already exists updating information!");
+                sbTeam = scoreboard.getTeam(parseTeam(t.getTeamName()));
             }
             if (sbTeam == null)
-                sbTeam = scoreboard.registerNewTeam(parseTeam(t.getName()));
+                sbTeam = scoreboard.registerNewTeam(parseTeam(t.getTeamName()));
             sbTeam.setPrefix(t.getColor() + "");
             sbTeam.setSuffix(ChatColor.RESET + "");
             sbTeam.setCanSeeFriendlyInvisibles(true);

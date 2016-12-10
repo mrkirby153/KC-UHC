@@ -6,7 +6,6 @@ import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.scoreboard.ScoreboardManager;
 import me.mrkirby153.kcuhc.team.TeamHandler;
-import me.mrkirby153.kcuhc.team.TeamSpectator;
 import me.mrkirby153.uhc.bot.network.UHCNetwork;
 import me.mrkirby153.uhc.bot.network.data.RedisConnection;
 import org.bukkit.entity.Player;
@@ -41,13 +40,19 @@ public class UHC extends JavaPlugin {
 
     public static ExtraHealthHandler extraHealthHelper;
 
+    public TeamHandler teamHandler;
+
     @Override
     public void onEnable() {
         saveDefaultConfig();
         plugin = this;
+
+        teamHandler = new TeamHandler(this);
+        teamHandler.load();
+
         admins = (ArrayList<String>) getConfig().getStringList("admins");
         if (new File(getDataFolder(), "arena.yml").exists()) {
-            arena = new UHCArena();
+            arena = new UHCArena(teamHandler);
             arena.initialize();
         }
         if (getConfig().getBoolean("discord.useDiscord")) {
@@ -60,7 +65,7 @@ public class UHC extends JavaPlugin {
             } catch (LoginException | InterruptedException e) {
                 e.printStackTrace();
             }*/
-            getCommand("discord").setExecutor(new CommandDiscord());
+            getCommand("discord").setExecutor(new CommandDiscord(teamHandler));
 /*            discordHandler = new DiscordBotConnection(getConfig().getString("discord.botHost"), getConfig().getInt("discord.botPort"));
             discordHandler.connect();*/
             String botHost = getConfig().getString("discord.botHost");
@@ -79,32 +84,30 @@ public class UHC extends JavaPlugin {
                 getLogger().info("Set server id to " + id);
             }
         }
-        new SpectatorTask(this);
+        new SpectatorTask(this, teamHandler);
         new FreezeHandler(this);
-        playerTracker = new PlayerTrackerHandler(this);
+        playerTracker = new PlayerTrackerHandler(this, teamHandler);
         velocityTracker = new VelocityTracker(this);
         markerHandler = new EpisodeMarkerHandler(this);
         extraHealthHelper = new ExtraHealthHandler(this);
         getServer().getPluginManager().registerEvents(new MOTDHandler(), this);
-        getServer().getPluginManager().registerEvents(spectateListener = new SpectateListener(), this);
+        getServer().getPluginManager().registerEvents(spectateListener = new SpectateListener(teamHandler), this);
         getServer().getPluginManager().registerEvents(new ScoreboardManager(), this);
         getServer().getPluginManager().registerEvents(new RegenTicket(), this);
         getServer().getPluginManager().registerEvents(new BosssBarHandler(), this);
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new BorderBumper(),0, 1);
-        TeamHandler.registerTeam(TeamHandler.SPECTATORS_TEAM, new TeamSpectator());
-        TeamHandler.loadFromFile();
-        getCommand("uhc").setExecutor(new CommandUHC());
-        getCommand("team").setExecutor(new CommandTeam());
-        getCommand("spectate").setExecutor(new CommandSpectate());
-        getCommand("admin").setExecutor(new CommandAdmin());
-        getCommand("teaminventory").setExecutor(new CommandTeamInv());
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, new UHCArena.PlayerActionBarUpdater(), 0, 1);
+        getCommand("uhc").setExecutor(new CommandUHC(teamHandler));
+        getCommand("team").setExecutor(new CommandTeam(teamHandler));
+        getCommand("spectate").setExecutor(new CommandSpectate(teamHandler));
+        getCommand("admin").setExecutor(new CommandAdmin(teamHandler));
+        getCommand("teaminventory").setExecutor(new CommandTeamInv(teamHandler));
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, new UHCArena.PlayerActionBarUpdater(teamHandler), 0, 1);
     }
 
 
     @Override
     public void onDisable() {
-        TeamHandler.unregisterAll();
+        teamHandler.unregisterAll();
         // Remove everyone's boss bar in case of a reload
         BosssBarHandler.removeAll();
     }

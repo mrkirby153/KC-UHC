@@ -1,10 +1,10 @@
 package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.utils.UtilTime;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.TeamSpectator;
 import me.mrkirby153.kcuhc.team.UHCTeam;
+import me.mrkirby153.kcuhc.utils.UtilTime;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -29,8 +29,11 @@ public class PlayerTrackerHandler implements Listener, Runnable {
 
     private HashMap<UUID, UUID> targets = new HashMap<>();
 
-    public PlayerTrackerHandler(UHC plugin) {
+    private TeamHandler teamHandler;
+    
+    public PlayerTrackerHandler(UHC plugin, TeamHandler teamHandler) {
         this.plugin = plugin;
+        this.teamHandler = teamHandler;
         plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 5L);
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
@@ -77,13 +80,13 @@ public class PlayerTrackerHandler implements Listener, Runnable {
         }
 
         List<UUID> toExclude = new ArrayList<>();
-        UHCTeam currentTeam = TeamHandler.getTeamForPlayer(event.getPlayer());
+        UHCTeam currentTeam = teamHandler.getTeamForPlayer(event.getPlayer());
         if (currentTeam != null) {
             if (currentTeam instanceof TeamSpectator)
                 return;
             toExclude.addAll(currentTeam.getPlayers());
         }
-        toExclude.addAll(TeamHandler.spectatorsTeam().getPlayers());
+        toExclude.addAll(teamHandler.spectatorsTeam().getPlayers());
 
         Player trackedPlayer = findClosestPlayer(event.getPlayer().getLocation(), toExclude);
 

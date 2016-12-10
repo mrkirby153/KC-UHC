@@ -33,6 +33,12 @@ public class RegenTicket implements Listener {
 
     private static HashMap<UUID, ItemStack> regenTickets = new HashMap<>();
 
+    private static TeamHandler teamHandler;
+
+    public static void setTeamHandler(TeamHandler teamHandler){
+        RegenTicket.teamHandler = teamHandler;
+    }
+
     @EventHandler
     public void onDrop(PlayerDropItemEvent event) {
         if (isTicket(event.getItemDrop().getItemStack()))
@@ -128,7 +134,7 @@ public class RegenTicket implements Listener {
     }
 
     public static void give(Player player) {
-        if (TeamHandler.isSpectator(player))
+        if (teamHandler.isSpectator(player))
             return;
         player.spigot().sendMessage(UtilChat.generateFormattedChat("You have been given a regen ticket. This ticket will restore " +
                 "you to full health. However, once PvP damage is given or delt, it is removed!", net.md_5.bungee.api.ChatColor.DARK_GREEN, 8));

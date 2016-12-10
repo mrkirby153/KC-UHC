@@ -40,7 +40,7 @@ public class GameSettingsInventory extends PropertyGui {
 
         addButton(45, new ShopItem(Material.DIAMOND_SWORD, "Team Settings"), (player, clickType) -> {
             player.closeInventory();
-            new TeamSelectInventory(module, player);
+            new TeamSelectInventory(module, UHC.plugin.teamHandler, player);
         });
         integerProperty(properties.PVP_GRACE_MINS, Material.DIAMOND_HELMET, "PvP Grace (mins)", 49, 1, 3);
     }

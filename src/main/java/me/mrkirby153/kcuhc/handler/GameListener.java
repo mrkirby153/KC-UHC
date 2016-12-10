@@ -36,16 +36,23 @@ import java.util.Random;
 public class GameListener implements Listener {
 
     private static final Random random = new Random();
+    
+    private TeamHandler teamHandler;
+
+    public GameListener(TeamHandler teamHandler) {
+        this.teamHandler = teamHandler;
+    }
+
 
     @EventHandler
     public void death(PlayerDeathEvent event) {
         if(!isRunning())
             return;
         Player dead = event.getEntity();
-        UHCTeam team = TeamHandler.getTeamForPlayer(dead);
+        UHCTeam team = teamHandler.getTeamForPlayer(dead);
         savePlayerData(dead);
         dead.setGlowing(false);
-        TeamHandler.leaveTeam(dead);
+        teamHandler.leaveTeam(dead);
         for(Player p : UHC.arena.players()){
             UtilTitle.title(p, ChatColor.DARK_PURPLE+ dead.getDisplayName(), ChatColor.AQUA+event.getDeathMessage().replace(dead.getName(), ""),
                     10, 20 * 5, 20);
@@ -73,10 +80,10 @@ public class GameListener implements Listener {
             return;
         UHC.arena.playerJoin(event.getPlayer());
         event.setJoinMessage(ChatColor.BLUE + "Join> " + ChatColor.GRAY + event.getPlayer().getName());
-        if (TeamHandler.getTeamForPlayer(event.getPlayer()) == null)
-            TeamHandler.joinTeam(TeamHandler.spectatorsTeam(), event.getPlayer());
+        if (teamHandler.getTeamForPlayer(event.getPlayer()) == null)
+            teamHandler.joinTeam(teamHandler.spectatorsTeam(), event.getPlayer());
         else
-            TeamHandler.joinTeam(TeamHandler.getTeamForPlayer(event.getPlayer()), event.getPlayer());
+            teamHandler.joinTeam(teamHandler.getTeamForPlayer(event.getPlayer()), event.getPlayer());
     }
 
     @EventHandler
@@ -149,9 +156,9 @@ public class GameListener implements Listener {
             if (event.getEntityType() == EntityType.HORSE) {
                 Horse horse = (Horse) event.getEntity();
                 horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
-                UHCTeam team = TeamHandler.getTeamForPlayer((Player) event.getOwner());
+                UHCTeam team = teamHandler.getTeamForPlayer((Player) event.getOwner());
                 if (team != null) {
-                    horse.setCustomName("Team " + team.getColor() + team.getName() + "'s " + ChatColor.WHITE + "Horse");
+                    horse.setCustomName("Team " + team.getColor() + team.getTeamName() + "'s " + ChatColor.WHITE + "Horse");
                 } else if (event.getOwner().getName().endsWith("s"))
                     horse.setCustomName(event.getOwner().getName() + "' Horse");
                 else
@@ -190,11 +197,11 @@ public class GameListener implements Listener {
     public void entityInteract(PlayerInteractEvent evt) {
         if(!isRunning())
             return;
-        if (TeamHandler.isSpectator(evt.getPlayer()))
+        if (teamHandler.isSpectator(evt.getPlayer()))
             return;
         if (evt.getAction() == Action.RIGHT_CLICK_AIR || evt.getAction() == Action.RIGHT_CLICK_BLOCK)
             for (Player p : Bukkit.getOnlinePlayers()) {
-                if (!TeamHandler.isSpectator(p))
+                if (!teamHandler.isSpectator(p))
                     continue;
                 Block clickedAgainst = evt.getClickedBlock();
                 if (clickedAgainst == null)
@@ -289,8 +296,8 @@ public class GameListener implements Listener {
         cfg.set("username", player.getName());
         cfg.set("uuid", player.getUniqueId().toString());
         cfg.set("deathLocation", player.getLocation());
-        if (TeamHandler.getTeamForPlayer(player) != null)
-            cfg.set("team", TeamHandler.getTeamForPlayer(player).getName());
+        if (teamHandler.getTeamForPlayer(player) != null)
+            cfg.set("team", teamHandler.getTeamForPlayer(player).getTeamName());
         PlayerInventory inv = player.getInventory();
         for (int i = 0; i < inv.getSize(); i++) {
             cfg.set("inv." + i, inv.getItem(i));
@@ -313,10 +320,10 @@ public class GameListener implements Listener {
         File file = new File(UHC.plugin.getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId()));
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
         Location l = (Location) cfg.get("deathLocation");
-        TeamHandler.leaveTeam(player);
+        UHC.plugin.teamHandler.leaveTeam(player);
         if (cfg.getString("team") != null)
-            if (TeamHandler.getTeamByName(cfg.getString("team")) != null) {
-                TeamHandler.joinTeam(TeamHandler.getTeamByName(cfg.getString("team")), player);
+            if (UHC.plugin.teamHandler.getTeamByName(cfg.getString("team")) != null) {
+                UHC.plugin.teamHandler.joinTeam(UHC.plugin.teamHandler.getTeamByName(cfg.getString("team")), player);
             }
         for (String key : cfg.getConfigurationSection("inv").getKeys(false)) {
             player.getInventory().setItem(Integer.parseInt(key), (ItemStack) cfg.get("inv." + key));

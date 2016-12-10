@@ -2,6 +2,7 @@ package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.team.TeamHandler;
+import me.mrkirby153.kcuhc.team.TeamSpectator;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -26,6 +27,12 @@ import java.util.UUID;
 public class SpectateListener implements Listener {
 
     private static HashSet<UUID> earlyPickup = new HashSet<>();
+    
+    private TeamHandler teamHandler;
+    
+    public SpectateListener(TeamHandler teamHandler){
+        this.teamHandler = teamHandler;
+    }
 
     public static void addEarlyPickup(Player player) {
         earlyPickup.add(player.getUniqueId());
@@ -35,7 +42,7 @@ public class SpectateListener implements Listener {
     public void onPickup(PlayerPickupItemEvent event) {
         if (earlyPickup.contains(event.getPlayer().getUniqueId()))
             event.setCancelled(true);
-        if (TeamHandler.isSpectator(event.getPlayer())) {
+        if (teamHandler.isSpectator(event.getPlayer())) {
             earlyPickup.remove(event.getPlayer().getUniqueId());
             event.setCancelled(true);
         }
@@ -44,7 +51,7 @@ public class SpectateListener implements Listener {
     @EventHandler
     public void onDamage(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player) {
-            if (TeamHandler.isSpectator((Player) event.getDamager()))
+            if (teamHandler.isSpectator((Player) event.getDamager()))
                 event.setCancelled(true);
         }
     }
@@ -53,7 +60,7 @@ public class SpectateListener implements Listener {
     public void onTarget(EntityTargetEvent event) {
         if (event.getTarget() instanceof Player) {
             Player player = (Player) event.getTarget();
-            if (TeamHandler.isSpectator(player))
+            if (teamHandler.isSpectator(player))
                 event.setCancelled(true);
         }
     }
@@ -63,7 +70,7 @@ public class SpectateListener implements Listener {
         if(event instanceof HangingBreakByEntityEvent){
             Entity remover = ((HangingBreakByEntityEvent) event).getRemover();
             if(remover instanceof Player){
-                if(TeamHandler.isSpectator((Player) remover))
+                if(teamHandler.isSpectator((Player) remover))
                     event.setCancelled(true);
             }
         }
@@ -71,21 +78,21 @@ public class SpectateListener implements Listener {
 
     @EventHandler
     public void onInteract(PlayerInteractEntityEvent event){
-        if(TeamHandler.isSpectator(event.getPlayer()))
+        if(teamHandler.isSpectator(event.getPlayer()))
             event.setCancelled(true);
     }
 
     @EventHandler
     public void vehicleDestroy(VehicleDestroyEvent event) {
         if (event.getAttacker() instanceof Player)
-            if (TeamHandler.isSpectator((Player) event.getAttacker()))
+            if (teamHandler.isSpectator((Player) event.getAttacker()))
                 event.setCancelled(true);
     }
 
     @EventHandler
     public void vehicleDamage(VehicleDamageEvent event) {
         if (event.getAttacker() instanceof Player) {
-            if (TeamHandler.isSpectator((Player) event.getAttacker()))
+            if (teamHandler.isSpectator((Player) event.getAttacker()))
                 event.setCancelled(true);
         }
     }
@@ -93,14 +100,14 @@ public class SpectateListener implements Listener {
     @EventHandler
     public void vehiclePush(VehicleEntityCollisionEvent event){
         if(event.getEntity() instanceof Player){
-            if(TeamHandler.isSpectator((Player) event.getEntity()))
+            if(teamHandler.isSpectator((Player) event.getEntity()))
                 event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void onInteract(PlayerInteractEvent event) {
-        if (TeamHandler.isSpectator(event.getPlayer()))
+        if (teamHandler.isSpectator(event.getPlayer()))
             event.setCancelled(true);
     }
 
@@ -109,7 +116,7 @@ public class SpectateListener implements Listener {
         if (event.getEntity() instanceof Player) {
             if (event.getCause() == EntityDamageEvent.DamageCause.VOID)
                 return;
-            if (TeamHandler.isSpectator((Player) event.getEntity())) {
+            if (teamHandler.isSpectator((Player) event.getEntity())) {
                 event.getEntity().setFireTicks(0);
                 event.setCancelled(true);
             }
@@ -120,14 +127,14 @@ public class SpectateListener implements Listener {
     public void hungerChange(FoodLevelChangeEvent event) {
         if (event.getEntity() instanceof Player) {
             Player player = (Player) event.getEntity();
-            if (TeamHandler.getTeamForPlayer(player) == TeamHandler.getTeamByName(TeamHandler.SPECTATORS_TEAM))
+            if (teamHandler.getTeamForPlayer(player) instanceof TeamSpectator)
                 event.setCancelled(true);
         }
     }
 
     @EventHandler
     public void blockBreak(BlockBreakEvent event) {
-        if (TeamHandler.getTeamForPlayer(event.getPlayer()) == TeamHandler.getTeamByName(TeamHandler.SPECTATORS_TEAM))
+        if (teamHandler.getTeamForPlayer(event.getPlayer()) instanceof TeamSpectator)
             event.setCancelled(true);
     }
 
@@ -138,7 +145,7 @@ public class SpectateListener implements Listener {
             public void run() {
                 // Hide all spectators
                 for (Player p : Bukkit.getOnlinePlayers()) {
-                    if (TeamHandler.getTeamForPlayer(p) == TeamHandler.spectatorsTeam()) {
+                    if (teamHandler.getTeamForPlayer(p) == teamHandler.spectatorsTeam()) {
                         event.getPlayer().hidePlayer(p);
                     }
                 }

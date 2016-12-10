@@ -23,6 +23,11 @@ import java.security.SecureRandom;
 public class CommandDiscord extends BaseCommand {
     private final String validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
+    private TeamHandler teamHandler;
+
+    public CommandDiscord(TeamHandler teamHandler){
+        this.teamHandler = teamHandler;
+    }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -93,15 +98,15 @@ public class CommandDiscord extends BaseCommand {
         }
         if (args[0].equalsIgnoreCase("cinit")) {
             sender.sendMessage(UtilChat.message("Generating discord channels..."));
-            TeamHandler.teams().forEach(t -> {
-                new BotCommandNewTeam(UHC.plugin.serverId(), t.getName()).publishBlocking();
-                System.out.println("Created channel " + t.getName());
+            teamHandler.teams().forEach(t -> {
+                new BotCommandNewTeam(UHC.plugin.serverId(), t.getTeamName()).publishBlocking();
+                System.out.println("Created channel " + t.getTeamName());
             });
             UtilChat.message("Discord channels generated!");
         }
         if (args[0].equalsIgnoreCase("shutdown")) {
             sender.sendMessage(UtilChat.message("Removing discord channels..."));
-            TeamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getName()).publishBlocking());
+            teamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getTeamName()).publishBlocking());
             sender.sendMessage("Done!");
         }
         if (args[0].equalsIgnoreCase("disperse")) {

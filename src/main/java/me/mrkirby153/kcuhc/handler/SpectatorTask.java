@@ -30,19 +30,22 @@ public class SpectatorTask implements Runnable, Listener {
 
     private HashMap<UUID, UUID> spectatorTargets = new HashMap<>();
 
-    public SpectatorTask(JavaPlugin plugin) {
+    private TeamHandler teamHandler;
+
+    public SpectatorTask(JavaPlugin plugin, TeamHandler teamHandler) {
+        this.teamHandler = teamHandler;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 10L);
     }
 
     @Override
     public void run() {
-        List<Player> players = TeamHandler.spectatorsTeam().getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).collect(Collectors.toList());
+        List<Player> players = teamHandler.spectatorsTeam().getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).collect(Collectors.toList());
         for (Player p : players) {
             if (!p.getInventory().contains(Material.COMPASS) && UHC.arena.currentState() == UHCArena.State.RUNNING) {
                 p.sendMessage(UtilChat.message("Giving you the spectate inventory as you no longer have it"));
                 Inventory.closeInventory(p);
-                new SpecInventory(UHC.plugin, p);
+                new SpecInventory(UHC.plugin, p, teamHandler);
             }
             UUID target = spectatorTargets.get(p.getUniqueId());
             Entity currentTarget = p.getSpectatorTarget();
@@ -61,7 +64,7 @@ public class SpectatorTask implements Runnable, Listener {
                 spectatorTargets.remove(p.getUniqueId());
                 continue;
             }
-            UHCTeam team = TeamHandler.getTeamForPlayer(Bukkit.getPlayer(target));
+            UHCTeam team = teamHandler.getTeamForPlayer(Bukkit.getPlayer(target));
             if (team == null) {
                 sendActionBar(p, "Spectating " + Bukkit.getPlayer(target).getName());
             } else {
@@ -72,7 +75,7 @@ public class SpectatorTask implements Runnable, Listener {
 
     @EventHandler
     public void entityInteract(PlayerInteractEntityEvent event) {
-        if (!TeamHandler.isSpectator(event.getPlayer())) {
+        if (!teamHandler.isSpectator(event.getPlayer())) {
             return;
         }
         Entity rightClicked = event.getRightClicked();
@@ -80,7 +83,7 @@ public class SpectatorTask implements Runnable, Listener {
             return;
         }
         Player toSpectate = (Player) rightClicked;
-        if (TeamHandler.isSpectator(toSpectate))
+        if (teamHandler.isSpectator(toSpectate))
             return;
         event.getPlayer().setGameMode(GameMode.SPECTATOR);
         event.getPlayer().setSpectatorTarget(toSpectate);

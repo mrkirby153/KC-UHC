@@ -1,10 +1,10 @@
 package me.mrkirby153.kcuhc.command;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.utils.UtilChat;
-import me.mrkirby153.kcuhc.utils.UtilTime;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCTeam;
+import me.mrkirby153.kcuhc.utils.UtilChat;
+import me.mrkirby153.kcuhc.utils.UtilTime;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
@@ -18,6 +18,13 @@ import java.util.UUID;
 public class CommandAdmin extends BaseCommand {
 
     private HashMap<UUID, Long> nextMessageIn = new HashMap<>();
+    
+    private TeamHandler teamHandler;
+
+    public CommandAdmin(TeamHandler teamHandler) {
+        this.teamHandler = teamHandler;
+    }
+
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] args) {
@@ -65,7 +72,7 @@ public class CommandAdmin extends BaseCommand {
             msg += arg + " ";
         }
         msg = commandSender.getName() + ": " + ChatColor.RESET + msg.trim();
-        UHCTeam team = TeamHandler.getTeamForPlayer((Player) commandSender);
+        UHCTeam team = teamHandler.getTeamForPlayer((Player) commandSender);
         if (team != null) {
             msg = team.getColor() + "(" + team.getFriendlyName() + ") " + msg;
         }
