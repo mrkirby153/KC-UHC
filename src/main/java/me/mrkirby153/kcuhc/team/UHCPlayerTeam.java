@@ -27,13 +27,13 @@ public class UHCPlayerTeam extends UHCTeam implements ConfigurationSerializable 
         }
         UHCPlayerTeam upt = new UHCPlayerTeam((String) data.get("name"), co);
         upt.setFriendlyName((String) data.get("displayName"));
-        UHC.plugin.teamHandler.registerTeam(upt);
+        UHC.getInstance().teamHandler.registerTeam(upt);
         return upt;
     }
 
     @Override
     public void onJoin(Player player) {
-        UHC.arena.addPlayer(player);
+        UHC.getInstance().arena.addPlayer(player);
         player.setGameMode(GameMode.SURVIVAL);
         player.setDisplayName(getColor() + player.getName() + ChatColor.RESET);
     }

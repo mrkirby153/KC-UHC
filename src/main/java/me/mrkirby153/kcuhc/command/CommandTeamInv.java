@@ -14,9 +14,11 @@ import org.bukkit.inventory.Inventory;
 public class CommandTeamInv extends BaseCommand{
 
     private TeamHandler teamHandler;
+    private UHC plugin;
 
-    public CommandTeamInv(TeamHandler teamHandler) {
+    public CommandTeamInv(TeamHandler teamHandler, UHC plugin) {
         this.teamHandler = teamHandler;
+        this.plugin = plugin;
     }
 
     @Override
@@ -30,15 +32,15 @@ public class CommandTeamInv extends BaseCommand{
             sender.sendMessage(UtilChat.generateLegacyError("You are not on a team!"));
             return true;
         }
-        if(!UHC.arena.getProperties().TEAM_INV_ENABLED.get()){
+        if(!plugin.arena.getProperties().TEAM_INV_ENABLED.get()){
             sender.sendMessage(UtilChat.generateLegacyError("Team inventories are not enabled!"));
             return true;
         }
-        if(UHC.arena.currentState() != UHCArena.State.RUNNING){
+        if(plugin.arena.currentState() != UHCArena.State.RUNNING){
             sender.sendMessage(UtilChat.generateLegacyError("You cannot open a team inventory before the game starts!"));
             return true;
         }
-        Inventory inventory = UHC.arena.getTeamInventoryHandler().getInventory(team);
+        Inventory inventory = plugin.arena.getTeamInventoryHandler().getInventory(team);
         player.openInventory(inventory);
         return true;
     }

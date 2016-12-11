@@ -20,9 +20,11 @@ public class CommandTeam extends BaseCommand {
     private boolean assignSelf = true;
     
     private final TeamHandler teamHandler;
-    
-    public CommandTeam(TeamHandler teamHandler){
+    private UHC plugin;
+
+    public CommandTeam(TeamHandler teamHandler, UHC plugin){
         this.teamHandler = teamHandler;
+        this.plugin = plugin;
     }
 
     @Override
@@ -90,7 +92,7 @@ public class CommandTeam extends BaseCommand {
             if (args[0].equalsIgnoreCase("spread")) {
                 if (restrictAdmin(sender))
                     return true;
-                UHC.arena.distributeTeams(50);
+                plugin.arena.distributeTeams(50);
                 sender.sendMessage(UtilChat.message("Spread teams!"));
                 return true;
             }
@@ -101,7 +103,7 @@ public class CommandTeam extends BaseCommand {
                 sender.sendMessage(UtilChat.message("Loaded teams from file"));
                 return true;
             }
-            if (!(UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.INITIALIZED)) {
+            if (!(plugin.arena.currentState() == UHCArena.State.WAITING || plugin.arena.currentState() == UHCArena.State.INITIALIZED)) {
                 if (sender instanceof Player) {
                     sender.sendMessage(UtilChat.generateLegacyError("You cannot change teams when the game has started!"));
                     return true;

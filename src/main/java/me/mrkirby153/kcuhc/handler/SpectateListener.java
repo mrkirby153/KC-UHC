@@ -29,9 +29,12 @@ public class SpectateListener implements Listener {
     private static HashSet<UUID> earlyPickup = new HashSet<>();
     
     private TeamHandler teamHandler;
+
+    private UHC plugin;
     
-    public SpectateListener(TeamHandler teamHandler){
+    public SpectateListener(TeamHandler teamHandler, UHC plugin){
         this.teamHandler = teamHandler;
+        this.plugin = plugin;
     }
 
     public static void addEarlyPickup(Player player) {
@@ -150,12 +153,12 @@ public class SpectateListener implements Listener {
                     }
                 }
             }
-        }.runTaskLater(UHC.plugin, 5);
+        }.runTaskLater(plugin, 5);
     }
 
     @EventHandler
     public void onRespawn(final PlayerRespawnEvent event) {
-        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> earlyPickup.remove(event.getPlayer().getUniqueId()), 10L);
+        Bukkit.getServer().getScheduler().runTaskLater(plugin, () -> earlyPickup.remove(event.getPlayer().getUniqueId()), 10L);
 
     }
 }

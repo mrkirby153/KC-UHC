@@ -16,7 +16,7 @@ public class GameSettingsInventory extends PropertyGui {
 
     @Override
     public void build() {
-        ArenaProperties properties = UHC.arena.getProperties();
+        ArenaProperties properties = UHC.getInstance().arena.getProperties();
         booleanButton(properties.SPREAD_PLAYERS, new ItemFactory(Material.ENDER_PEARL).name("Spread Players").construct(), 0);
         booleanButton(properties.CHECK_ENDING, new ItemFactory(Material.CAKE).name("End Check").construct(), 2);
         booleanButton(properties.DROP_PLAYER_HEAD, new ItemFactory(Material.SKULL_ITEM).data(3).name("Drop Player Heads").construct(), 4);
@@ -40,7 +40,7 @@ public class GameSettingsInventory extends PropertyGui {
 
         addButton(45, new ItemFactory(Material.DIAMOND_SWORD).name("Team Settings").construct(), (player, clickType) -> {
             player.closeInventory();
-            new TeamSelectInventory(plugin, UHC.plugin.teamHandler, player);
+            new TeamSelectInventory(plugin, plugin.teamHandler, player);
         });
         integerProperty(properties.PVP_GRACE_MINS, Material.DIAMOND_HELMET, "PvP Grace (mins)", 49, 1, 3);
     }

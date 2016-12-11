@@ -42,12 +42,12 @@ public class FreezeHandler implements Listener, Runnable {
     public static HashMap<Entity, Location> frozenEntities = new HashMap<>();
 
     public static boolean isFrozen() {
-        return UHC.arena != null && UHC.arena.currentState() == UHCArena.State.FROZEN;
+        return UHC.getInstance().arena != null && UHC.getInstance().arena.currentState() == UHCArena.State.FROZEN;
     }
 
     public static void freezePlayer(Player player) {
         frozenPlayers.add(player.getUniqueId());
-        Vector velocity = UHC.velocityTracker.getVelocity(player);
+        Vector velocity = UHC.getInstance().velocityTracker.getVelocity(player);
         FreezeHandler.velocity.put(player.getUniqueId(), velocity);
 /*        player.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "You have been frozen!");
         player.sendMessage("   PVP has been disabled and you may no longer interact with the world!");*/

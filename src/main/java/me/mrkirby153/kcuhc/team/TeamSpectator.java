@@ -45,11 +45,11 @@ public class TeamSpectator extends UHCTeam {
         player.setAllowFlight(true);
         player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0, true, false));
         player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0, true, false));
-        if (UHC.arena.currentState() == UHCArena.State.RUNNING)
-            new SpecInventory(UHC.plugin, player, teamHandler);
+        if (UHC.getInstance().arena.currentState() == UHCArena.State.RUNNING)
+            new SpecInventory(UHC.getInstance(), player, teamHandler);
         if (UHC.uhcNetwork != null) {
             System.out.println("Giving " + player.getName() + " the spectator role");
-            new BotCommandAssignSpectator(UHC.plugin.serverId(), player.getUniqueId()).publish();
+            new BotCommandAssignSpectator(UHC.getInstance().serverId(), player.getUniqueId()).publish();
         }
         hideFromPlayers(player);
         player.setHealth(player.getMaxHealth());
@@ -68,8 +68,8 @@ public class TeamSpectator extends UHCTeam {
         player.setFlying(false);
         player.setWalkSpeed(0.2F);
         player.setFlySpeed(0.2F);
-        if (UHC.arena != null && (UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.INITIALIZED
-                || UHC.arena.currentState() == UHCArena.State.ENDGAME))
+        if (UHC.getInstance().arena != null && (UHC.getInstance().arena.currentState() == UHCArena.State.WAITING || UHC.getInstance().arena.currentState() == UHCArena.State.INITIALIZED
+                || UHC.getInstance().arena.currentState() == UHCArena.State.ENDGAME))
             player.setAllowFlight(true);
         Inventory.closeInventory(player);
         player.setCollidable(true);
@@ -81,7 +81,7 @@ public class TeamSpectator extends UHCTeam {
             p.showPlayer(player);
         }
         // Hide all the spectators
-        for (UUID u : UHC.plugin.teamHandler.spectatorsTeam().getPlayers()) {
+        for (UUID u : UHC.getInstance().teamHandler.spectatorsTeam().getPlayers()) {
             Player p = Bukkit.getPlayer(u);
             if (p != null) {
                 player.hidePlayer(p);

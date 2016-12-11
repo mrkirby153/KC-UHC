@@ -38,9 +38,11 @@ public class GameListener implements Listener {
     private static final Random random = new Random();
     
     private TeamHandler teamHandler;
+    private UHC plugin;
 
-    public GameListener(TeamHandler teamHandler) {
+    public GameListener(TeamHandler teamHandler, UHC plugin) {
         this.teamHandler = teamHandler;
+        this.plugin = plugin;
     }
 
 
@@ -53,11 +55,11 @@ public class GameListener implements Listener {
         savePlayerData(dead);
         dead.setGlowing(false);
         teamHandler.leaveTeam(dead);
-        for(Player p : UHC.arena.players()){
+        for(Player p : UHC.getInstance().arena.players()){
             UtilTitle.title(p, ChatColor.DARK_PURPLE+ dead.getDisplayName(), ChatColor.AQUA+event.getDeathMessage().replace(dead.getName(), ""),
                     10, 20 * 5, 20);
         }
-        if (UHC.arena.getProperties().DROP_PLAYER_HEAD.get()) {
+        if (UHC.getInstance().arena.getProperties().DROP_PLAYER_HEAD.get()) {
             Location playerLoc = dead.getLocation();
             // Drop the player's head
             ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
@@ -70,7 +72,7 @@ public class GameListener implements Listener {
         killTamedHorses(dead);
         if(team != null && team.getPlayers().size() < 1){
             System.out.println("--- TEAM ELIMINATED, DROPPING INVENTORY AT " + dead.getLocation() + " ---");
-            UHC.arena.getTeamInventoryHandler().dropInventory(team, dead.getLocation());
+            UHC.getInstance().arena.getTeamInventoryHandler().dropInventory(team, dead.getLocation());
         }
     }
 
@@ -78,7 +80,7 @@ public class GameListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         if(!isRunning())
             return;
-        UHC.arena.playerJoin(event.getPlayer());
+        plugin.arena.playerJoin(event.getPlayer());
         event.setJoinMessage(ChatColor.BLUE + "Join> " + ChatColor.GRAY + event.getPlayer().getName());
         if (teamHandler.getTeamForPlayer(event.getPlayer()) == null)
             teamHandler.joinTeam(teamHandler.spectatorsTeam(), event.getPlayer());
@@ -91,7 +93,7 @@ public class GameListener implements Listener {
         if(!isRunning())
             return;
         event.setQuitMessage(ChatColor.BLUE + "Part> " + ChatColor.GRAY + event.getPlayer().getName());
-        UHC.arena.playerDisconnect(event.getPlayer());
+        plugin.arena.playerDisconnect(event.getPlayer());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -118,7 +120,7 @@ public class GameListener implements Listener {
             return;
         // If a player hits a player
         if (event.getDamager().getType() == EntityType.PLAYER && event.getEntity().getType() == EntityType.PLAYER) {
-            if(UHC.arena.pvpDisabled()){
+            if(plugin.arena.pvpDisabled()){
                 event.setCancelled(true);
             }
             return;
@@ -127,7 +129,7 @@ public class GameListener implements Listener {
         if(event.getDamager().getType() == EntityType.ARROW && event.getEntity().getType() == EntityType.PLAYER){
             Arrow arrow = (Arrow) event.getDamager();
             if(arrow.getShooter() instanceof Player){
-                if(UHC.arena.pvpDisabled()){
+                if(plugin.arena.pvpDisabled()){
                     event.setCancelled(true);
                 }
             }
@@ -145,7 +147,7 @@ public class GameListener implements Listener {
         if(!isRunning())
             return;
         SpectateListener.addEarlyPickup(event.getPlayer());
-        Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> UHC.arena.spectate(event.getPlayer(), true), 1L);
+        Bukkit.getServer().getScheduler().runTaskLater(plugin, () -> plugin.arena.spectate(event.getPlayer(), true), 1L);
     }
 
     @EventHandler
@@ -235,7 +237,7 @@ public class GameListener implements Listener {
         if (!event.getFrom().getName().contains("nether")) {
             return;
         }
-        double bounds = UHC.arena.getWorld().getWorldBorder().getSize() / 2;
+        double bounds = plugin.arena.getWorld().getWorldBorder().getSize() / 2;
         System.out.println("Bounds: +/- " + bounds);
         Player player = event.getPlayer();
         if (Math.abs(player.getLocation().getBlockZ()) > bounds || Math.abs(player.getLocation().getBlockX()) > bounds) {
@@ -283,7 +285,7 @@ public class GameListener implements Listener {
             return;
         if (event.getSpawnReason() != CreatureSpawnEvent.SpawnReason.NATURAL)
             return;
-        if (UHC.arena.getProperties().WORLDBORDER_END_SIZE.get() <= UHC.arena.getWorld().getWorldBorder().getSize()) {
+        if (plugin.arena.getProperties().WORLDBORDER_END_SIZE.get() <= plugin.arena.getWorld().getWorldBorder().getSize()) {
             int num = random.nextInt(100);
             if (num < 75) {
                 event.setCancelled(true);
@@ -310,20 +312,20 @@ public class GameListener implements Listener {
         }
         cfg.set("potions", activeEffects);
         try {
-            cfg.save(new File(UHC.plugin.getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId())));
+            cfg.save(new File(plugin.getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId())));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     public static void restorePlayerData(Player player, boolean restoreLocation) {
-        File file = new File(UHC.plugin.getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId()));
+        File file = new File(UHC.getInstance().getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId()));
         YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
         Location l = (Location) cfg.get("deathLocation");
-        UHC.plugin.teamHandler.leaveTeam(player);
+        UHC.getInstance().teamHandler.leaveTeam(player);
         if (cfg.getString("team") != null)
-            if (UHC.plugin.teamHandler.getTeamByName(cfg.getString("team")) != null) {
-                UHC.plugin.teamHandler.joinTeam(UHC.plugin.teamHandler.getTeamByName(cfg.getString("team")), player);
+            if (UHC.getInstance().teamHandler.getTeamByName(cfg.getString("team")) != null) {
+                UHC.getInstance().teamHandler.joinTeam(UHC.getInstance().teamHandler.getTeamByName(cfg.getString("team")), player);
             }
         for (String key : cfg.getConfigurationSection("inv").getKeys(false)) {
             player.getInventory().setItem(Integer.parseInt(key), (ItemStack) cfg.get("inv." + key));
@@ -346,12 +348,12 @@ public class GameListener implements Listener {
     }
 
     public static boolean isDead(Player player) {
-        return new File(UHC.plugin.getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId())).exists();
+        return new File(UHC.getInstance().getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId())).exists();
     }
 
     public static void resetDeaths() {
         try {
-            FileUtils.deleteDirectory(new File(UHC.plugin.getDataFolder(), "deaths"));
+            FileUtils.deleteDirectory(new File(UHC.getInstance().getDataFolder(), "deaths"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -359,7 +361,7 @@ public class GameListener implements Listener {
 
     // TODO: 6/5/2016 Check for lava/water/suffocation
     public static boolean validLocation(Player player) {
-        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new File(UHC.plugin.getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId())));
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(new File(UHC.getInstance().getDataFolder(), String.format("deaths/%s.yml", player.getUniqueId())));
         Location location = (Location) cfg.get("deathLocation");
         WorldBorder wb = location.getWorld().getWorldBorder();
         double bounds = wb.getSize() / 2;
@@ -371,6 +373,6 @@ public class GameListener implements Listener {
     }
 
     private static boolean isRunning(){
-        return UHC.arena.currentState() == UHCArena.State.RUNNING || UHC.arena.currentState() == UHCArena.State.FROZEN;
+        return UHC.getInstance().arena.currentState() == UHCArena.State.RUNNING || UHC.getInstance().arena.currentState() == UHCArena.State.FROZEN;
     }
 }

@@ -1,8 +1,8 @@
 package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.arena.UHCArena;
+import me.mrkirby153.kcuhc.utils.UtilChat;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -18,11 +18,17 @@ import org.bukkit.scheduler.BukkitRunnable;
 public class MOTDHandler implements Listener {
 
     private static String motd = "";
-    private static final String MOTD_HEADER = ChatColor.RED + "" + ChatColor.BOLD + "Kirbycraft UHC: \n";
+    private static final String MOTD_HEADER = ChatColor.RED + "" + ChatColor.BOLD + "Kirbycraft plugin: \n";
 
 
     public static void setMotd(String newMotd) {
         motd = newMotd;
+    }
+
+    private UHC plugin;
+
+    public MOTDHandler(UHC plugin) {
+        this.plugin = plugin;
     }
 
     @EventHandler
@@ -32,28 +38,28 @@ public class MOTDHandler implements Listener {
 
     @EventHandler
     public void playerJoin(final PlayerLoginEvent event) {
-        if (UHC.arena != null) {
-            if (UHC.arena.currentState() == UHCArena.State.GENERATING_WORLD) {
+        if (plugin.arena != null) {
+            if (plugin.arena.currentState() == UHCArena.State.GENERATING_WORLD) {
                 event.disallow(PlayerLoginEvent.Result.KICK_OTHER, ChatColor.RED + "We're not quite ready for you yet\n" + ChatColor.GOLD + "Check back in a few");
             }
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    if(UHC.arena.currentState() != UHCArena.State.RUNNING && UHC.arena.currentState() != UHCArena.State.FROZEN) {
-                        if (!event.getPlayer().getWorld().getName().equalsIgnoreCase(UHC.arena.getCenter().getWorld().getName()))
-                            event.getPlayer().teleport(UHC.arena.getCenter().add(0, 2, 0));
-                        else if (event.getPlayer().getLocation().distanceSquared(UHC.arena.getCenter()) > Math.pow(50, 2))
-                            event.getPlayer().teleport(UHC.arena.getCenter().add(0, 2, 0));
+                    if(plugin.arena.currentState() != UHCArena.State.RUNNING && plugin.arena.currentState() != UHCArena.State.FROZEN) {
+                        if (!event.getPlayer().getWorld().getName().equalsIgnoreCase(plugin.arena.getCenter().getWorld().getName()))
+                            event.getPlayer().teleport(plugin.arena.getCenter().add(0, 2, 0));
+                        else if (event.getPlayer().getLocation().distanceSquared(plugin.arena.getCenter()) > Math.pow(50, 2))
+                            event.getPlayer().teleport(plugin.arena.getCenter().add(0, 2, 0));
                         event.getPlayer().playSound(event.getPlayer().getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1F, 1F);
                         BaseComponent line = UtilChat.generateFormattedChat("=============================================", ChatColor.GREEN, 10);
                         BaseComponent padding = new TextComponent(" ");
 
-                        BaseComponent greeting = UtilChat.generateFormattedChat("Welcome to KC-UHC ", ChatColor.WHITE, 8);
+                        BaseComponent greeting = UtilChat.generateFormattedChat("Welcome to KC-plugin ", ChatColor.WHITE, 8);
                         greeting.addExtra(UtilChat.generateFormattedChat(event.getPlayer().getName(), ChatColor.GOLD, 8));
                         UtilChat.sendMultiple(event.getPlayer(), line, greeting);
 
                         BaseComponent notStarted = UtilChat.generateFormattedChat("   The game hasn't started yet so hold tight!", ChatColor.WHITE, 0);
-                        if(UHC.plugin.getConfig().getBoolean("discord.useDiscord")){
+                        if(plugin.getConfig().getBoolean("discord.useDiscord")){
                             event.getPlayer().spigot().sendMessage(notStarted);
                             event.getPlayer().spigot().sendMessage(padding);
                             BaseComponent usingDiscord = UtilChat.generateFormattedChat("   This server is using ", ChatColor.WHITE, 0);
@@ -62,7 +68,7 @@ public class MOTDHandler implements Listener {
                             event.getPlayer().spigot().sendMessage(usingDiscord);
 
                             BaseComponent discordInvite = UtilChat.generateFormattedChat("   Join the discord server by clicking ", ChatColor.WHITE, 0);
-                            discordInvite.addExtra(UtilChat.generateHyperlink(UtilChat.generateFormattedChat("[HERE]", ChatColor.BLUE, 0), UHC.plugin.getConfig().getString("discord.inviteUrl")));
+                            discordInvite.addExtra(UtilChat.generateHyperlink(UtilChat.generateFormattedChat("[HERE]", ChatColor.BLUE, 0), plugin.getConfig().getString("discord.inviteUrl")));
                             discordInvite.addExtra(UtilChat.generateHyperlink(UtilChat.generateFormattedChat(" [MORE INFO]", ChatColor.BLUE), "https://docs.google.com/document/d/1nbrxbNHjko88v_CHoXLbfvZzC2b81hojC8j-OfOU0lQ/edit?usp=sharing"));
                             BaseComponent linkCommand = UtilChat.generateFormattedChat("   Once you have joined the discord server, type ", ChatColor.WHITE, 0);
                             TextComponent cmd = new TextComponent("/discord link");
@@ -79,7 +85,7 @@ public class MOTDHandler implements Listener {
                         event.getPlayer().spigot().sendMessage(line);
                     }
                 }
-            }.runTaskLater(UHC.plugin, 10L);
+            }.runTaskLater(plugin, 10L);
         }
     }
 }

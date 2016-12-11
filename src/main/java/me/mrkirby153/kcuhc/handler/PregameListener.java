@@ -27,52 +27,19 @@ import java.util.UUID;
 
 public class PregameListener implements Listener {
 
+    private UHC plugin;
+
+    public PregameListener(UHC plugin) {
+        this.plugin = plugin;
+    }
+
     @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
+    public void blockPlace(BlockPlaceEvent event) {
         if (!isPregame())
             return;
         if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
             return;
         event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
-        if (!isPregame())
-            return;
-        event.setJoinMessage(ChatColor.GREEN + event.getPlayer().getName() + " has joined!");
-        event.getPlayer().setAllowFlight(true);
-    }
-
-    @EventHandler
-    public void onLogin(AsyncPlayerPreLoginEvent event) {
-        if (!isPregame())
-            return;
-        // Remove the player's data
-        if (UHC.arena.currentState() != UHCArena.State.RUNNING) {
-            UUID u = event.getUniqueId();
-            for (World w : Bukkit.getWorlds()) {
-                File worldFolder = new File(Bukkit.getWorldContainer(), w.getName());
-                File dataFolder = new File(worldFolder, "playerdata");
-                File datFile = new File(dataFolder, u.toString() + ".dat");
-                if (datFile.exists())
-                    if (datFile.delete()) {
-                        UHC.plugin.getLogger().info("Deleted " + event.getName() + "'s data for world " + w.getName());
-                    } else {
-                        UHC.plugin.getLogger().warning("Could not delete " + event.getName() + "'s data for world " + w.getName());
-                    }
-            }
-        }
-    }
-
-    @EventHandler
-    public void onLogout(PlayerQuitEvent event) {
-        if (!isPregame())
-            return;
-        if (UHC.arena.currentState() != UHCArena.State.RUNNING) {
-            // Remove the player from the arena
-            UHC.arena.removePlayer(event.getPlayer());
-        }
     }
 
     @EventHandler
@@ -89,32 +56,7 @@ public class PregameListener implements Listener {
     }
 
     @EventHandler
-    public void onFoodChange(FoodLevelChangeEvent event) {
-        if (!isPregame())
-            return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void itemPickup(PlayerPickupItemEvent event) {
-        if (!isPregame())
-            return;
-        if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
-            return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void itemDrop(PlayerDropItemEvent event) {
-        if (!isPregame())
-            return;
-        if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
-            return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void blockPlace(BlockPlaceEvent event) {
+    public void entityInteract(PlayerInteractEntityEvent event) {
         if (!isPregame())
             return;
         if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
@@ -141,6 +83,100 @@ public class PregameListener implements Listener {
     }
 
     @EventHandler
+    public void itemDrop(PlayerDropItemEvent event) {
+        if (!isPregame())
+            return;
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
+            return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void itemPickup(PlayerPickupItemEvent event) {
+        if (!isPregame())
+            return;
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
+            return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onBlockBreak(BlockBreakEvent event) {
+        if (!isPregame())
+            return;
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
+            return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onFoodChange(FoodLevelChangeEvent event) {
+        if (!isPregame())
+            return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onInteract(PlayerInteractEvent event) {
+        if (!isPregame())
+            return;
+        if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
+            return;
+        event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event) {
+        if (!isPregame())
+            return;
+        event.setJoinMessage(ChatColor.GREEN + event.getPlayer().getName() + " has joined!");
+        event.getPlayer().setAllowFlight(true);
+    }
+
+    @EventHandler
+    public void onLogin(AsyncPlayerPreLoginEvent event) {
+        if (!isPregame())
+            return;
+        // Remove the player's data
+        if (plugin.arena.currentState() != UHCArena.State.RUNNING) {
+            UUID u = event.getUniqueId();
+            for (World w : Bukkit.getWorlds()) {
+                File worldFolder = new File(Bukkit.getWorldContainer(), w.getName());
+                File dataFolder = new File(worldFolder, "playerdata");
+                File datFile = new File(dataFolder, u.toString() + ".dat");
+                if (datFile.exists())
+                    if (datFile.delete()) {
+                        plugin.getLogger().info("Deleted " + event.getName() + "'s data for world " + w.getName());
+                    } else {
+                        plugin.getLogger().warning("Could not delete " + event.getName() + "'s data for world " + w.getName());
+                    }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onLogout(PlayerQuitEvent event) {
+        if (!isPregame())
+            return;
+        if (plugin.arena.currentState() != UHCArena.State.RUNNING) {
+            // Remove the player from the arena
+            plugin.arena.removePlayer(event.getPlayer());
+        }
+    }
+
+    @EventHandler
+    public void vehicleDamage(VehicleDamageEvent event) {
+        if (!isPregame())
+            return;
+        if (event.getAttacker() instanceof Player) {
+            if (((Player) event.getAttacker()).getGameMode() == GameMode.CREATIVE) {
+                return;
+            }
+        }
+        event.setCancelled(true);
+    }
+
+    @EventHandler
     public void vehicleDestroy(VehicleDestroyEvent event) {
         if (!isPregame())
             return;
@@ -163,41 +199,11 @@ public class PregameListener implements Listener {
     }
 
     @EventHandler
-    public void vehicleDamage(VehicleDamageEvent event) {
-        if (!isPregame())
-            return;
-        if (event.getAttacker() instanceof Player) {
-            if (((Player) event.getAttacker()).getGameMode() == GameMode.CREATIVE) {
-                return;
-            }
-        }
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void entityInteract(PlayerInteractEntityEvent event) {
-        if (!isPregame())
-            return;
-        if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
-            return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onInteract(PlayerInteractEvent event) {
-        if (!isPregame())
-            return;
-        if (event.getPlayer().getGameMode() == GameMode.CREATIVE)
-            return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
     public void weatherChange(WeatherChangeEvent event) {
         event.setCancelled(true);
     }
 
     private boolean isPregame() {
-        return UHC.arena.currentState() == UHCArena.State.INITIALIZED || UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.ENDGAME;
+        return plugin.arena.currentState() == UHCArena.State.INITIALIZED || plugin.arena.currentState() == UHCArena.State.WAITING || plugin.arena.currentState() == UHCArena.State.ENDGAME;
     }
 }

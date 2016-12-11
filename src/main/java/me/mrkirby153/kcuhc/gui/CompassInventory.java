@@ -29,12 +29,12 @@ public class CompassInventory extends Gui<UHC> implements Runnable {
     private int page = 1;
     private TeamHandler teamHandler;
 
-    public CompassInventory(Player player, TeamHandler teamHandler) {
-        this(player, 1, teamHandler);
+    public CompassInventory(UHC plugin, Player player, TeamHandler teamHandler) {
+        this(plugin, player, 1, teamHandler);
     }
 
-    public CompassInventory(Player player, int page, TeamHandler teamHandler) {
-        super(UHC.plugin, player, 6, "Spectate");
+    public CompassInventory(UHC plugin, Player player, int page, TeamHandler teamHandler) {
+        super(plugin, player, 6, "Spectate");
         this.page = page;
         this.teamHandler = teamHandler;
         open();
@@ -63,7 +63,7 @@ public class CompassInventory extends Gui<UHC> implements Runnable {
             int slot = 1;
             for (UUID uuid : team.getPlayers()) {
                 boolean playerInArena = false;
-                for (Player p : UHC.arena.players()) {
+                for (Player p : plugin.arena.players()) {
                     if (p.getUniqueId().equals(uuid))
                         playerInArena = true;
                 }
@@ -160,7 +160,7 @@ public class CompassInventory extends Gui<UHC> implements Runnable {
     }
 
     private void setTeamWool(int row, UHCTeam team) {
-        getInventory().setItem(row * 9, new ItemFactory(Material.WOOL).data(getDye(team).getWoolData()).name(team.getColor()+WordUtils.capitalizeFully(team.getFriendlyName())).construct());
+        getInventory().setItem(row * 9, new ItemFactory(Material.WOOL).data(getDye(team).getWoolData()).name(team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName())).construct());
     }
 
     private class TeleportToPlayer implements Action {

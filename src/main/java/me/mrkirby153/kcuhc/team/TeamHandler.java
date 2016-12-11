@@ -47,7 +47,7 @@ public class TeamHandler extends Module<UHC> {
         }
         team.addPlayer(player);
         playerToTeamMap.put(player.getUniqueId(), team);
-        UHC.arena.addPlayer(player);
+        getPlugin().arena.addPlayer(player);
     }
 
     public void leaveTeam(Player player) {
@@ -63,7 +63,7 @@ public class TeamHandler extends Module<UHC> {
     }
 
     public synchronized void saveTeam(UHCTeam team) {
-        File file = new File(UHC.plugin.getDataFolder(), "teams.yml");
+        File file = new File(getPlugin().getDataFolder(), "teams.yml");
         YamlConfiguration config;
         if (!file.exists())
             config = new YamlConfiguration();
@@ -119,7 +119,7 @@ public class TeamHandler extends Module<UHC> {
     }
     public void loadFromFile() {
         unregisterAll();
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(new File(UHC.plugin.getDataFolder(), "teams.yml"));
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(new File(getPlugin().getDataFolder(), "teams.yml"));
         for (String s : config.getKeys(false)) {
             registerTeam((UHCPlayerTeam) config.get(s));
         }

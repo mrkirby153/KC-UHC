@@ -15,7 +15,7 @@ public class WorldborderSettingsInventory extends PropertyGui {
 
     @Override
     public void build() {
-        ArenaProperties properties = UHC.arena.getProperties();
+        ArenaProperties properties = plugin.arena.getProperties();
         addButton(4, new ItemFactory(Material.BARRIER).name("World Border Settings").construct(), null);
         integerProperty(properties.WORLDBORDER_START_SIZE, Material.FENCE, "Worldborder Start Size", 13);
         integerProperty(properties.WORLDBORDER_TRAVEL_TIME, Material.WATCH, "Worldborder Travel Time (mins)", 22);

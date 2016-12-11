@@ -9,7 +9,6 @@ import org.bukkit.Sound;
 import org.bukkit.WorldBorder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.java.JavaPlugin;
 
 public class WorldBorderHandler implements Runnable, Listener {
 
@@ -21,9 +20,11 @@ public class WorldBorderHandler implements Runnable, Listener {
 
     private UHCArena arena;
     private TeamHandler teamHandler;
+    private UHC plugin;
 
 
-    public WorldBorderHandler(JavaPlugin plugin, UHCArena arena, TeamHandler teamHandler) {
+    public WorldBorderHandler(UHC plugin, UHCArena arena, TeamHandler teamHandler) {
+        this.plugin = plugin;
         plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 20L);
         this.arena = arena;
         this.teamHandler = teamHandler;
@@ -78,7 +79,7 @@ public class WorldBorderHandler implements Runnable, Listener {
         if (arena.currentState() != UHCArena.State.RUNNING || arena.getWorld().getWorldBorder().getSize() <= arena.getProperties().WORLDBORDER_END_SIZE.get()) {
             if(arena.currentState() == UHCArena.State.COUNTDOWN)
                 return;
-            for(Player p : UHC.arena.players()){
+            for(Player p : plugin.arena.players()){
                 BosssBarHandler.removeBar(p);
             }
             return;

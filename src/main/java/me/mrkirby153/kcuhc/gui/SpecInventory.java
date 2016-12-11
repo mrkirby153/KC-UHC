@@ -24,7 +24,7 @@ public class SpecInventory extends Inventory<UHC> {
     @Override
     public void build() {
         clear();
-        addItem(hotbarSlot(1), new ItemFactory(Material.COMPASS).name("Spectate " + ChatColor.GREEN + "(Right Click)").construct(), (player1, clickType) -> new CompassInventory(player1, teamHandler));
+        addItem(hotbarSlot(1), new ItemFactory(Material.COMPASS).name("Spectate " + ChatColor.GREEN + "(Right Click)").construct(), (player1, clickType) -> new CompassInventory(module, player1, teamHandler));
         if (player.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
             addItem(hotbarSlot(9), new ItemFactory(Material.ENDER_PEARL).name("Toggle Night Vision " + ChatColor.GREEN + "(Right Click)").construct(),
                     (player, type) -> {

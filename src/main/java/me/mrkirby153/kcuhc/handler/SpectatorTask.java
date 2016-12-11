@@ -19,7 +19,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
 import java.util.List;
@@ -31,9 +30,11 @@ public class SpectatorTask implements Runnable, Listener {
     private HashMap<UUID, UUID> spectatorTargets = new HashMap<>();
 
     private TeamHandler teamHandler;
+    private UHC plugin;
 
-    public SpectatorTask(JavaPlugin plugin, TeamHandler teamHandler) {
+    public SpectatorTask(UHC plugin, TeamHandler teamHandler) {
         this.teamHandler = teamHandler;
+        this.plugin = plugin;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 10L);
     }
@@ -42,10 +43,10 @@ public class SpectatorTask implements Runnable, Listener {
     public void run() {
         List<Player> players = teamHandler.spectatorsTeam().getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).collect(Collectors.toList());
         for (Player p : players) {
-            if (!p.getInventory().contains(Material.COMPASS) && UHC.arena.currentState() == UHCArena.State.RUNNING) {
+            if (!p.getInventory().contains(Material.COMPASS) && plugin.arena.currentState() == UHCArena.State.RUNNING) {
                 p.sendMessage(UtilChat.message("Giving you the spectate inventory as you no longer have it"));
                 Inventory.closeInventory(p);
-                new SpecInventory(UHC.plugin, p, teamHandler);
+                new SpecInventory(plugin, p, teamHandler);
             }
             UUID target = spectatorTargets.get(p.getUniqueId());
             Entity currentTarget = p.getSpectatorTarget();

@@ -25,9 +25,11 @@ import java.util.UUID;
 public class CommandUHC extends BaseCommand {
 
     private TeamHandler teamHandler;
+    private UHC plugin;
 
-    public CommandUHC(TeamHandler teamHandler) {
+    public CommandUHC(UHC plugin, TeamHandler teamHandler) {
         this.teamHandler = teamHandler;
+        this.plugin = plugin;
     }
 
     @Override
@@ -35,7 +37,7 @@ public class CommandUHC extends BaseCommand {
         if (args.length == 0) {
             if (UHC.isAdmin(sender.getName()) || sender.isOp())
                 if (sender instanceof Player)
-                    new GameAdminInventory(UHC.plugin, (Player) sender);
+                    new GameAdminInventory(plugin, (Player) sender);
             return true;
         }
         if (args.length == 1) {
@@ -43,7 +45,7 @@ public class CommandUHC extends BaseCommand {
                 return true;
             if (args[0].equalsIgnoreCase("players")) {
                 String playerNames = "";
-                for (Player p : UHC.arena.players()) {
+                for (Player p : plugin.arena.players()) {
                     playerNames += p.getDisplayName() + ChatColor.RESET + ", ";
                 }
                 playerNames = playerNames.substring(0, playerNames.length() - 2);
@@ -62,63 +64,63 @@ public class CommandUHC extends BaseCommand {
             }
             if (args[0].equalsIgnoreCase("start")) {
                 sender.sendMessage(UtilChat.message("Started countdown"));
-                UHC.arena.startCountdown();
+                plugin.arena.startCountdown();
                 return true;
             }
             if (args[0].equalsIgnoreCase("stop")) {
                 sender.sendMessage(UtilChat.message("Stopped game"));
-                UHC.arena.stop("Nobody");
+                plugin.arena.stop("Nobody");
                 return true;
             }
             if (args[0].equalsIgnoreCase("state")) {
-                sender.sendMessage(UtilChat.message("UHC is in state: " + ChatColor.GOLD + UHC.arena.currentState().toString()));
+                sender.sendMessage(UtilChat.message("UHC is in state: " + ChatColor.GOLD + plugin.arena.currentState().toString()));
                 return true;
             }
             if (args[0].equalsIgnoreCase("generate")) {
                 sender.sendMessage(UtilChat.message("Started generation of map"));
-                UHC.arena.generate();
+                plugin.arena.generate();
                 return true;
             }
             if (args[0].equalsIgnoreCase("init")) {
-                UHC.arena.initialize();
+                plugin.arena.initialize();
                 return true;
             }
             if (args[0].equalsIgnoreCase("disable")) {
-                UHC.arena.essentiallyDisable();
+                plugin.arena.essentiallyDisable();
                 Bukkit.broadcastMessage(UtilChat.message("Disabling UHC plugin!"));
                 return true;
             }
             if (args[0].equalsIgnoreCase("debugStart")) {
-                if (UHC.arena.getProperties().CHECK_ENDING.get())
-                    UHC.arena.toggleShouldEndCheck();
-                if (UHC.arena.getProperties().SPREAD_PLAYERS.get())
-                    UHC.arena.toggleSpreadingPlayers();
+                if (plugin.arena.getProperties().CHECK_ENDING.get())
+                    plugin.arena.toggleShouldEndCheck();
+                if (plugin.arena.getProperties().SPREAD_PLAYERS.get())
+                    plugin.arena.toggleSpreadingPlayers();
                 if (teamHandler.getTeamByName("debug") == null)
                    teamHandler.registerTeam(new UHCPlayerTeam("Debug", ChatColor.GOLD));
                 for (Player p : Bukkit.getOnlinePlayers())
                     teamHandler.joinTeam(teamHandler.getTeamByName("debug"), p);
-                Bukkit.getScheduler().runTaskLater(UHC.plugin, () -> {
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     sender.setOp(true);
                     sender.sendMessage(UtilChat.message("You are now op"));
                 }, 220);
-                UHC.arena.startCountdown();
+                plugin.arena.startCountdown();
                 sender.sendMessage(UtilChat.message("Debug starting"));
                 return true;
             }
             if (args[0].equalsIgnoreCase("toggleending")) {
-                UHC.arena.toggleShouldEndCheck();
+                plugin.arena.toggleShouldEndCheck();
                 return true;
             }
             if (args[0].equalsIgnoreCase("togglespread")) {
-                UHC.arena.toggleSpreadingPlayers();
+                plugin.arena.toggleSpreadingPlayers();
                 return true;
             }
             if (args[0].equalsIgnoreCase("freeze")) {
-                UHC.arena.freeze();
+                plugin.arena.freeze();
                 return true;
             }
             if (args[0].equalsIgnoreCase("unfreeze")) {
-                UHC.arena.unfreeze();
+                plugin.arena.unfreeze();
                 return true;
             }
             if (args[0].equalsIgnoreCase("freezebypass")) {
@@ -175,7 +177,7 @@ public class CommandUHC extends BaseCommand {
             if (args[0].equalsIgnoreCase("state")) {
                 try {
                     UHCArena.State s = UHCArena.State.valueOf(args[1].toUpperCase());
-                    UHC.arena.setState(s);
+                    plugin.arena.setState(s);
                     sender.sendMessage(UtilChat.message("Set state to " + ChatColor.GOLD + s.toString()));
                     return true;
                 } catch (IllegalArgumentException e) {
@@ -186,7 +188,7 @@ public class CommandUHC extends BaseCommand {
             if (args[0].equalsIgnoreCase("winner")) {
                 try {
                     Field f = Color.class.getDeclaredField(args[1].toUpperCase());
-                    UHC.arena.temp_FireworkLaunch((Color) f.get(null));
+                    plugin.arena.temp_FireworkLaunch((Color) f.get(null));
                     sender.sendMessage(UtilChat.message("Launching fireworks with color " + ChatColor.GOLD + args[1].toUpperCase()));
                     return true;
                 } catch (NoSuchFieldException e) {
@@ -218,7 +220,7 @@ public class CommandUHC extends BaseCommand {
                     sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
                 }
                 sender.sendMessage(UtilChat.message("Added heart row to " + ChatColor.GOLD + args[1]));
-                UHC.extraHealthHelper.addHeartRow(p);
+                plugin.extraHealthHelper.addHeartRow(p);
                 return true;
             }
             if (args[0].equalsIgnoreCase("removeHeartRow")) {
@@ -227,7 +229,7 @@ public class CommandUHC extends BaseCommand {
                     sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
                 }
                 sender.sendMessage(UtilChat.message("Removed heart row from " + ChatColor.GOLD + args[1]));
-                UHC.extraHealthHelper.removeHealthRow(p);
+                plugin.extraHealthHelper.removeHealthRow(p);
                 return true;
             }
             if (args[0].equalsIgnoreCase("rticket")) {
@@ -246,13 +248,13 @@ public class CommandUHC extends BaseCommand {
                         sender.sendMessage(UtilChat.generateLegacyError("That preset does not exist!"));
                         return true;
                     }
-                    UHC.arena.setProperties(ArenaProperties.loadProperties(propName));
+                    plugin.arena.setProperties(ArenaProperties.loadProperties(propName));
                     sender.sendMessage(UtilChat.message("Loaded property file " + ChatColor.GOLD + propName + ".json"));
                     return true;
                 }
                 if (args[1].equalsIgnoreCase("save")) {
                     String propName = args[2];
-                    ArenaProperties.saveProperties(UHC.arena.getProperties(), propName);
+                    ArenaProperties.saveProperties(plugin.arena.getProperties(), propName);
                     sender.sendMessage(UtilChat.message("Saved property file " + ChatColor.GOLD + propName + ".json"));
                     return true;
                 }

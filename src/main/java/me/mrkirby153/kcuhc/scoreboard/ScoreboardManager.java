@@ -9,9 +9,15 @@ import org.bukkit.event.player.PlayerLoginEvent;
 
 public class ScoreboardManager implements Listener {
 
+    private UHC plugin;
+
+    public ScoreboardManager(UHC plugin) {
+        this.plugin = plugin;
+    }
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void playerLogin(PlayerLoginEvent event) {
         if (event.getResult() == PlayerLoginEvent.Result.ALLOWED)
-            Bukkit.getServer().getScheduler().runTaskLater(UHC.plugin, () -> event.getPlayer().setScoreboard(UHC.arena.scoreboardUpdater.getScoreboard().getBoard()), 10);
+            Bukkit.getServer().getScheduler().runTaskLater(plugin, () -> event.getPlayer().setScoreboard(plugin.arena.scoreboardUpdater.getScoreboard().getBoard()), 10);
     }
 }

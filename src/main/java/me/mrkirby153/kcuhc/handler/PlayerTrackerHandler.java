@@ -40,7 +40,7 @@ public class PlayerTrackerHandler implements Listener, Runnable {
 
     @Override
     public void run() {
-        if(!UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get()){
+        if(!plugin.arena.getProperties().COMPASS_PLAYER_TRACKER.get()){
             Bukkit.getOnlinePlayers().forEach(p->p.setCompassTarget(p.getBedSpawnLocation()));
             Bukkit.getOnlinePlayers().forEach(p->updateCompasses(p, null));
             return;
@@ -68,7 +68,7 @@ public class PlayerTrackerHandler implements Listener, Runnable {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInteract(PlayerInteractEvent event) {
-        if(!UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get())
+        if(!plugin.arena.getProperties().COMPASS_PLAYER_TRACKER.get())
             return;
         if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK)
             return;
@@ -104,17 +104,13 @@ public class PlayerTrackerHandler implements Listener, Runnable {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void playerDeath(PlayerDeathEvent event) {
-        if(!UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get())
+        if(!plugin.arena.getProperties().COMPASS_PLAYER_TRACKER.get())
             return;
         Player dead = event.getEntity();
 
         // Remove compasses from drops if given on start
-        if(UHC.arena.getProperties().GIVE_COMPASS_ON_START.get()) {
-            Iterator<ItemStack> drops = event.getDrops().iterator();
-            while (drops.hasNext()) {
-                if (drops.next().getType() == Material.COMPASS)
-                    drops.remove();
-            }
+        if(plugin.arena.getProperties().GIVE_COMPASS_ON_START.get()) {
+            event.getDrops().removeIf(itemStack -> itemStack.getType() == Material.COMPASS);
         }
 
         UUID uuid = dead.getUniqueId();
@@ -151,7 +147,7 @@ public class PlayerTrackerHandler implements Listener, Runnable {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void prepareCraft(PrepareItemCraftEvent event) {
-        if(!UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get())
+        if(!plugin.arena.getProperties().COMPASS_PLAYER_TRACKER.get())
             return;
         if (event.getRecipe().getResult() == null)
             return;
@@ -226,7 +222,7 @@ public class PlayerTrackerHandler implements Listener, Runnable {
             if (item.getType() == Material.COMPASS) {
                 ItemMeta meta = item.getItemMeta();
                 String tracking = (tracked == null) ? "Right Click to select target" : tracked.getName();
-                if(UHC.arena.getProperties().COMPASS_PLAYER_TRACKER.get()) {
+                if(plugin.arena.getProperties().COMPASS_PLAYER_TRACKER.get()) {
                     meta.setDisplayName(ChatColor.AQUA + "Player Tracker (" + ChatColor.GREEN + ChatColor.BOLD + tracking + ChatColor.RESET + ChatColor.AQUA + ")");
                     item.setItemMeta(meta);
                     tracker.getInventory().setItem(i, item);

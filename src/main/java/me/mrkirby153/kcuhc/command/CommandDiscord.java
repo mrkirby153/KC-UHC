@@ -24,9 +24,11 @@ public class CommandDiscord extends BaseCommand {
     private final String validChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     private TeamHandler teamHandler;
+    private UHC plugin;
 
-    public CommandDiscord(TeamHandler teamHandler){
+    public CommandDiscord(TeamHandler teamHandler, UHC plugin){
         this.teamHandler = teamHandler;
+        this.plugin = plugin;
     }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
@@ -76,7 +78,7 @@ public class CommandDiscord extends BaseCommand {
                 BaseComponent line = UtilChat.generateFormattedChat("=============================================", ChatColor.GREEN, 10);
                 BaseComponent padding = new TextComponent(" ");
                 BaseComponent message = UtilChat.generateFormattedChat("             >>> Click here to join the discord server <<<", ChatColor.GRAY, 0);
-                message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, UHC.plugin.getConfig().getString("discord.inviteUrl")));
+                message.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, plugin.getConfig().getString("discord.inviteUrl")));
                 message.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new BaseComponent[]{UtilChat.generateFormattedChat("Join the discord server", ChatColor.WHITE, 0)}));
                 UtilChat.sendMultiple(p, line, padding, padding, padding, padding, message, padding, padding, padding, line);
                 p.playSound(p.getLocation(), Sound.BLOCK_ANVIL_PLACE, 1F, 0.8F);
@@ -92,29 +94,29 @@ public class CommandDiscord extends BaseCommand {
         }
         if (args[0].equalsIgnoreCase("serverlink")) {
             String guildId = args[1];
-            String serverId = UHC.plugin.getConfig().getString("discord.serverId");
+            String serverId = plugin.getConfig().getString("discord.serverId");
             new BotCommandLink(serverId, guildId).publishBlocking();
             sender.sendMessage(UtilChat.message("Linked this server to the discord server"));
         }
         if (args[0].equalsIgnoreCase("cinit")) {
             sender.sendMessage(UtilChat.message("Generating discord channels..."));
             teamHandler.teams().forEach(t -> {
-                new BotCommandNewTeam(UHC.plugin.serverId(), t.getTeamName()).publishBlocking();
+                new BotCommandNewTeam(plugin.serverId(), t.getTeamName()).publishBlocking();
                 System.out.println("Created channel " + t.getTeamName());
             });
             UtilChat.message("Discord channels generated!");
         }
         if (args[0].equalsIgnoreCase("shutdown")) {
             sender.sendMessage(UtilChat.message("Removing discord channels..."));
-            teamHandler.teams().forEach(t -> new BotCommandRemoveTeam(UHC.plugin.serverId(), t.getTeamName()).publishBlocking());
+            teamHandler.teams().forEach(t -> new BotCommandRemoveTeam(plugin.serverId(), t.getTeamName()).publishBlocking());
             sender.sendMessage("Done!");
         }
         if (args[0].equalsIgnoreCase("disperse")) {
             sender.sendMessage(UtilChat.message("Sending everyone to their channels..."));
-            UHC.arena.sendEveryoneToTeamChannels();
+            plugin.arena.sendEveryoneToTeamChannels();
         }
         if (args[0].equalsIgnoreCase("bringtolobby")) {
-            UHC.arena.bringEveryoneToLobby();
+            plugin.arena.bringEveryoneToLobby();
             sender.sendMessage(UtilChat.message("Bringing everyone to the lobby..."));
         }
         if (args[0].equalsIgnoreCase("linked")) {

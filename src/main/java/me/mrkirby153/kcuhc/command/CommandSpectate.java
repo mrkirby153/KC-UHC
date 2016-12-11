@@ -13,9 +13,11 @@ import org.bukkit.entity.Player;
 public class CommandSpectate extends BaseCommand {
 
     private TeamHandler teamHandler;
+    private UHC plugin;
 
-    public CommandSpectate(TeamHandler teamHandler) {
+    public CommandSpectate(TeamHandler teamHandler, UHC plugin) {
         this.teamHandler = teamHandler;
+        this.plugin = plugin;
     }
 
 
@@ -24,7 +26,7 @@ public class CommandSpectate extends BaseCommand {
         if (restrictPlayer(sender))
             return true;
         Player player = (Player) sender;
-        if (UHC.arena.currentState() == UHCArena.State.WAITING || UHC.arena.currentState() == UHCArena.State.INITIALIZED)
+        if (plugin.arena.currentState() == UHCArena.State.WAITING || plugin.arena.currentState() == UHCArena.State.INITIALIZED)
             if (!(teamHandler.getTeamForPlayer(player) instanceof TeamSpectator)) {
                 teamHandler.leaveTeam(player);
                 teamHandler.joinTeam(teamHandler.spectatorsTeam(), player);
@@ -32,7 +34,7 @@ public class CommandSpectate extends BaseCommand {
                 player.sendMessage(UtilChat.message("You are now a spectator. Type " + ChatColor.GOLD + "/spectate " + ChatColor.GRAY + " to leave"));
             } else {
                 teamHandler.leaveTeam(player);
-                player.teleport(UHC.arena.getCenter().add(0, 2, 0));
+                player.teleport(plugin.arena.getCenter().add(0, 2, 0));
                 player.sendMessage(UtilChat.message("You are no longer a spectator"));
             }
         else

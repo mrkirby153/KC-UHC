@@ -18,29 +18,35 @@ import java.util.Random;
 
 public class UHC extends JavaPlugin {
 
-    public static UHC plugin;
-
-    public static UHCArena arena;
-
     public static ArrayList<String> admins;
-
-    public static SpectateListener spectateListener;
-
-
-//    public static DiscordBotConnection discordHandler;
-
     public static UHCNetwork uhcNetwork;
-
-
-    public static PlayerTrackerHandler playerTracker;
-
-    public static VelocityTracker velocityTracker;
-
-    public static EpisodeMarkerHandler markerHandler;
-
-    public static ExtraHealthHandler extraHealthHelper;
-
+    private static UHC plugin;
+    public UHCArena arena;
+    public SpectateListener spectateListener;
+    public PlayerTrackerHandler playerTracker;
+    public VelocityTracker velocityTracker;
+    public EpisodeMarkerHandler markerHandler;
+    public ExtraHealthHandler extraHealthHelper;
     public TeamHandler teamHandler;
+
+    public static UHC getInstance() {
+        return plugin;
+    }
+
+    public static boolean isAdmin(Player player) {
+        return admins.contains(player.getName());
+    }
+
+    public static boolean isAdmin(String string) {
+        return admins.contains(string);
+    }
+
+    @Override
+    public void onDisable() {
+        teamHandler.unregisterAll();
+        // Remove everyone's boss bar in case of a reload
+        BosssBarHandler.removeAll();
+    }
 
     @Override
     public void onEnable() {
@@ -52,26 +58,15 @@ public class UHC extends JavaPlugin {
 
         admins = (ArrayList<String>) getConfig().getStringList("admins");
         if (new File(getDataFolder(), "arena.yml").exists()) {
-            arena = new UHCArena(teamHandler);
+            arena = new UHCArena(this, teamHandler);
             arena.initialize();
         }
         if (getConfig().getBoolean("discord.useDiscord")) {
-/*            try {
-                String botGuild = getConfig().getString("discord.botGuild");
-                handler = new DiscordHandler(botGuild);
-                String botToken = getConfig().getString("discord.botToken");
-                getLogger().info("Connecting to discord using the token '" + botToken + "' and the guild '" + botGuild + "'");
-                new JDABuilder(botToken).addListener(handler).buildBlocking();
-            } catch (LoginException | InterruptedException e) {
-                e.printStackTrace();
-            }*/
-            getCommand("discord").setExecutor(new CommandDiscord(teamHandler));
-/*            discordHandler = new DiscordBotConnection(getConfig().getString("discord.botHost"), getConfig().getInt("discord.botPort"));
-            discordHandler.connect();*/
+            getCommand("discord").setExecutor(new CommandDiscord(teamHandler, plugin));
             String botHost = getConfig().getString("discord.botHost");
             int botPort = getConfig().getInt("discord.botPort");
             String password = getConfig().getString("discord.botPassword");
-            uhcNetwork = new UHCNetwork(new RedisConnection(botHost, botPort, password.equals("")? null : password));
+            uhcNetwork = new UHCNetwork(new RedisConnection(botHost, botPort, password.equals("") ? null : password));
             if (getConfig().getString("discord.serverId") == null || getConfig().getString("discord.serverId").isEmpty()) {
                 String acceptableChars = "ABCEDFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
                 Random r = new SecureRandom();
@@ -90,34 +85,18 @@ public class UHC extends JavaPlugin {
         velocityTracker = new VelocityTracker(this);
         markerHandler = new EpisodeMarkerHandler(this);
         extraHealthHelper = new ExtraHealthHandler(this);
-        getServer().getPluginManager().registerEvents(new MOTDHandler(), this);
-        getServer().getPluginManager().registerEvents(spectateListener = new SpectateListener(teamHandler), this);
-        getServer().getPluginManager().registerEvents(new ScoreboardManager(), this);
+        getServer().getPluginManager().registerEvents(new MOTDHandler(this), this);
+        getServer().getPluginManager().registerEvents(spectateListener = new SpectateListener(teamHandler, plugin), this);
+        getServer().getPluginManager().registerEvents(new ScoreboardManager(plugin), this);
         getServer().getPluginManager().registerEvents(new RegenTicket(), this);
         getServer().getPluginManager().registerEvents(new BosssBarHandler(), this);
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, new BorderBumper(),0, 1);
-        getCommand("uhc").setExecutor(new CommandUHC(teamHandler));
-        getCommand("team").setExecutor(new CommandTeam(teamHandler));
-        getCommand("spectate").setExecutor(new CommandSpectate(teamHandler));
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, new BorderBumper(), 0, 1);
+        getCommand("uhc").setExecutor(new CommandUHC(this, teamHandler));
+        getCommand("team").setExecutor(new CommandTeam(teamHandler, plugin));
+        getCommand("spectate").setExecutor(new CommandSpectate(teamHandler, plugin));
         getCommand("admin").setExecutor(new CommandAdmin(teamHandler));
-        getCommand("teaminventory").setExecutor(new CommandTeamInv(teamHandler));
+        getCommand("teaminventory").setExecutor(new CommandTeamInv(teamHandler, plugin));
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new UHCArena.PlayerActionBarUpdater(teamHandler), 0, 1);
-    }
-
-
-    @Override
-    public void onDisable() {
-        teamHandler.unregisterAll();
-        // Remove everyone's boss bar in case of a reload
-        BosssBarHandler.removeAll();
-    }
-
-    public static boolean isAdmin(Player player) {
-        return admins.contains(player.getName());
-    }
-
-    public static boolean isAdmin(String string) {
-        return admins.contains(string);
     }
 
     public String serverId() {

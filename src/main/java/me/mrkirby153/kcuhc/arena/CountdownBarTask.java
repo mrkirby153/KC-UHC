@@ -13,22 +13,24 @@ public class CountdownBarTask implements Runnable {
     private int duration;
 
     private int taskId;
+    private UHC plugin;
 
-    public CountdownBarTask(long startTime, int duration) {
+    public CountdownBarTask(UHC plugin, long startTime, int duration) {
         this.startTime = startTime;
         this.duration = duration;
+        this.plugin = plugin;
     }
 
     @Override
     public void run() {
         if (startTime < System.currentTimeMillis()) {
-            for(Player p : UHC.arena.players()){
+            for(Player p : UHC.getInstance().arena.players()){
                 BosssBarHandler.removeBar(p);
             }
             cancel();
             return;
         }
-        for(Player p : UHC.arena.players()){
+        for(Player p : plugin.arena.players()){
             double msLeft = startTime - System.currentTimeMillis();
             double percent = (msLeft / duration);
             BosssBarHandler.setBossBarText(p, ChatColor.WHITE+""+ ChatColor.BOLD+"Starting in "+ChatColor.GREEN+ChatColor.BOLD+ UtilTime.format(1, startTime - System.currentTimeMillis(), UtilTime.TimeUnit.FIT));
@@ -42,6 +44,6 @@ public class CountdownBarTask implements Runnable {
 
     public void cancel(){
         Bukkit.getServer().getScheduler().cancelTask(this.taskId);
-        UHC.arena.countdownTask = null;
+        plugin.arena.countdownTask = null;
     }
 }

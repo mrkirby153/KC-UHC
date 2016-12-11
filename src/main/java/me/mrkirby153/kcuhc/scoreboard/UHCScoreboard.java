@@ -14,17 +14,19 @@ public class UHCScoreboard extends KirbyScoreboard {
 
     private Objective tablistHealth;
     private Objective belowNameHealth;
+    private UHC plugin;
 
-    public UHCScoreboard() {
+    public UHCScoreboard(UHC plugin) {
         super(ChatColor.GOLD + "" + ChatColor.BOLD + "KC UHC");
+        this.plugin = plugin;
         tablistHealth = addObjective("TablistHealth", DisplaySlot.PLAYER_LIST, "health");
         char heart = '\u2764'; // heart
-        tablistHealth = addObjective(ChatColor.RED + Character.toString(heart), DisplaySlot.BELOW_NAME, "health");
+        belowNameHealth = addObjective(ChatColor.RED + Character.toString(heart), DisplaySlot.BELOW_NAME, "health");
     }
 
     @Override
     public Set<ScoreboardTeam> getTeams() {
-        return new HashSet<>(UHC.plugin.teamHandler.teams());
+        return new HashSet<>(plugin.teamHandler.teams());
     }
 
     public Objective getTablistHealth() {

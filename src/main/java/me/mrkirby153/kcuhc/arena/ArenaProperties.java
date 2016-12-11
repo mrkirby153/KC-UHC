@@ -42,7 +42,7 @@ public class ArenaProperties {
     public Property<Boolean> TEAM_INV_ENABLED = new Property<>("team_inv", true);
 
     public static ArenaProperties loadProperties(String fileName) {
-        File file = new File(UHC.plugin.getDataFolder(), "presets/" + fileName + ".json");
+        File file = new File(UHC.getInstance().getDataFolder(), "presets/" + fileName + ".json");
         if(!file.exists()){
             System.out.println("Preset "+fileName+" does not exist, creating");
             try {
@@ -69,7 +69,7 @@ public class ArenaProperties {
     }
 
     public static boolean propertyExists(String name){
-        File file = new File(UHC.plugin.getDataFolder(), "presets/" + name + ".json");
+        File file = new File(UHC.getInstance().getDataFolder(), "presets/" + name + ".json");
         return file.exists();
     }
 
@@ -79,7 +79,7 @@ public class ArenaProperties {
         String json = gson.toJson(properties);
 
         try {
-            FileWriter writer = new FileWriter(new File(UHC.plugin.getDataFolder(), "presets/" + fileName + ".json"));
+            FileWriter writer = new FileWriter(new File(UHC.getInstance().getDataFolder(), "presets/" + fileName + ".json"));
             writer.write(json);
             writer.flush();
             writer.close();
