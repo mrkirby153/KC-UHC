@@ -1,8 +1,7 @@
 package me.mrkirby153.kcuhc.shop;
 
 
-import me.mrkirby153.kcuhc.shop.item.Action;
-import me.mrkirby153.kcuhc.shop.item.ShopItem;
+import me.mrkirby153.kcutils.gui.Action;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -77,7 +76,7 @@ public abstract class Inventory<T extends JavaPlugin> implements Listener {
             inv.close();
     }
 
-    public void addItem(int slot, ShopItem item, Action action) {
+    public void addItem(int slot, ItemStack item, Action action) {
         actions.put(slot, action);
         stackToInventorySlotMap.put(item, slot);
         player.getInventory().setItem(slot, item);

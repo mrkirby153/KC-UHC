@@ -2,28 +2,28 @@ package me.mrkirby153.kcuhc.gui;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.ArenaProperties;
-import me.mrkirby153.kcuhc.shop.Shop;
-import me.mrkirby153.kcuhc.shop.item.Action;
-import me.mrkirby153.kcuhc.shop.item.ShopItem;
+import me.mrkirby153.kcutils.ItemFactory;
+import me.mrkirby153.kcutils.gui.Action;
+import me.mrkirby153.kcutils.gui.Gui;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.inventory.ItemStack;
 
-public abstract class PropertyGui extends Shop<UHC> {
+public abstract class PropertyGui extends Gui<UHC> {
     public PropertyGui(UHC module, Player player, int rows, String title) {
         super(module, player, rows, title);
     }
 
-    protected void booleanButton(ArenaProperties.Property<Boolean> property, ShopItem item, int slot) {
+    private ItemStack makeItem(int count) {
+        return new ItemFactory(Material.QUARTZ_BLOCK).name(count > 0 ? "+" + count : "" + count).construct();
+    }
+
+    protected void booleanButton(ArenaProperties.Property<Boolean> property, ItemStack item, int slot) {
         addButton(slot, item, null);
-        ShopItem toggleItem;
-        if (property.get()) {
-            toggleItem = new ShopItem(Material.INK_SACK, (byte) 10, 1, "Enabled", new String[0]);
-        } else {
-            toggleItem = new ShopItem(Material.INK_SACK, (byte) 8, 1, "Disabled", new String[0]);
-        }
+        ItemStack toggleItem = new ItemFactory(Material.INK_SACK).data(property.get() ? 10 : 8).name(property.get() ? "Enabled" : "Disabled").construct();
         addButton(slot + 9, toggleItem, (player, clickType) -> {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 2F);
             property.setValue(!property.get());
@@ -31,24 +31,19 @@ public abstract class PropertyGui extends Shop<UHC> {
         });
     }
 
-    protected void integerProperty(ArenaProperties.Property<Integer> property, Material item, String name, int slot, int...numbers) {
+    protected void integerProperty(ArenaProperties.Property<Integer> property, Material item, String name, int slot, int... numbers) {
         int current = property.get();
-        ShopItem shopIte = new ShopItem(item, name + ": " + ChatColor.GOLD + current);
 
         // -100 -10 -1
-        addButton(slot, shopIte, null);
-        for(int i = 0; i < numbers.length; i++){
-            addButton(slot - (i+1), makeItem(numbers[i]*-1), new IntegerAction(property, numbers[i]*-1));
-            addButton(slot + (i+1), makeItem(numbers[i]), new IntegerAction(property, numbers[i]));
+        addButton(slot, new ItemFactory(item).name(name + ": " + ChatColor.GOLD + current).construct(), null);
+        for (int i = 0; i < numbers.length; i++) {
+            addButton(slot - (i + 1), makeItem(numbers[i] * -1), new IntegerAction(property, numbers[i] * -1));
+            addButton(slot + (i + 1), makeItem(numbers[i]), new IntegerAction(property, numbers[i]));
         }
     }
 
-    protected void integerProperty(ArenaProperties.Property<Integer> property, Material item, String name, int slot){
+    protected void integerProperty(ArenaProperties.Property<Integer> property, Material item, String name, int slot) {
         integerProperty(property, item, name, slot, 1, 10, 100);
-    }
-
-    private ShopItem makeItem(int count) {
-        return new ShopItem(Material.QUARTZ_BLOCK, (count > 0 ? "+" : "") + count);
     }
 
     private class IntegerAction implements Action {

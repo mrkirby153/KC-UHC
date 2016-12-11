@@ -1,17 +1,18 @@
 package me.mrkirby153.kcuhc.gui;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.shop.Shop;
-import me.mrkirby153.kcuhc.shop.item.Action;
-import me.mrkirby153.kcuhc.shop.item.ShopItem;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCTeam;
+import me.mrkirby153.kcutils.ItemFactory;
+import me.mrkirby153.kcutils.gui.Action;
+import me.mrkirby153.kcutils.gui.Gui;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
@@ -21,13 +22,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class CompassInventory extends Shop<UHC> implements Runnable {
+public class CompassInventory extends Gui<UHC> implements Runnable {
 
-
-    private int page = 1;
 
     private static final int ROWS_PER_PAGE = 5;
-
+    private int page = 1;
     private TeamHandler teamHandler;
 
     public CompassInventory(Player player, TeamHandler teamHandler) {
@@ -39,11 +38,6 @@ public class CompassInventory extends Shop<UHC> implements Runnable {
         this.page = page;
         this.teamHandler = teamHandler;
         open();
-    }
-
-    @Override
-    public void onOpen() {
-        module.getServer().getScheduler().scheduleSyncRepeatingTask(module, this, 0L, 10L);
     }
 
     @Override
@@ -89,36 +83,28 @@ public class CompassInventory extends Shop<UHC> implements Runnable {
                     addButton(newSlot, playerItem((Player) op), new TeleportToPlayer((Player) op));
                     slot++;
                 } else {
-                    setItem(newSlot, new ShopItem(Material.SKULL_ITEM, ChatColor.GRAY + "Offline: " + op.getName()));
+                    setItem(newSlot, new ItemFactory(Material.SKULL_ITEM).name(ChatColor.GRAY + "OFFLINE: " + op.getName()).construct());
                     slot++;
                 }
             }
             currentRow++;
         }
-        if (page < pages)
-            addButton(53, new ShopItem(Material.SIGN, (byte) 0, page + 1, "Page " + (page + 1), new String[0]), new PageChange(page + 1));
+        if (page < pages) {
+            addButton(53, new ItemFactory(Material.SIGN).name("Page " + (page + 1)).amount(page + 1).construct(), new PageChange(page + 1));
+        }
         if (page > 1)
-            addButton(45, new ShopItem(Material.SIGN, (byte) 0, page - 1, "Page " + (page - 1), new String[0]), new PageChange(page - 1));
+            addButton(45, new ItemFactory(Material.SIGN).name("Page " + (page - 1)).amount(page - 1).construct(), new PageChange(page - 1))
+                    ;
     }
 
-
-    private void setItem(int slot, ItemStack item) {
-        getInventory().setItem(slot, item);
+    @Override
+    public void onOpen() {
+        plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 10L);
     }
 
-    private void setTeamWool(int row, UHCTeam team) {
-        getInventory().setItem(row * 9, new ShopItem(Material.WOOL, getDye(team).getWoolData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]));
-    }
-
-    private ShopItem playerItem(Player player) {
-        ShopItem item = new ShopItem(Material.SKULL_ITEM, (byte) 3, 1, player.getName(), new String[]{
-                ChatColor.UNDERLINE + "Health:" + ChatColor.RESET + ChatColor.GOLD + " " + player.getHealth() + "/" + player.getMaxHealth(),
-                ChatColor.UNDERLINE + "Food:" + ChatColor.RESET + ChatColor.GOLD + " " + player.getFoodLevel()
-        });
-        SkullMeta meta = (SkullMeta) item.getItemMeta();
-        meta.setOwner(player.getName());
-        item.setItemMeta(meta);
-        return item;
+    @Override
+    public void run() {
+        build();
     }
 
     private DyeColor getDye(UHCTeam team) {
@@ -160,9 +146,21 @@ public class CompassInventory extends Shop<UHC> implements Runnable {
         }
     }
 
-    @Override
-    public void run() {
-        build();
+    private ItemStack playerItem(Player player) {
+        ItemStack construct = new ItemFactory(Material.SKULL_ITEM).data(3).name(player.getName()).lore(ChatColor.GREEN + "Health: " + ChatColor.RESET + player.getHealth() + "/" + player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(),
+                ChatColor.GREEN + "Food: " + ChatColor.RESET + player.getFoodLevel()).construct();
+        SkullMeta meta = (SkullMeta) construct.getItemMeta();
+        meta.setOwner(player.getName());
+        construct.setItemMeta(meta);
+        return construct;
+    }
+
+    private void setItem(int slot, ItemStack item) {
+        getInventory().setItem(slot, item);
+    }
+
+    private void setTeamWool(int row, UHCTeam team) {
+        getInventory().setItem(row * 9, new ItemFactory(Material.WOOL).data(getDye(team).getWoolData()).name(team.getColor()+WordUtils.capitalizeFully(team.getFriendlyName())).construct());
     }
 
     private class TeleportToPlayer implements Action {

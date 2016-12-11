@@ -1,11 +1,11 @@
 package me.mrkirby153.kcuhc.gui.admin;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.shop.Shop;
-import me.mrkirby153.kcuhc.shop.item.ShopItem;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCPlayerTeam;
 import me.mrkirby153.kcuhc.team.UHCTeam;
+import me.mrkirby153.kcutils.ItemFactory;
+import me.mrkirby153.kcutils.gui.Gui;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
@@ -13,6 +13,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
@@ -20,7 +21,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.UUID;
 
-public class TeamSelectInventory extends Shop<UHC> {
+public class TeamSelectInventory extends Gui<UHC> {
 
     private Mode mode = Mode.SELECT_TEAM;
     private UHCTeam team;
@@ -43,11 +44,11 @@ public class TeamSelectInventory extends Shop<UHC> {
             case SELECT_PLAYERS:
                 buildPlayerSelect();
         }
-        addButton(45, new ShopItem(Material.ARROW, "Back"), (player, clickType) -> {
+        addButton(45, new ItemFactory(Material.ARROW).name("Back").construct(), (player, clickType) -> {
             switch (mode) {
                 case SELECT_TEAM:
                     player.closeInventory();
-                    new GameSettingsInventory(module, player);
+                    new GameSettingsInventory(plugin, player);
                     break;
                 case SELECT_PLAYERS:
                     mode = Mode.SELECT_TEAM;
@@ -55,7 +56,7 @@ public class TeamSelectInventory extends Shop<UHC> {
                     build();
             }
         });
-        addButton(3, new ShopItem(Material.DIAMOND_SWORD, "Two Teams"), (player, clickType) -> {
+        addButton(3, new ItemFactory(Material.DIAMOND_SWORD).name("Two Teams").lore("Create two teams and assign everyone randomly").construct(), (player, clickType) -> {
             // Create two random teams
             ArrayList<UHCTeam> te = new ArrayList<>(teamHandler.teams());
             te.forEach(teamHandler::unregisterTeam);
@@ -89,7 +90,7 @@ public class TeamSelectInventory extends Shop<UHC> {
             });
             build();
         });
-        addButton(5, new ShopItem(Material.GOLD_SWORD, "Single Person Teams"), (player, clickType) -> {
+        addButton(5, new ItemFactory(Material.GOLD_SWORD).name("Single Person Teams").lore("Create a team for everyone online").construct(), (player, clickType) -> {
             // Create one team per player
             ArrayList<UHCTeam> te = new ArrayList<>(teamHandler.teams());
             te.forEach(teamHandler::unregisterTeam);
@@ -107,13 +108,13 @@ public class TeamSelectInventory extends Shop<UHC> {
     private void buildPlayerSelect() {
         int row = 2;
         int col = 2;
-        addButton(4, new ShopItem(Material.WOOL, getDye(team).getWoolData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]), null);
+        addButton(4, new ItemFactory(Material.WOOL).data(getDye(team).getWoolData()).name(team.getColor()+ WordUtils.capitalize(team.getFriendlyName())).construct(), null);
         for (Player p : Bukkit.getOnlinePlayers()) {
             int slot = (9 * (row - 1)) + col - 1;
-            ShopItem item = playerItem(p);
+            ItemStack item = playerItem(p);
             if (teamHandler.getTeamForPlayer(p) != null && team.getTeamName().equalsIgnoreCase(teamHandler.getTeamForPlayer(p).getTeamName())) {
                 ItemMeta meta = item.getItemMeta();
-                meta.setDisplayName(ChatColor.GOLD + "[MEMBER] " + item.getName());
+                meta.setDisplayName(ChatColor.GOLD + "[MEMBER] " + item.getItemMeta().getDisplayName());
                 item.setItemMeta(meta);
             }
             addButton(slot, item, (player, clickType) -> {
@@ -136,7 +137,7 @@ public class TeamSelectInventory extends Shop<UHC> {
 
         for (UHCTeam team : teamHandler.teams()) {
             int slot = (9 * (row - 1)) + col - 1;
-            addButton(slot, new ShopItem(Material.WOOL, getDye(team).getWoolData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]),
+            addButton(slot, new ItemFactory(Material.WOOL).data(getDye(team).getWoolData()).name(team.getColor()+ WordUtils.capitalize(team.getFriendlyName())).construct(),
                     (player, clickType) -> setTeam(team));
             col++;
             if (col > 8) {
@@ -185,8 +186,8 @@ public class TeamSelectInventory extends Shop<UHC> {
         }
     }
 
-    private ShopItem playerItem(Player player) {
-        ShopItem item = new ShopItem(Material.SKULL_ITEM, (byte) 3, 1, player.getName(), new String[0]);
+    private ItemStack playerItem(Player player) {
+        ItemStack item = new ItemFactory(Material.SKULL_ITEM).data(3).name(player.getName()).construct();
         SkullMeta meta = (SkullMeta) item.getItemMeta();
         meta.setOwner(player.getName());
         item.setItemMeta(meta);
@@ -197,10 +198,6 @@ public class TeamSelectInventory extends Shop<UHC> {
         this.team = team;
         this.mode = Mode.SELECT_PLAYERS;
         build();
-    }
-
-    private void setTeamWool(int row, UHCTeam team) {
-        getInventory().setItem(row * 9, new ShopItem(Material.WOOL, getDye(team).getWoolData(), 1, team.getColor() + WordUtils.capitalizeFully(team.getFriendlyName()), new String[0]));
     }
 
     enum Mode {
