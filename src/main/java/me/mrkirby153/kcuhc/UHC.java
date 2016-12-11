@@ -1,12 +1,12 @@
 package me.mrkirby153.kcuhc;
 
 import me.mrkirby153.kcuhc.arena.UHCArena;
-import me.mrkirby153.kcuhc.arena.handler.BosssBarHandler;
 import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.handler.listener.SpectateListener;
 import me.mrkirby153.kcuhc.scoreboard.ScoreboardManager;
 import me.mrkirby153.kcuhc.team.TeamHandler;
+import me.mrkirby153.kcutils.BossBar;
 import me.mrkirby153.uhc.bot.network.UHCNetwork;
 import me.mrkirby153.uhc.bot.network.data.RedisConnection;
 import org.bukkit.entity.Player;
@@ -33,6 +33,7 @@ public class UHC extends JavaPlugin {
     public BorderBumper borderBumper;
     public EpisodeMarkerHandler markerHandler;
     public SpectatorHandler spectatorHandler;
+    public BossBar bossBar;
 
     public static UHC getInstance() {
         return plugin;
@@ -50,7 +51,7 @@ public class UHC extends JavaPlugin {
     public void onDisable() {
         teamHandler.unregisterAll();
         // Remove everyone's boss bar in case of a reload
-        BosssBarHandler.removeAll();
+        bossBar.removeAll();
     }
 
     @Override
@@ -89,9 +90,13 @@ public class UHC extends JavaPlugin {
 
         new FreezeHandler(this);
 
+
         // Load modules
         spectatorHandler = new SpectatorHandler(this, teamHandler);
         spectatorHandler.load();
+
+        bossBar = new BossBar(plugin);
+        bossBar.load();
 
         playerTracker = new PlayerTrackerHandler(this, teamHandler);
         playerTracker.load();
@@ -113,7 +118,6 @@ public class UHC extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new ScoreboardManager(plugin), this);
         getServer().getPluginManager().registerEvents(new RegenTicket(), this);
-        getServer().getPluginManager().registerEvents(new BosssBarHandler(), this);
 
         // Register commands
         getCommand("uhc").setExecutor(new CommandUHC(this, teamHandler));

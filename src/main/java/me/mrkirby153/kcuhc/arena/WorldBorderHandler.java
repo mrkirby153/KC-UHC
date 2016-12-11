@@ -1,7 +1,6 @@
 package me.mrkirby153.kcuhc.arena;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.arena.handler.BosssBarHandler;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Location;
@@ -80,7 +79,7 @@ public class WorldBorderHandler implements Runnable, Listener {
             if(arena.currentState() == UHCArena.State.COUNTDOWN)
                 return;
             for(Player p : plugin.arena.players()){
-                BosssBarHandler.removeBar(p);
+                plugin.bossBar.remove(p);
             }
             return;
         }
@@ -100,20 +99,20 @@ public class WorldBorderHandler implements Runnable, Listener {
             if (distX < distZ) {
                 if (playerX > (worldBorderX - arena.getProperties().WORLDBORDER_WARN_DISTANCE.get())) {
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, scaleSound(distX), 0.5F);
-                    BosssBarHandler.setBossBarText(player, ChatColor.RED+"You are close to the world border!");
+                    plugin.bossBar.setTitle(player, ChatColor.RED+"You are close to the world border!");
                     double percent = 1 - (worldBorderX - playerX)/ arena.getProperties().WORLDBORDER_WARN_DISTANCE.get();
-                    BosssBarHandler.setBossBarProgress(player, percent);
+                    plugin.bossBar.setPercent(player, percent);
                 } else {
-                    BosssBarHandler.removeBar(player);
-                }
+                   plugin.bossBar.remove(player);
+            }
             } else {
                 if (playerZ > (worldBorderZ - arena.getProperties().WORLDBORDER_WARN_DISTANCE.get())) {
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, scaleSound(distZ), 2F);
-                    BosssBarHandler.setBossBarText(player, ChatColor.RED + "You are close to the world border!");
+                    plugin.bossBar.setTitle(player, ChatColor.RED + "You are close to the world border!");
                     double percent = 1 - (worldBorderZ - playerZ)/ arena.getProperties().WORLDBORDER_WARN_DISTANCE.get();
-                    BosssBarHandler.setBossBarProgress(player, percent);
+                    plugin.bossBar.setPercent(player, percent);
                 } else {
-                    BosssBarHandler.removeBar(player);
+                    plugin.bossBar.remove(player);
                 }
             }
 

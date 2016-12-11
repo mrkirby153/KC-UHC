@@ -1,7 +1,6 @@
 package me.mrkirby153.kcuhc.arena;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.arena.handler.BosssBarHandler;
 import me.mrkirby153.kcuhc.utils.UtilTime;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -25,7 +24,7 @@ public class CountdownBarTask implements Runnable {
     public void run() {
         if (startTime < System.currentTimeMillis()) {
             for(Player p : UHC.getInstance().arena.players()){
-                BosssBarHandler.removeBar(p);
+                plugin.bossBar.remove(p);
             }
             cancel();
             return;
@@ -33,8 +32,8 @@ public class CountdownBarTask implements Runnable {
         for(Player p : plugin.arena.players()){
             double msLeft = startTime - System.currentTimeMillis();
             double percent = (msLeft / duration);
-            BosssBarHandler.setBossBarText(p, ChatColor.WHITE+""+ ChatColor.BOLD+"Starting in "+ChatColor.GREEN+ChatColor.BOLD+ UtilTime.format(1, startTime - System.currentTimeMillis(), UtilTime.TimeUnit.FIT));
-            BosssBarHandler.setBossBarProgress(p, percent);
+            plugin.bossBar.setTitle(p, ChatColor.WHITE+""+ ChatColor.BOLD+"Starting in "+ChatColor.GREEN+ChatColor.BOLD+ UtilTime.format(1, startTime - System.currentTimeMillis(), UtilTime.TimeUnit.FIT));
+            plugin.bossBar.setPercent(p, percent);
         }
     }
 
