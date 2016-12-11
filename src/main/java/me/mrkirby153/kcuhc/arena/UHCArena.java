@@ -6,6 +6,8 @@ import me.mrkirby153.kcuhc.arena.handler.EndgameHandler;
 import me.mrkirby153.kcuhc.arena.handler.TeamInventoryHandler;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.handler.*;
+import me.mrkirby153.kcuhc.handler.listener.GameListener;
+import me.mrkirby153.kcuhc.handler.listener.PregameListener;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.TeamSpectator;

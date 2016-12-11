@@ -1,6 +1,8 @@
 package me.mrkirby153.kcuhc.handler;
 
+import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.utils.UtilChat;
+import me.mrkirby153.kcutils.Module;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -11,11 +13,15 @@ import org.bukkit.util.Vector;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class BorderBumper implements Runnable {
+public class BorderBumper extends Module<UHC> implements Runnable {
 
     private HashMap<UUID, Long> bumperCooldown = new HashMap<>();
 
     private static final double BUMP_POWER = 0.25;
+
+    public BorderBumper(UHC plugin) {
+        super("Border Bumper", "1.0", plugin);
+    }
 
     @Override
     public void run() {
@@ -79,6 +85,11 @@ public class BorderBumper implements Runnable {
         player.setVelocity(bumpVector);
         player.sendMessage(UtilChat.message(ChatColor.BOLD + "Stay inside the world border!".toUpperCase()));
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BASS, 1F, 1F);
+    }
+
+    @Override
+    protected void init() {
+        scheduleRepeating(this, 0L, 1L);
     }
 
 

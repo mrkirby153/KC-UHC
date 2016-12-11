@@ -3,10 +3,12 @@ package me.mrkirby153.kcuhc.handler;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
+import me.mrkirby153.kcuhc.handler.listener.SpectateListener;
 import me.mrkirby153.kcuhc.shop.Inventory;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.utils.UtilChat;
+import me.mrkirby153.kcutils.Module;
 import net.minecraft.server.v1_11_R1.IChatBaseComponent;
 import net.minecraft.server.v1_11_R1.PacketPlayOutChat;
 import org.bukkit.Bukkit;
@@ -25,18 +27,18 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-public class SpectatorTask implements Runnable, Listener {
+public class SpectatorHandler extends Module<UHC> implements Runnable, Listener {
 
     private HashMap<UUID, UUID> spectatorTargets = new HashMap<>();
 
     private TeamHandler teamHandler;
     private UHC plugin;
+    private SpectateListener spectateListener;
 
-    public SpectatorTask(UHC plugin, TeamHandler teamHandler) {
+    public SpectatorHandler(UHC plugin, TeamHandler teamHandler) {
+        super("Spectator Handler", "1.0", plugin);
         this.teamHandler = teamHandler;
         this.plugin = plugin;
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
-        plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 10L);
     }
 
     @Override
@@ -95,5 +97,13 @@ public class SpectatorTask implements Runnable, Listener {
     private void sendActionBar(Player player, String message) {
         PacketPlayOutChat chat = new PacketPlayOutChat(IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + message + "\"}"), (byte) 2);
         ((CraftPlayer) player).getHandle().playerConnection.sendPacket(chat);
+    }
+
+    @Override
+    protected void init() {
+        registerListener(this);
+        scheduleRepeating(this, 0L, 10L);
+        spectateListener = new SpectateListener(teamHandler, plugin);
+        registerListener(spectateListener);
     }
 }

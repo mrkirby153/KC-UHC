@@ -3,6 +3,7 @@ package me.mrkirby153.kcuhc.handler;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.utils.UtilChat;
+import me.mrkirby153.kcutils.Module;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -15,7 +16,7 @@ import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.server.ServerListPingEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
-public class MOTDHandler implements Listener {
+public class MOTDHandler extends Module<UHC>  implements Listener {
 
     private static String motd = "";
     private static final String MOTD_HEADER = ChatColor.RED + "" + ChatColor.BOLD + "Kirbycraft plugin: \n";
@@ -28,6 +29,7 @@ public class MOTDHandler implements Listener {
     private UHC plugin;
 
     public MOTDHandler(UHC plugin) {
+        super("MOTD Manager", "1.0", plugin);
         this.plugin = plugin;
     }
 
@@ -87,5 +89,10 @@ public class MOTDHandler implements Listener {
                 }
             }.runTaskLater(plugin, 10L);
         }
+    }
+
+    @Override
+    protected void init() {
+        registerListener(this);
     }
 }

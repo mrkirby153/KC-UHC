@@ -2,6 +2,7 @@ package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.utils.UtilTime;
+import me.mrkirby153.kcutils.Module;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Sound;
@@ -10,7 +11,7 @@ import org.bukkit.entity.Player;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class EpisodeMarkerHandler implements Runnable {
+public class EpisodeMarkerHandler extends Module<UHC> implements Runnable {
 
 
     private int episodeLength;
@@ -27,10 +28,10 @@ public class EpisodeMarkerHandler implements Runnable {
 
 
     public EpisodeMarkerHandler(UHC uhc) {
+        super("Episode Marker", "1.0", uhc);
         if (uhc.getConfig().getBoolean("episodes.use")) {
             episodeLength = uhc.getConfig().getInt("episodes.duration");
         }
-        uhc.getServer().getScheduler().scheduleSyncRepeatingTask(uhc, this, 0L, 1L);
     }
 
 
@@ -58,5 +59,10 @@ public class EpisodeMarkerHandler implements Runnable {
             nextAnnounce = System.currentTimeMillis() + (1000 * 60 * episodeLength);
             System.out.println("=== [Next Episode (" + ++episodeNumber + ") in " + episodeLength + " minutes (" + sdf.format(new Date(nextAnnounce)) + ") ] ===");
         }
+    }
+
+    @Override
+    protected void init() {
+        scheduleRepeating(this, 0L, 1L);
     }
 }

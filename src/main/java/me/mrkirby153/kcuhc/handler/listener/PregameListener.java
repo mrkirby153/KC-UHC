@@ -1,4 +1,4 @@
-package me.mrkirby153.kcuhc.handler;
+package me.mrkirby153.kcuhc.handler.listener;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.UHCArena;

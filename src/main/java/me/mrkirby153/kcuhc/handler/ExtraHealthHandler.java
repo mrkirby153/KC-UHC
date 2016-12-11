@@ -1,26 +1,26 @@
 package me.mrkirby153.kcuhc.handler;
 
+import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcutils.Module;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.HashMap;
 import java.util.UUID;
 
-public class ExtraHealthHandler implements Runnable, Listener{
+public class ExtraHealthHandler extends Module<UHC> implements Runnable, Listener {
 
     private HashMap<UUID, Integer> health = new HashMap<>();
     private HashMap<UUID, Double> savedHealth = new HashMap<>();
 
-    public ExtraHealthHandler(JavaPlugin plugin) {
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
-        plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 3L);
+    public ExtraHealthHandler(UHC plugin) {
+        super("Extra Health", "1.0", plugin);
     }
 
     public void addHeartRow(Player player) {
@@ -31,6 +31,13 @@ public class ExtraHealthHandler implements Runnable, Listener{
         health.put(player.getUniqueId(), rows);
     }
 
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void death(PlayerDeathEvent event) {
+        event.getEntity().removePotionEffect(PotionEffectType.HEALTH_BOOST);
+        health.remove(event.getEntity().getUniqueId());
+        savedHealth.remove(event.getEntity().getUniqueId());
+    }
+
     public void removeHealthRow(Player player) {
         int newRows = health.remove(player.getUniqueId()) - 1;
         if (newRows <= 0) {
@@ -38,13 +45,6 @@ public class ExtraHealthHandler implements Runnable, Listener{
             return;
         }
         health.put(player.getUniqueId(), newRows);
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void death(PlayerDeathEvent event){
-        event.getEntity().removePotionEffect(PotionEffectType.HEALTH_BOOST);
-        health.remove(event.getEntity().getUniqueId());
-        savedHealth.remove(event.getEntity().getUniqueId());
     }
 
     @Override
@@ -67,7 +67,7 @@ public class ExtraHealthHandler implements Runnable, Listener{
             }
             if (savedHealth.containsKey(p.getUniqueId())) {
                 Double v = savedHealth.get(p.getUniqueId());
-                if(v > p.getMaxHealth())
+                if (v > p.getMaxHealth())
                     v = p.getMaxHealth();
                 p.setHealth(v);
             }
@@ -83,5 +83,11 @@ public class ExtraHealthHandler implements Runnable, Listener{
         int healthShouldHave = 20 + (20 * rows);
         double health = Math.floor(player.getMaxHealth());
         return healthShouldHave == health;
+    }
+
+    @Override
+    protected void init() {
+        registerListener(this);
+        scheduleRepeating(this, 0L, 3L);
     }
 }

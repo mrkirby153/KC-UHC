@@ -5,6 +5,7 @@ import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.TeamSpectator;
 import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.utils.UtilTime;
+import me.mrkirby153.kcutils.Module;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,54 +22,49 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PlayerTrackerHandler implements Listener, Runnable {
-
-    private UHC plugin;
+public class PlayerTrackerHandler extends Module<UHC> implements Listener, Runnable {
 
     public static final double DIST_IN_OTHER_DIMENSION = -16.2538964;
-
     private HashMap<UUID, UUID> targets = new HashMap<>();
 
     private TeamHandler teamHandler;
-    
+
     public PlayerTrackerHandler(UHC plugin, TeamHandler teamHandler) {
-        this.plugin = plugin;
+        super("Player Tracker", "1.0", plugin);
         this.teamHandler = teamHandler;
-        plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, 5L);
-        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
-    @Override
-    public void run() {
-        if(!plugin.arena.getProperties().COMPASS_PLAYER_TRACKER.get()){
-            Bukkit.getOnlinePlayers().forEach(p->p.setCompassTarget(p.getBedSpawnLocation()));
-            Bukkit.getOnlinePlayers().forEach(p->updateCompasses(p, null));
-            return;
+    public double distanceToTarget(UUID tracker) {
+        Player player = Bukkit.getPlayer(tracker);
+        if (player == null)
+            return Double.NEGATIVE_INFINITY;
+        Player target = getTarget(tracker);
+        if (target == null) {
+            return Double.NEGATIVE_INFINITY;
         }
-        Iterator<Map.Entry<UUID, UUID>> iterator = targets.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<UUID, UUID> next = iterator.next();
-            UUID trackerUUID = next.getKey();
-            UUID trackedUUID = next.getValue();
-
-            Player tracker = Bukkit.getPlayer(trackerUUID);
-            Player tracked = Bukkit.getPlayer(trackedUUID);
-
-            if (tracked == null) {
-                updateCompasses(tracker, null);
-                tracker.setCompassTarget(tracker.getWorld().getSpawnLocation());
-            }
-            if (tracker == null || tracked == null) {
-                iterator.remove();
-                continue;
-            }
-            tracker.setCompassTarget(tracked.getLocation());
+        if (target.getLocation().getWorld() != player.getLocation().getWorld()) {
+            return DIST_IN_OTHER_DIMENSION;
         }
+        return UtilTime.trim(1, target.getLocation().distance(player.getLocation()));
+    }
+
+    public Player getTarget(UUID tracker) {
+        return Bukkit.getPlayer(targets.get(tracker));
+    }
+
+    public void giveTracker(Player player) {
+        ItemStack playerTracker = new ItemStack(Material.COMPASS);
+        ItemMeta meta = playerTracker.getItemMeta();
+        meta.setDisplayName(ChatColor.AQUA + "Player Tracker (" + ChatColor.GREEN +
+                ChatColor.BOLD + "Right click to select target" + ChatColor.RESET + ChatColor.AQUA + ")");
+        playerTracker.setItemMeta(meta);
+        player.getInventory().setItem(8, playerTracker);
+        player.updateInventory();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInteract(PlayerInteractEvent event) {
-        if(!plugin.arena.getProperties().COMPASS_PLAYER_TRACKER.get())
+        if (!getPlugin().arena.getProperties().COMPASS_PLAYER_TRACKER.get())
             return;
         if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK)
             return;
@@ -104,12 +100,12 @@ public class PlayerTrackerHandler implements Listener, Runnable {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void playerDeath(PlayerDeathEvent event) {
-        if(!plugin.arena.getProperties().COMPASS_PLAYER_TRACKER.get())
+        if (!getPlugin().arena.getProperties().COMPASS_PLAYER_TRACKER.get())
             return;
         Player dead = event.getEntity();
 
         // Remove compasses from drops if given on start
-        if(plugin.arena.getProperties().GIVE_COMPASS_ON_START.get()) {
+        if (getPlugin().arena.getProperties().GIVE_COMPASS_ON_START.get()) {
             event.getDrops().removeIf(itemStack -> itemStack.getType() == Material.COMPASS);
         }
 
@@ -147,7 +143,7 @@ public class PlayerTrackerHandler implements Listener, Runnable {
 
     @EventHandler(priority = EventPriority.HIGH)
     public void prepareCraft(PrepareItemCraftEvent event) {
-        if(!plugin.arena.getProperties().COMPASS_PLAYER_TRACKER.get())
+        if (!getPlugin().arena.getProperties().COMPASS_PLAYER_TRACKER.get())
             return;
         if (event.getRecipe().getResult() == null)
             return;
@@ -165,32 +161,32 @@ public class PlayerTrackerHandler implements Listener, Runnable {
         event.getInventory().setResult(playerTracker);
     }
 
-    public void giveTracker(Player player) {
-        ItemStack playerTracker = new ItemStack(Material.COMPASS);
-        ItemMeta meta = playerTracker.getItemMeta();
-        meta.setDisplayName(ChatColor.AQUA + "Player Tracker (" + ChatColor.GREEN +
-                ChatColor.BOLD + "Right click to select target" + ChatColor.RESET + ChatColor.AQUA + ")");
-        playerTracker.setItemMeta(meta);
-        player.getInventory().setItem(8, playerTracker);
-        player.updateInventory();
-    }
-
-    public double distanceToTarget(UUID tracker) {
-        Player player = Bukkit.getPlayer(tracker);
-        if (player == null)
-            return Double.NEGATIVE_INFINITY;
-        Player target = getTarget(tracker);
-        if (target == null) {
-            return Double.NEGATIVE_INFINITY;
+    @Override
+    public void run() {
+        if (!getPlugin().arena.getProperties().COMPASS_PLAYER_TRACKER.get()) {
+            Bukkit.getOnlinePlayers().forEach(p -> p.setCompassTarget(p.getBedSpawnLocation()));
+            Bukkit.getOnlinePlayers().forEach(p -> updateCompasses(p, null));
+            return;
         }
-        if(target.getLocation().getWorld() != player.getLocation().getWorld()){
-            return DIST_IN_OTHER_DIMENSION;
-        }
-        return UtilTime.trim(1, target.getLocation().distance(player.getLocation()));
-    }
+        Iterator<Map.Entry<UUID, UUID>> iterator = targets.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<UUID, UUID> next = iterator.next();
+            UUID trackerUUID = next.getKey();
+            UUID trackedUUID = next.getValue();
 
-    public Player getTarget(UUID tracker) {
-        return Bukkit.getPlayer(targets.get(tracker));
+            Player tracker = Bukkit.getPlayer(trackerUUID);
+            Player tracked = Bukkit.getPlayer(trackedUUID);
+
+            if (tracked == null) {
+                updateCompasses(tracker, null);
+                tracker.setCompassTarget(tracker.getWorld().getSpawnLocation());
+            }
+            if (tracker == null || tracked == null) {
+                iterator.remove();
+                continue;
+            }
+            tracker.setCompassTarget(tracked.getLocation());
+        }
     }
 
     private Player findClosestPlayer(Location location, List<UUID> toExclude) {
@@ -222,13 +218,13 @@ public class PlayerTrackerHandler implements Listener, Runnable {
             if (item.getType() == Material.COMPASS) {
                 ItemMeta meta = item.getItemMeta();
                 String tracking = (tracked == null) ? "Right Click to select target" : tracked.getName();
-                if(plugin.arena.getProperties().COMPASS_PLAYER_TRACKER.get()) {
+                if (getPlugin().arena.getProperties().COMPASS_PLAYER_TRACKER.get()) {
                     meta.setDisplayName(ChatColor.AQUA + "Player Tracker (" + ChatColor.GREEN + ChatColor.BOLD + tracking + ChatColor.RESET + ChatColor.AQUA + ")");
                     item.setItemMeta(meta);
                     tracker.getInventory().setItem(i, item);
                     tracker.updateInventory();
                 } else {
-                    if(meta.getDisplayName() != null) {
+                    if (meta.getDisplayName() != null) {
                         meta.setDisplayName(null);
                         item.setItemMeta(meta);
                         tracker.getInventory().setItem(i, item);
@@ -237,5 +233,11 @@ public class PlayerTrackerHandler implements Listener, Runnable {
                 }
             }
         }
+    }
+
+    @Override
+    protected void init() {
+        registerListener(this);
+        scheduleRepeating(this, 0, 5L);
     }
 }

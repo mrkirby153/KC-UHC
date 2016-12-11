@@ -4,6 +4,7 @@ import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.arena.handler.BosssBarHandler;
 import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.handler.*;
+import me.mrkirby153.kcuhc.handler.listener.SpectateListener;
 import me.mrkirby153.kcuhc.scoreboard.ScoreboardManager;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.uhc.bot.network.UHCNetwork;
@@ -25,9 +26,13 @@ public class UHC extends JavaPlugin {
     public SpectateListener spectateListener;
     public PlayerTrackerHandler playerTracker;
     public VelocityTracker velocityTracker;
-    public EpisodeMarkerHandler markerHandler;
     public ExtraHealthHandler extraHealthHelper;
+
     public TeamHandler teamHandler;
+    public MOTDHandler motdHandler;
+    public BorderBumper borderBumper;
+    public EpisodeMarkerHandler markerHandler;
+    public SpectatorHandler spectatorHandler;
 
     public static UHC getInstance() {
         return plugin;
@@ -57,10 +62,12 @@ public class UHC extends JavaPlugin {
         teamHandler.load();
 
         admins = (ArrayList<String>) getConfig().getStringList("admins");
+
         if (new File(getDataFolder(), "arena.yml").exists()) {
             arena = new UHCArena(this, teamHandler);
             arena.initialize();
         }
+
         if (getConfig().getBoolean("discord.useDiscord")) {
             getCommand("discord").setExecutor(new CommandDiscord(teamHandler, plugin));
             String botHost = getConfig().getString("discord.botHost");
@@ -79,23 +86,42 @@ public class UHC extends JavaPlugin {
                 getLogger().info("Set server id to " + id);
             }
         }
-        new SpectatorTask(this, teamHandler);
+
         new FreezeHandler(this);
+
+        // Load modules
+        spectatorHandler = new SpectatorHandler(this, teamHandler);
+        spectatorHandler.load();
+
         playerTracker = new PlayerTrackerHandler(this, teamHandler);
-        velocityTracker = new VelocityTracker(this);
+        playerTracker.load();
+
+        motdHandler = new MOTDHandler(this);
+        motdHandler.load();
+
+        borderBumper = new BorderBumper(this);
+        borderBumper.load();
+
         markerHandler = new EpisodeMarkerHandler(this);
+        markerHandler.load();
+
         extraHealthHelper = new ExtraHealthHandler(this);
-        getServer().getPluginManager().registerEvents(new MOTDHandler(this), this);
-        getServer().getPluginManager().registerEvents(spectateListener = new SpectateListener(teamHandler, plugin), this);
+        extraHealthHelper.load();
+
+        velocityTracker = new VelocityTracker(this);
+
+
         getServer().getPluginManager().registerEvents(new ScoreboardManager(plugin), this);
         getServer().getPluginManager().registerEvents(new RegenTicket(), this);
         getServer().getPluginManager().registerEvents(new BosssBarHandler(), this);
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, new BorderBumper(), 0, 1);
+
+        // Register commands
         getCommand("uhc").setExecutor(new CommandUHC(this, teamHandler));
         getCommand("team").setExecutor(new CommandTeam(teamHandler, plugin));
         getCommand("spectate").setExecutor(new CommandSpectate(teamHandler, plugin));
         getCommand("admin").setExecutor(new CommandAdmin(teamHandler));
         getCommand("teaminventory").setExecutor(new CommandTeamInv(teamHandler, plugin));
+
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new UHCArena.PlayerActionBarUpdater(teamHandler), 0, 1);
     }
 

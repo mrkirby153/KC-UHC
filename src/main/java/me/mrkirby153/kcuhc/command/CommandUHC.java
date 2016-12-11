@@ -5,7 +5,7 @@ import me.mrkirby153.kcuhc.arena.ArenaProperties;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.gui.admin.GameAdminInventory;
 import me.mrkirby153.kcuhc.handler.FreezeHandler;
-import me.mrkirby153.kcuhc.handler.GameListener;
+import me.mrkirby153.kcuhc.handler.listener.GameListener;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
 import me.mrkirby153.kcuhc.handler.RegenTicket;
 import me.mrkirby153.kcuhc.team.TeamHandler;
