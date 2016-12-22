@@ -10,7 +10,6 @@ import me.mrkirby153.uhc.bot.network.UHCNetwork;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.util.ArrayList;
 
 public class UHC extends JavaPlugin {
@@ -60,10 +59,8 @@ public class UHC extends JavaPlugin {
 
         admins = (ArrayList<String>) getConfig().getStringList("admins");
 
-        if (new File(getDataFolder(), "arena.yml").exists()) {
-            arena = new UHCArena(this, teamHandler);
-            arena.initialize();
-        }
+        arena = new UHCArena(this, teamHandler);
+        arena.initialize();
 
         // Load discord integration
         discordHandler = new DiscordHandler(plugin, teamHandler);
