@@ -29,56 +29,32 @@ public class WorldBorderHandler implements Runnable, Listener {
         this.teamHandler = teamHandler;
     }
 
-    public void setWorldborder(double size, int time) {
-        WorldBorder overworldBorder = arena.getWorld().getWorldBorder();
-        WorldBorder netherBorder = arena.getNether().getWorldBorder();
-        overworldStartSize = overworldBorder.getSize();
-        overworldEndSize = size;
-        overworldBorder.setSize(size, time);
-        if (netherBorder != null) {
-            netherStartSize = netherBorder.getSize();
-            netherEndSize = size * 2;
-            netherBorder.setSize(size * 2, time);
-        }
-    }
-
-    public void setWorldborder(double size) {
-        setWorldborder(size, 0);
+    public WorldBorder getNether() {
+        if(arena.getNether() == null)
+            return null;
+        return arena.getNether().getWorldBorder();
     }
 
     public WorldBorder getOverworld() {
         return arena.getWorld().getWorldBorder();
     }
 
-    public WorldBorder getNether() {
-        return arena.getNether().getWorldBorder();
+    public boolean netherTravelComplete() {
+        return netherEndSize <= netherStartSize;
     }
 
     public boolean overworldTravelComplete() {
         return overworldEndSize <= overworldStartSize;
     }
 
-    public boolean netherTravelComplete() {
-        return netherEndSize <= netherStartSize;
-    }
-
-    public boolean travelComplete() {
-        return overworldTravelComplete() && netherTravelComplete();
-    }
-
-    public void setWarningDistance(int distance) {
-        getOverworld().setWarningDistance(distance);
-        getNether().setWarningDistance(distance);
-    }
-
     @Override
     public void run() {
-        if(!arena.getProperties().ENABLE_WORLDBORDER_WARNING.get())
+        if (!arena.getProperties().ENABLE_WORLDBORDER_WARNING.get())
             return;
         if (arena.currentState() != UHCArena.State.RUNNING || arena.getWorld().getWorldBorder().getSize() <= arena.getProperties().WORLDBORDER_END_SIZE.get()) {
-            if(arena.currentState() == UHCArena.State.COUNTDOWN)
+            if (arena.currentState() == UHCArena.State.COUNTDOWN)
                 return;
-            for(Player p : plugin.arena.players()){
+            for (Player p : plugin.arena.players()) {
                 plugin.bossBar.remove(p);
             }
             return;
@@ -99,17 +75,17 @@ public class WorldBorderHandler implements Runnable, Listener {
             if (distX < distZ) {
                 if (playerX > (worldBorderX - arena.getProperties().WORLDBORDER_WARN_DISTANCE.get())) {
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, scaleSound(distX), 0.5F);
-                    plugin.bossBar.setTitle(player, ChatColor.RED+"You are close to the world border!");
-                    double percent = 1 - (worldBorderX - playerX)/ arena.getProperties().WORLDBORDER_WARN_DISTANCE.get();
+                    plugin.bossBar.setTitle(player, ChatColor.RED + "You are close to the world border!");
+                    double percent = 1 - (worldBorderX - playerX) / arena.getProperties().WORLDBORDER_WARN_DISTANCE.get();
                     plugin.bossBar.setPercent(player, percent);
                 } else {
-                   plugin.bossBar.remove(player);
-            }
+                    plugin.bossBar.remove(player);
+                }
             } else {
                 if (playerZ > (worldBorderZ - arena.getProperties().WORLDBORDER_WARN_DISTANCE.get())) {
                     player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, scaleSound(distZ), 2F);
                     plugin.bossBar.setTitle(player, ChatColor.RED + "You are close to the world border!");
-                    double percent = 1 - (worldBorderZ - playerZ)/ arena.getProperties().WORLDBORDER_WARN_DISTANCE.get();
+                    double percent = 1 - (worldBorderZ - playerZ) / arena.getProperties().WORLDBORDER_WARN_DISTANCE.get();
                     plugin.bossBar.setPercent(player, percent);
                 } else {
                     plugin.bossBar.remove(player);
@@ -117,6 +93,34 @@ public class WorldBorderHandler implements Runnable, Listener {
             }
 
         }
+    }
+
+    public void setWarningDistance(int distance) {
+        getOverworld().setWarningDistance(distance);
+        if (getNether() != null)
+            getNether().setWarningDistance(distance);
+    }
+
+    public void setWorldborder(double size, int time) {
+        WorldBorder overworldBorder = arena.getWorld().getWorldBorder();
+        WorldBorder netherBorder = null;
+        if (arena.getNether() != null) netherBorder = arena.getNether().getWorldBorder();
+        overworldStartSize = overworldBorder.getSize();
+        overworldEndSize = size;
+        overworldBorder.setSize(size, time);
+        if (netherBorder != null) {
+            netherStartSize = netherBorder.getSize();
+            netherEndSize = size * 2;
+            netherBorder.setSize(size * 2, time);
+        }
+    }
+
+    public void setWorldborder(double size) {
+        setWorldborder(size, 0);
+    }
+
+    public boolean travelComplete() {
+        return overworldTravelComplete() && netherTravelComplete();
     }
 
     private float scaleSound(double distance) {
