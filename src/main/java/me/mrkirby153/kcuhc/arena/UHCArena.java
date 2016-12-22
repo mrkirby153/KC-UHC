@@ -5,7 +5,10 @@ import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.handler.EndgameHandler;
 import me.mrkirby153.kcuhc.arena.handler.TeamInventoryHandler;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
-import me.mrkirby153.kcuhc.handler.*;
+import me.mrkirby153.kcuhc.handler.FreezeHandler;
+import me.mrkirby153.kcuhc.handler.MOTDHandler;
+import me.mrkirby153.kcuhc.handler.PlayerTrackerHandler;
+import me.mrkirby153.kcuhc.handler.RegenTicket;
 import me.mrkirby153.kcuhc.handler.listener.GameListener;
 import me.mrkirby153.kcuhc.handler.listener.PregameListener;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
@@ -119,7 +122,8 @@ public class UHCArena implements Runnable, Listener {
             ChatColor.GOLD + "Was I supposed to write legitimate tips? Oops.",
             ChatColor.YELLOW + "You mean whatever I write here will show up as a tip? HI MOM",
             ChatColor.GOLD + "In the event of an emergency, do not panic! Use /a <message> to contact an admin!",
-            ChatColor.YELLOW + "Access your team-specific inventory with " + ChatColor.GREEN + "/teaminv"
+            ChatColor.YELLOW + "Access your team-specific inventory with " + ChatColor.GREEN + "/teaminv",
+            ChatColor.GOLD + "Talk privately with your team by prefixing your message with an " + ChatColor.GREEN + "@!"
 
     };
 

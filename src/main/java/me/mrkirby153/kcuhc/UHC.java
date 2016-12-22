@@ -29,6 +29,7 @@ public class UHC extends JavaPlugin {
     public SpectatorHandler spectatorHandler;
     public BossBar bossBar;
     public DiscordHandler discordHandler;
+    public TeamChatHandler teamChatHandler;
 
     public static UHC getInstance() {
         return plugin;
@@ -73,6 +74,9 @@ public class UHC extends JavaPlugin {
         // Load modules
         spectatorHandler = new SpectatorHandler(this, teamHandler);
         spectatorHandler.load();
+
+        teamChatHandler = new TeamChatHandler(this);
+        teamChatHandler.load();
 
         bossBar = new BossBar(plugin);
         bossBar.load();
