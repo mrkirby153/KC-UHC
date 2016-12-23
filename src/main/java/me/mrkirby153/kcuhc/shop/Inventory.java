@@ -132,7 +132,6 @@ public abstract class Inventory<T extends JavaPlugin> implements Listener {
     public void onClick(InventoryClickEvent event) {
         if (event.getWhoClicked() != player)
             return;
-        event.setCancelled(true);
         org.bukkit.inventory.Inventory clickedInventory = event.getClickedInventory();
         if (clickedInventory == null)
             return;
