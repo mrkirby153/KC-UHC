@@ -28,6 +28,7 @@ public class CompassInventory extends Gui<UHC> implements Runnable {
     private static final int ROWS_PER_PAGE = 5;
     private int page = 1;
     private TeamHandler teamHandler;
+    private int updateTaskId;
 
     public CompassInventory(UHC plugin, Player player, TeamHandler teamHandler) {
         this(plugin, player, 1, teamHandler);
@@ -105,6 +106,11 @@ public class CompassInventory extends Gui<UHC> implements Runnable {
     @Override
     public void run() {
         build();
+    }
+
+    @Override
+    public void onClose() {
+        plugin.getServer().getScheduler().cancelTask(this.updateTaskId);
     }
 
     private DyeColor getDye(UHCTeam team) {
