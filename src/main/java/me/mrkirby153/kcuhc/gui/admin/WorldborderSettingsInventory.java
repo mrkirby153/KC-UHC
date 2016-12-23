@@ -20,6 +20,7 @@ public class WorldborderSettingsInventory extends PropertyGui {
         integerProperty(properties.WORLDBORDER_START_SIZE, Material.FENCE, "Worldborder Start Size", 13);
         integerProperty(properties.WORLDBORDER_TRAVEL_TIME, Material.WATCH, "Worldborder Travel Time (mins)", 22);
         integerProperty(properties.WORLDBORDER_END_SIZE, Material.NETHER_FENCE, "Worldborder End Size", 31);
+        integerProperty(properties.MIN_DISTANCE_BETWEEN_TEAMS, Material.PISTON_BASE, "Min Distance between teams (blocks)", 40);
         addButton(45, new ItemFactory(Material.ARROW).name("Back").construct(), (player, clickType) -> {
             player.closeInventory();
             new GameSettingsInventory(plugin, player);
