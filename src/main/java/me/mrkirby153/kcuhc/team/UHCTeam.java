@@ -76,4 +76,9 @@ public abstract class UHCTeam extends ScoreboardTeam {
                 return Color.YELLOW;
         }
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof UHCTeam && ((UHCTeam) obj).getTeamName().equals(this.getTeamName());
+    }
 }
