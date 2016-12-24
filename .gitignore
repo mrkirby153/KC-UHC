@@ -22,3 +22,4 @@ dependency-reduced-pom.xml
 testServer/
 development.ppk
 classes/
+src/main/resources/rebel.xml
