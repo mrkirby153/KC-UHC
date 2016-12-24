@@ -41,9 +41,7 @@ public class TeamHandler extends Module<UHC> {
 
     public void joinTeam(UHCTeam team, Player player) {
         if (getTeamForPlayer(player) != null) {
-            teams.stream().filter(t -> t.getPlayers().contains(player.getUniqueId())).forEach(t -> {
-                t.removePlayer(player);
-            });
+            leaveTeam(player);
         }
         team.addPlayer(player);
         playerToTeamMap.put(player.getUniqueId(), team);
