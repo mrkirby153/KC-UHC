@@ -49,11 +49,12 @@ public class TeamHandler extends Module<UHC> {
     }
 
     public void leaveTeam(Player player) {
-        UHCTeam team = playerToTeamMap.remove(player.getUniqueId());
+        UHCTeam team = getTeamForPlayer(player);
         if (team != null) {
             team.removePlayer(player);
             team.onLeave(player);
         }
+        playerToTeamMap.remove(player.getUniqueId());
     }
 
     public void registerTeam(UHCTeam team) {

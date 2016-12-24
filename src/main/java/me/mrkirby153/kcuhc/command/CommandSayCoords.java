@@ -1,7 +1,7 @@
 package me.mrkirby153.kcuhc.command;
 
+import me.mrkirby153.kcuhc.team.LoneWolfTeam;
 import me.mrkirby153.kcuhc.team.TeamHandler;
-import me.mrkirby153.kcuhc.team.UHCPlayerTeam;
 import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.utils.UtilTime;
@@ -29,8 +29,12 @@ public class CommandSayCoords extends BaseCommand {
             return true;
         Player player = (Player) commandSender;
         UHCTeam team = teamHandler.getTeamForPlayer(player);
-        if (team == null || !(team instanceof UHCPlayerTeam)) {
+        if (team == null) {
             player.sendMessage(UtilChat.generateLegacyError("You are not on a team!"));
+            return true;
+        }
+        if(team instanceof LoneWolfTeam){
+            player.sendMessage(UtilChat.generateLegacyError("Lone Wolves cannot share their coordinates with their team members!"));
             return true;
         }
         team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> {

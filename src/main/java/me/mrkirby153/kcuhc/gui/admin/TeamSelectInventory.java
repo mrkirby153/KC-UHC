@@ -59,7 +59,7 @@ public class TeamSelectInventory extends Gui<UHC> {
         addButton(3, new ItemFactory(Material.DIAMOND_SWORD).name("Two Teams").lore("Create two teams and assign everyone randomly").construct(), (player, clickType) -> {
             // Create two random teams
             ArrayList<UHCTeam> te = new ArrayList<>(teamHandler.teams());
-            te.forEach(teamHandler::unregisterTeam);
+            te.stream().filter(e -> e instanceof UHCPlayerTeam).forEach(teamHandler::unregisterTeam);
             teamHandler.registerTeam(new UHCPlayerTeam("Red", ChatColor.RED));
             teamHandler.registerTeam(new UHCPlayerTeam("Blue", ChatColor.BLUE));
 
@@ -79,21 +79,16 @@ public class TeamSelectInventory extends Gui<UHC> {
                     assignedAlready.add(p.getUniqueId());
                 }
             });
-            // Assign everyone who's not on a team to a team
-            Bukkit.getOnlinePlayers().forEach(p -> {
-                if(teamHandler.getTeamForPlayer(p) != null)
-                    return;
-                if(random.nextBoolean())
-                    teamHandler.joinTeam(teamHandler.getTeamByName("Red"), p);
-                else
-                    teamHandler.joinTeam(teamHandler.getTeamByName("Blue"), p);
+            // Assign everyone who's not on a team to lone wolves
+            Bukkit.getOnlinePlayers().stream().filter(p -> teamHandler.getTeamForPlayer(p) == null).forEach(p -> {
+                plugin.loneWolfHandler.addLoneWolf(p);
             });
             build();
         });
         addButton(5, new ItemFactory(Material.GOLD_SWORD).name("Single Person Teams").lore("Create a team for everyone online").construct(), (player, clickType) -> {
             // Create one team per player
             ArrayList<UHCTeam> te = new ArrayList<>(teamHandler.teams());
-            te.forEach(teamHandler::unregisterTeam);
+            te.stream().filter(t -> t instanceof UHCPlayerTeam).forEach(teamHandler::unregisterTeam);
 
             String charCodes = "0123456789abcde";
             Random random = new Random();
@@ -102,6 +97,10 @@ public class TeamSelectInventory extends Gui<UHC> {
                 teamHandler.joinTeam(teamHandler.getTeamByName(p.getName().toLowerCase()), p);
             }
             build();
+        });
+        addButton(8, new ItemFactory(Material.APPLE).name("Lone Wolf Settings").construct(), (player, clickType)->{
+            player.closeInventory();
+            new LoneWolfSettingsInventory(plugin, player);
         });
     }
 

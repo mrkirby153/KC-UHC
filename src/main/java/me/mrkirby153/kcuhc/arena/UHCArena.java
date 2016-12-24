@@ -12,14 +12,12 @@ import me.mrkirby153.kcuhc.handler.RegenTicket;
 import me.mrkirby153.kcuhc.handler.listener.GameListener;
 import me.mrkirby153.kcuhc.handler.listener.PregameListener;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
-import me.mrkirby153.kcuhc.team.TeamHandler;
-import me.mrkirby153.kcuhc.team.TeamSpectator;
-import me.mrkirby153.kcuhc.team.UHCPlayerTeam;
-import me.mrkirby153.kcuhc.team.UHCTeam;
+import me.mrkirby153.kcuhc.team.*;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.utils.UtilTime;
 import me.mrkirby153.kcuhc.utils.UtilTitle;
 import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandAssignSpectator;
+import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandLoneWolf;
 import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandToLobby;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandAssignTeams;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandNewTeam;
@@ -60,7 +58,6 @@ import org.bukkit.potion.PotionEffectType;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static me.mrkirby153.kcuhc.UHC.uhcNetwork;
 import static me.mrkirby153.kcuhc.arena.UHCArena.State.*;
@@ -289,35 +286,75 @@ public class UHCArena implements Runnable, Listener {
         System.out.println("Spreading teams...");
 
         // Calculate team spawn locations
-        Map<UHCTeam, Location> locations = new HashMap<>();
+        Map<UHCTeam, Location> teamSpawnLocations = new HashMap<>();
+        List<Location> finalSpawnLocs = new ArrayList<>();
         for (UHCTeam team : teamHandler.teams()) {
+            if (team instanceof LoneWolfTeam || team instanceof TeamSpectator)
+                continue;
             Location randomSpawn = SpawnUtils.getRandomSpawn(getWorld(), properties.WORLDBORDER_START_SIZE.get());
-            locations.put(team, randomSpawn);
+            teamSpawnLocations.put(team, randomSpawn);
         }
 
+        Map<UUID, Location> loneWolfSpawnLocations = new HashMap<>();
+        plugin.loneWolfHandler.getLoneWolves().forEach(e -> loneWolfSpawnLocations.put(e, SpawnUtils.getRandomSpawn(getWorld(), properties.WORLDBORDER_START_SIZE.get())));
+
         // Verify that the teams are spread far enough apart
-        for (UHCTeam team : locations.keySet()) {
-            Location spawnLoc = locations.get(team);
-            // Attempt 1,000 tries
+        for (Map.Entry<UHCTeam, Location> entry : teamSpawnLocations.entrySet()) {
+            Location spawnLoc = entry.getValue();
+            UHCTeam team = entry.getKey();
+            List<Location> locs = new ArrayList<>(teamSpawnLocations.values());
+            locs.addAll(loneWolfSpawnLocations.values());
+            locs.addAll(finalSpawnLocs);
             for (int i = 0; i < 1000; i++) {
                 boolean clash = false;
-                for (Location oL : locations.values()) {
-                    if (oL.distanceSquared(spawnLoc) < Math.pow(minRadius, 2) && !oL.equals(spawnLoc)) {
-                        System.out.println("CLASH! " + spawnLoc.toString() + " is too close to " + oL.toString());
+                for (Location otherLoc : locs) {
+                    if (otherLoc.distanceSquared(spawnLoc) < Math.pow(minRadius, 2) && !otherLoc.equals(spawnLoc)) {
+                        System.out.println("CLASH: " + spawnLoc.toString() + " is too close to " + otherLoc.toString());
                         clash = true;
-                    }
-                    if (!clash)
                         break;
-                    spawnLoc = SpawnUtils.getRandomSpawn(getWorld(), properties.WORLDBORDER_START_SIZE.get());
+                    }
                 }
+                if(!clash){
+                    break;
+                }
+                spawnLoc = SpawnUtils.getRandomSpawn(getWorld(), properties.WORLDBORDER_START_SIZE.get());
             }
-            // Teleport everyone on the team to that location
-            System.out.println(String.format("Teleporting players on team around %s to %.2f, %.2f, %.2f", team.getTeamName(), spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ()));
-            for (Player p : team.getPlayers().stream().map(Bukkit::getPlayer).filter(pl -> pl != null).collect(Collectors.toList())) {
-                Location spawnAround = SpawnUtils.getSpawnAround(spawnLoc, 2);
+            finalSpawnLocs.add(spawnLoc);
+            final Location finalLoc = spawnLoc;
+            System.out.println(String.format("Teleporting players on team %s around %.2f, %.2f, %.2f", team.getTeamName(), spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ()));
+            team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> {
+                Location spawnAround = SpawnUtils.getSpawnAround(finalLoc, 2);
                 System.out.println(String.format("\tTeleporting %s to %.2f, %.2f, %.2f", p.getName(), spawnAround.getX(), spawnAround.getY(), spawnAround.getZ()));
                 p.teleport(spawnAround);
+            });
+        }
+
+        // Spread the lone wolves
+        System.out.println("Spreading Lone Wolves...");
+        for(Map.Entry<UUID, Location> entry : loneWolfSpawnLocations.entrySet()){
+            Location spawnLoc = entry.getValue();
+            List<Location> locs = new ArrayList<>(finalSpawnLocs);
+            locs.addAll(loneWolfSpawnLocations.values());
+            for (int i = 0; i < 1000; i++) {
+                boolean clash = false;
+                for (Location otherLoc : locs) {
+                    if (otherLoc.distanceSquared(spawnLoc) < Math.pow(minRadius, 2) && !otherLoc.equals(spawnLoc)) {
+                        System.out.println("CLASH: " + spawnLoc.toString() + " is too close to " + otherLoc.toString());
+                        clash = true;
+                        break;
+                    }
+                }
+                if(!clash){
+                    break;
+                }
+                spawnLoc = SpawnUtils.getRandomSpawn(getWorld(), properties.WORLDBORDER_START_SIZE.get());
             }
+            finalSpawnLocs.add(spawnLoc);
+            Player player = Bukkit.getPlayer(entry.getKey());
+            if(player == null)
+                continue;
+            player.teleport(spawnLoc);
+            System.out.println(String.format("\tTeleporting %s to %.2f %.2f %.2f", player.getName(), spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ()));
         }
 
         System.out.println("Spread teams!");
@@ -684,14 +721,19 @@ public class UHCArena implements Runnable, Listener {
             return;
         Bukkit.getServer().getScheduler().runTaskAsynchronously(plugin, () -> {
             Bukkit.broadcastMessage(UtilChat.message("Creating discord channels..."));
-//            new BotCommandCreateSpectator(plugin.serverId()).publishBlocking();
-            teamHandler.teams().forEach(t -> new BotCommandNewTeam(plugin.serverId(), t.getTeamName()).publishBlocking());
+            // Don't create a channel for lone wolves
+            teamHandler.teams(false).stream().filter(team -> !(team instanceof LoneWolfTeam)).forEach(t -> new BotCommandNewTeam(plugin.serverId(), t.getTeamName()).publishBlocking());
 
             Bukkit.broadcastMessage(UtilChat.message("Moving everyone into their discord channels"));
             HashMap<UUID, String> teams = new HashMap<>();
 
             teamHandler.teams().forEach(t -> t.getPlayers().forEach(u -> teams.put(u, t.getTeamName())));
             new BotCommandAssignTeams(plugin.serverId(), null, teams).publishBlocking();
+
+            for(UUID loneWolf : plugin.loneWolfHandler.getLoneWolves()){
+                plugin.getLogger().info("Assigning lone wolf to "+loneWolf.toString());
+                new BotCommandLoneWolf(plugin.serverId(), loneWolf, BotCommandLoneWolf.Command.ASSIGN).publishBlocking();
+            }
 
             Bukkit.broadcastMessage(UtilChat.message("Everyone should be moved"));
         });
@@ -778,9 +820,13 @@ public class UHCArena implements Runnable, Listener {
         for (Player p : players()) {
             if (properties.REGEN_TICKET_ENABLE.get())
                 RegenTicket.give(p);
+            if (teamHandler.getTeamForPlayer(p) instanceof LoneWolfTeam) {
+                // Lone wolves don't get compasses or team inventories
+                continue;
+            }
             if (properties.GIVE_COMPASS_ON_START.get())
                 plugin.playerTracker.giveTracker(p);
-            if(properties.TEAM_INV_ENABLED.get()){
+            if (properties.TEAM_INV_ENABLED.get()) {
                 teamInventoryHandler.giveInventoryItem(p);
             }
         }
@@ -811,6 +857,7 @@ public class UHCArena implements Runnable, Listener {
         this.winner = winner;
         this.endgameHandler.reset();
         this.teamInventoryHandler.reset();
+        this.plugin.loneWolfHandler.reset();
 
         RegenTicket.clearRegenTickets();
         winner = WordUtils.capitalizeFully(winner.replace('_', ' '));

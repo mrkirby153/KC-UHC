@@ -128,6 +128,10 @@ public class CommandUHC extends BaseCommand {
                 FreezeHandler.freezebypass(player);
                 return true;
             }
+            if(args[0].equalsIgnoreCase("spread")){
+                plugin.arena.distributeTeams(plugin.arena.getProperties().MIN_DISTANCE_BETWEEN_TEAMS.get());
+                return true;
+            }
         }
         if (args.length == 2) {
             if (restrictAdmin(sender)) {

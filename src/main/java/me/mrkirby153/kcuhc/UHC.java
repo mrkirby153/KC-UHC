@@ -1,11 +1,13 @@
 package me.mrkirby153.kcuhc;
 
 import me.mrkirby153.kcuhc.arena.UHCArena;
+import me.mrkirby153.kcuhc.arena.handler.lonewolf.LoneWolfHandler;
 import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.handler.*;
 import me.mrkirby153.kcuhc.scoreboard.ScoreboardManager;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcutils.BossBar;
+import me.mrkirby153.kcutils.command.CommandManager;
 import me.mrkirby153.uhc.bot.network.UHCNetwork;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -30,6 +32,7 @@ public class UHC extends JavaPlugin {
     public BossBar bossBar;
     public DiscordHandler discordHandler;
     public TeamChatHandler teamChatHandler;
+    public LoneWolfHandler loneWolfHandler;
 
     public static UHC getInstance() {
         return plugin;
@@ -57,6 +60,8 @@ public class UHC extends JavaPlugin {
 
         teamHandler = new TeamHandler(this);
         teamHandler.load();
+
+        CommandManager.initialize(this);
 
         admins = (ArrayList<String>) getConfig().getStringList("admins");
 
@@ -97,6 +102,9 @@ public class UHC extends JavaPlugin {
         extraHealthHelper.load();
 
         velocityTracker = new VelocityTracker(this);
+
+        loneWolfHandler = new LoneWolfHandler(this, teamHandler);
+        loneWolfHandler.load();
 
 
         getServer().getPluginManager().registerEvents(new ScoreboardManager(plugin), this);

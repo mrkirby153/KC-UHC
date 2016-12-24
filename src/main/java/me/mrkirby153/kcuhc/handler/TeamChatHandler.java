@@ -1,7 +1,9 @@
 package me.mrkirby153.kcuhc.handler;
 
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.team.LoneWolfTeam;
 import me.mrkirby153.kcuhc.team.UHCTeam;
+import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcutils.Module;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -26,6 +28,10 @@ public class TeamChatHandler extends Module<UHC> implements Listener {
             return;
         if (event.getMessage().startsWith("@")) {
             event.setCancelled(true);
+            if(team instanceof LoneWolfTeam){
+                event.getPlayer().sendMessage(UtilChat.generateLegacyError("You cannot use team chat as a lone wolf!"));
+                return;
+            }
             String newMsg = event.getMessage().substring(1);
             team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(player -> {
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, SoundCategory.MASTER, 1.0F, 1.0F);

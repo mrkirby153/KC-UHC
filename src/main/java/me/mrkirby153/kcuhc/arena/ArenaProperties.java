@@ -41,6 +41,9 @@ public class ArenaProperties {
     public Property<Integer> PVP_GRACE_MINS = new Property<>("pvp_grace", 10);
     public Property<Boolean> TEAM_INV_ENABLED = new Property<>("team_inv", true);
 
+    public Property<Integer> LONE_WOLF_TEAM_SIZE = new Property<>("lone_wolf_team_size", 2);
+    public Property<Boolean> LONE_WOLF_CREATES_TEAMS = new Property<>("lone_wolf_creates_teams", false);
+
     public static ArenaProperties loadProperties(String fileName) {
         File file = new File(UHC.getInstance().getDataFolder(), "presets/" + fileName + ".json");
         if(!file.exists()){
