@@ -18,7 +18,9 @@ public class GameSettingsInventory extends PropertyGui {
     public void build() {
         ArenaProperties properties = UHC.getInstance().arena.getProperties();
         booleanButton(properties.SPREAD_PLAYERS, new ItemFactory(Material.ENDER_PEARL).name("Spread Players").construct(), 0);
-        booleanButton(properties.CHECK_ENDING, new ItemFactory(Material.CAKE).name("End Check").construct(), 2);
+        booleanButton(properties.END_ENABLED, new ItemFactory(Material.ENDER_PORTAL_FRAME).name("The End").construct(), 1);
+        booleanButton(properties.NETHER_ENABLED, new ItemFactory(Material.NETHERRACK).name("The Nether").construct(), 2);
+        booleanButton(properties.CHECK_ENDING, new ItemFactory(Material.CAKE).name("End Check").construct(), 3);
         booleanButton(properties.DROP_PLAYER_HEAD, new ItemFactory(Material.SKULL_ITEM).data(3).name("Drop Player Heads").construct(), 4);
         booleanButton(properties.ENABLE_HEAD_APPLE, new ItemFactory(Material.GOLDEN_APPLE).name("Head Apples").construct(), 6);
         booleanButton(properties.GIVE_COMPASS_ON_START, new ItemFactory(Material.COMPASS).name("Give Compass on Start").construct(), 8);

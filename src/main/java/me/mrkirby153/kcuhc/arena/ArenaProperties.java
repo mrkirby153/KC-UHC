@@ -44,6 +44,9 @@ public class ArenaProperties {
     public Property<Integer> LONE_WOLF_TEAM_SIZE = new Property<>("lone_wolf_team_size", 2);
     public Property<Boolean> LONE_WOLF_CREATES_TEAMS = new Property<>("lone_wolf_creates_teams", false);
 
+    public Property<Boolean> NETHER_ENABLED = new Property<>("nether_enabled", true);
+    public Property<Boolean> END_ENABLED = new Property<>("end_enabled", true);
+
     public static ArenaProperties loadProperties(String fileName) {
         File file = new File(UHC.getInstance().getDataFolder(), "presets/" + fileName + ".json");
         if(!file.exists()){

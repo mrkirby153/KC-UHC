@@ -33,6 +33,7 @@ public class UHC extends JavaPlugin {
     public DiscordHandler discordHandler;
     public TeamChatHandler teamChatHandler;
     public LoneWolfHandler loneWolfHandler;
+    public DimensionHandler dimensionHandler;
 
     public static UHC getInstance() {
         return plugin;
@@ -105,6 +106,9 @@ public class UHC extends JavaPlugin {
 
         loneWolfHandler = new LoneWolfHandler(this, teamHandler);
         loneWolfHandler.load();
+
+        dimensionHandler = new DimensionHandler(this);
+        dimensionHandler.load();
 
 
         getServer().getPluginManager().registerEvents(new ScoreboardManager(plugin), this);
