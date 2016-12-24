@@ -35,11 +35,16 @@ public class ScoreboardUpdater {
     public void refresh() {
         Bukkit.getOnlinePlayers().stream().filter(p -> p.getScoreboard() != scoreboard.getBoard()).forEach(p -> p.setScoreboard(scoreboard.getBoard()));
         scoreboard.reset();
+
         switch (arena.currentState()) {
             case WAITING:
             case INITIALIZED:
+            case COUNTDOWN:
                 scoreboard.add(" ");
-                scoreboard.add(ChatColor.RED + "" + ChatColor.BOLD + "Waiting for start...");
+                if (arena.currentState() == UHCArena.State.WAITING || arena.currentState() == UHCArena.State.INITIALIZED)
+                    scoreboard.add(ChatColor.RED + "" + ChatColor.BOLD + "Waiting for start...");
+                else
+                    scoreboard.add(ChatColor.GREEN + "" + ChatColor.BOLD + "Starting....");
                 scoreboard.add(" ");
                 scoreboard.add("Players: " + Bukkit.getOnlinePlayers().size() + "/" + Bukkit.getMaxPlayers());
                 scoreboard.add(" ");
