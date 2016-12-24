@@ -25,9 +25,38 @@
             <id>sonatype</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
+        <repository>
+            <id>demonwav</id>
+            <url>https://nexus.demonwav.com/content/repositories/snapshots/</url>
+        </repository>
     </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>demonwav</id>
+            <url>https://nexus.demonwav.com/content/repositories/snapshots/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
     <build>
         <plugins>
+            <plugin>
+                <groupId>com.demonwav</groupId>
+                <artifactId>bukkitstart</artifactId>
+                <version>1.1-SNAPSHOT</version>
+                <configuration>
+                    <acceptEula>true</acceptEula>
+                    <url>LATEST_SPIGOT</url>
+                    <runDirectory>testServer</runDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>setup-server</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -79,12 +108,12 @@
                                 </filter>
                             </filters>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <relocations>
+<!--                            <relocations>
                                 <relocation>
                                     <pattern>me.mrkirby153.kcutils</pattern>
                                     <shadedPattern>me.mrkirby153.kcuhc.kcutils</shadedPattern>
                                 </relocation>
-                            </relocations>
+                            </relocations>-->
                         </configuration>
                     </execution>
                 </executions>
@@ -142,6 +171,12 @@
             <groupId>me.mrkirby153</groupId>
             <artifactId>KirbyUtils</artifactId>
             <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.demonwav</groupId>
+            <artifactId>bukkitstart</artifactId>
+            <version>1.1-SNAPSHOT</version>
+            <scope>runtime</scope>
         </dependency>
     </dependencies>
 
