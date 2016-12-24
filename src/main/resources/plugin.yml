@@ -23,3 +23,7 @@ commands:
     aliases: ['a']
     usage: /a <message>
     description: Contact an admin
+  saycoords:
+    aliases: ['whereami', 'coords']
+    usage: /saycoords
+    description: Sends your coordinates to your team

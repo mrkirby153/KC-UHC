@@ -108,6 +108,7 @@ public class UHC extends JavaPlugin {
         getCommand("spectate").setExecutor(new CommandSpectate(teamHandler, plugin));
         getCommand("admin").setExecutor(new CommandAdmin(teamHandler));
         getCommand("teaminventory").setExecutor(new CommandTeamInv(teamHandler, plugin));
+        getCommand("saycoords").setExecutor(new CommandSayCoords(teamHandler));
 
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new UHCArena.PlayerActionBarUpdater(teamHandler), 0, 1);
     }
