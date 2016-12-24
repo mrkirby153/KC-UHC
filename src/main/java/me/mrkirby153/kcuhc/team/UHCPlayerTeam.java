@@ -1,6 +1,7 @@
 package me.mrkirby153.kcuhc.team;
 
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.arena.UHCArena;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
@@ -36,11 +37,14 @@ public class UHCPlayerTeam extends UHCTeam implements ConfigurationSerializable 
         UHC.getInstance().arena.addPlayer(player);
         player.setGameMode(GameMode.SURVIVAL);
         player.setDisplayName(getColor() + player.getName() + ChatColor.RESET);
+        if (UHC.getInstance().arena.currentState() == UHCArena.State.RUNNING && UHC.getInstance().arena.getProperties().TEAM_INV_ENABLED.get())
+            UHC.getInstance().getServer().getScheduler().runTaskLater(UHC.getInstance(), () -> UHC.getInstance().arena.getTeamInventoryHandler().giveInventoryItem(player), 5L);
     }
 
     @Override
     public void onLeave(Player player) {
         player.setDisplayName(player.getName());
+        UHC.getInstance().arena.getTeamInventoryHandler().takeInventoryItem(player);
     }
 
     @Override

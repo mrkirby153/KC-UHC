@@ -148,7 +148,8 @@ public class UHCArena implements Runnable, Listener {
         this.worldBorderHandler = new WorldBorderHandler(plugin, this, teamHandler);
         this.scoreboardUpdater = new ScoreboardUpdater(this, teamHandler, new UHCScoreboard(plugin));
         this.endgameHandler = new EndgameHandler(this);
-        this.teamInventoryHandler = new TeamInventoryHandler();
+        this.teamInventoryHandler = new TeamInventoryHandler(plugin);
+        this.teamInventoryHandler.load();
 
         plugin.getServer().getPluginManager().registerEvents(new PregameListener(plugin), plugin);
         plugin.getServer().getPluginManager().registerEvents(new GameListener(teamHandler, plugin), plugin);
@@ -779,6 +780,9 @@ public class UHCArena implements Runnable, Listener {
                 RegenTicket.give(p);
             if (properties.GIVE_COMPASS_ON_START.get())
                 plugin.playerTracker.giveTracker(p);
+            if(properties.TEAM_INV_ENABLED.get()){
+                teamInventoryHandler.giveInventoryItem(p);
+            }
         }
 
         sendEveryoneToTeamChannels();
