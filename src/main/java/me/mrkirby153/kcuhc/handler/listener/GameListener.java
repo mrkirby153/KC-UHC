@@ -2,6 +2,8 @@ package me.mrkirby153.kcuhc.handler.listener;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.UHCArena;
+import me.mrkirby153.kcuhc.module.ModuleRegistry;
+import me.mrkirby153.kcuhc.module.player.TeamInventoryModule;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.utils.UtilChat;
@@ -22,8 +24,6 @@ import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -36,7 +36,7 @@ import java.util.Random;
 public class GameListener implements Listener {
 
     private static final Random random = new Random();
-    
+
     private TeamHandler teamHandler;
     private UHC plugin;
 
@@ -48,37 +48,28 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void death(PlayerDeathEvent event) {
-        if(!isRunning())
+        if (!isRunning())
             return;
         Player dead = event.getEntity();
         UHCTeam team = teamHandler.getTeamForPlayer(dead);
         savePlayerData(dead);
         dead.setGlowing(false);
         teamHandler.leaveTeam(dead);
-        for(Player p : UHC.getInstance().arena.players()){
-            UtilTitle.title(p, ChatColor.DARK_PURPLE+ dead.getDisplayName(), ChatColor.AQUA+event.getDeathMessage().replace(dead.getName(), ""),
+        for (Player p : UHC.getInstance().arena.players()) {
+            UtilTitle.title(p, ChatColor.DARK_PURPLE + dead.getDisplayName(), ChatColor.AQUA + event.getDeathMessage().replace(dead.getName(), ""),
                     10, 20 * 5, 20);
-        }
-        if (UHC.getInstance().arena.getProperties().DROP_PLAYER_HEAD.get()) {
-            Location playerLoc = dead.getLocation();
-            // Drop the player's head
-            ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
-            ItemMeta m = head.getItemMeta();
-            ((SkullMeta) m).setOwner(dead.getName());
-            head.setItemMeta(m);
-            playerLoc.getWorld().dropItemNaturally(playerLoc, head);
         }
         dead.getWorld().strikeLightningEffect(dead.getLocation());
         killTamedHorses(dead);
-        if(team != null && team.getPlayers().size() < 1){
+        if (team != null && team.getPlayers().size() < 1) {
             System.out.println("--- TEAM ELIMINATED, DROPPING INVENTORY AT " + dead.getLocation() + " ---");
-            UHC.getInstance().arena.getTeamInventoryHandler().dropInventory(team, dead.getLocation());
+            ModuleRegistry.getLoadedModule(TeamInventoryModule.class).ifPresent(p -> p.dropInventory(team, dead.getLocation()));
         }
     }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        if(!isRunning())
+        if (!isRunning())
             return;
         plugin.arena.playerJoin(event.getPlayer());
         event.setJoinMessage(ChatColor.BLUE + "Join> " + ChatColor.GRAY + event.getPlayer().getName());
@@ -90,7 +81,7 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onLeave(PlayerQuitEvent event) {
-        if(!isRunning())
+        if (!isRunning())
             return;
         event.setQuitMessage(ChatColor.BLUE + "Part> " + ChatColor.GRAY + event.getPlayer().getName());
         plugin.arena.playerDisconnect(event.getPlayer());
@@ -98,7 +89,7 @@ public class GameListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDamage(EntityDamageEvent event) {
-        if(!isRunning())
+        if (!isRunning())
             return;
         if (event.getEntityType() != EntityType.PLAYER) {
             return;
@@ -116,25 +107,10 @@ public class GameListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void entityDamage(EntityDamageByEntityEvent event) {
-        if(!isRunning())
+        if (!isRunning())
             return;
-        // If a player hits a player
-        if (event.getDamager().getType() == EntityType.PLAYER && event.getEntity().getType() == EntityType.PLAYER) {
-            if(plugin.arena.pvpDisabled()){
-                event.setCancelled(true);
-            }
+        if(event.getDamager().getType() == EntityType.PLAYER)
             return;
-        }
-        // If an arrow hits a player
-        if(event.getDamager().getType() == EntityType.ARROW && event.getEntity().getType() == EntityType.PLAYER){
-            Arrow arrow = (Arrow) event.getDamager();
-            if(arrow.getShooter() instanceof Player){
-                if(plugin.arena.pvpDisabled()){
-                    event.setCancelled(true);
-                }
-            }
-            return;
-        }
         double oldDamage = event.getDamage();
         double newDamage = Math.floor(oldDamage / 2);
         if (newDamage < 1)
@@ -144,7 +120,7 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
-        if(!isRunning())
+        if (!isRunning())
             return;
         SpectateListener.addEarlyPickup(event.getPlayer());
         Bukkit.getServer().getScheduler().runTaskLater(plugin, () -> plugin.arena.spectate(event.getPlayer(), true), 1L);
@@ -152,26 +128,51 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void entityTame(EntityTameEvent event) {
-        if(!isRunning())
+        if (!isRunning())
             return;
-        if (event.getEntityType() == EntityType.HORSE) {
-            if (event.getEntityType() == EntityType.HORSE) {
-                Horse horse = (Horse) event.getEntity();
-                horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
-                UHCTeam team = teamHandler.getTeamForPlayer((Player) event.getOwner());
-                if (team != null) {
-                    horse.setCustomName("Team " + team.getColor() + team.getTeamName() + "'s " + ChatColor.WHITE + "Horse");
-                } else if (event.getOwner().getName().endsWith("s"))
-                    horse.setCustomName(event.getOwner().getName() + "' Horse");
-                else
-                    horse.setCustomName(event.getOwner().getName() + "'s Horse");
-            }
+        if (event.getEntityType() == EntityType.HORSE ) {
+            Horse horse = (Horse) event.getEntity();
+            horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
+            UHCTeam team = teamHandler.getTeamForPlayer((Player) event.getOwner());
+            if (team != null) {
+                horse.setCustomName("Team " + team.getColor() + team.getTeamName() + "'s " + ChatColor.WHITE + "Horse");
+            } else if (event.getOwner().getName().endsWith("s"))
+                horse.setCustomName(event.getOwner().getName() + "' Horse");
+            else
+                horse.setCustomName(event.getOwner().getName() + "'s Horse");
+        }
+        if(event.getEntityType() == EntityType.DONKEY){
+            Donkey donkey = (Donkey) event.getEntity();
+            donkey.getInventory().setItem(0, new ItemStack(Material.SADDLE));
+            UHCTeam team = teamHandler.getTeamForPlayer((Player) event.getOwner());
+            if (team != null) {
+                donkey.setCustomName("Team " + team.getColor() + team.getTeamName() + "'s " + ChatColor.WHITE + "Donkey");
+            } else if (event.getOwner().getName().endsWith("s"))
+                donkey.setCustomName(event.getOwner().getName() + "' Donkey");
+            else
+                donkey.setCustomName(event.getOwner().getName() + "'s Donkey");
         }
     }
 
     private void killTamedHorses(Player player) {
         for (World w : Bukkit.getWorlds()) {
             for (Entity e : w.getEntities()) {
+                if(e.getType() == EntityType.DONKEY){
+                    Donkey d = (Donkey) e;
+                    if(d.getOwner() == null)
+                        continue;
+                    if(d.getOwner().getUniqueId().equals(player.getUniqueId())){
+                        Entity passenger = d.getPassenger();
+                        if(passenger != null && passenger.getType() == EntityType.PLAYER && !passenger.getUniqueId().equals(player.getUniqueId())){
+                            passenger.sendMessage(UtilChat.message(ChatColor.GOLD + d.getOwner().getName() + "'s " + ChatColor.GRAY + "donkey has been re-tamed to you as they have died"));
+                            d.setOwner((Player) passenger);
+                            Bukkit.getServer().getPluginManager().callEvent(new EntityTameEvent(d, (Player) passenger));
+                        } else {
+                            d.setTamed(false);
+                            d.setCustomName("");
+                        }
+                    }
+                }
                 if (e.getType() != EntityType.HORSE)
                     continue;
                 Horse horse = (Horse) e;
@@ -197,7 +198,7 @@ public class GameListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void entityInteract(PlayerInteractEvent evt) {
-        if(!isRunning())
+        if (!isRunning())
             return;
         if (teamHandler.isSpectator(evt.getPlayer()))
             return;
@@ -232,7 +233,7 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void changeWorld(PlayerChangedWorldEvent event) {
-        if(!isRunning())
+        if (!isRunning())
             return;
         if (!event.getFrom().getName().contains("nether")) {
             return;
@@ -281,7 +282,7 @@ public class GameListener implements Listener {
 
     @EventHandler
     public void spawnEvent(CreatureSpawnEvent event) {
-        if(!isRunning())
+        if (!isRunning())
             return;
         if (event.getSpawnReason() != CreatureSpawnEvent.SpawnReason.NATURAL)
             return;
@@ -372,7 +373,7 @@ public class GameListener implements Listener {
         return Math.abs(location.getBlockX()) < bounds && Math.abs(location.getBlockZ()) < bounds;
     }
 
-    private static boolean isRunning(){
+    private static boolean isRunning() {
         return UHC.getInstance().arena.currentState() == UHCArena.State.RUNNING || UHC.getInstance().arena.currentState() == UHCArena.State.FROZEN;
     }
 }

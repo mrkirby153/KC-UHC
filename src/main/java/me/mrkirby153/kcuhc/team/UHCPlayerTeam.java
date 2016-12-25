@@ -2,6 +2,8 @@ package me.mrkirby153.kcuhc.team;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.UHCArena;
+import me.mrkirby153.kcuhc.module.ModuleRegistry;
+import me.mrkirby153.kcuhc.module.player.TeamInventoryModule;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
@@ -37,14 +39,17 @@ public class UHCPlayerTeam extends UHCTeam implements ConfigurationSerializable 
         UHC.getInstance().arena.addPlayer(player);
         player.setGameMode(GameMode.SURVIVAL);
         player.setDisplayName(getColor() + player.getName() + ChatColor.RESET);
-        if (UHC.getInstance().arena.currentState() == UHCArena.State.RUNNING && UHC.getInstance().arena.getProperties().TEAM_INV_ENABLED.get())
-            UHC.getInstance().getServer().getScheduler().runTaskLater(UHC.getInstance(), () -> UHC.getInstance().arena.getTeamInventoryHandler().giveInventoryItem(player), 5L);
+
+        ModuleRegistry.getLoadedModule(TeamInventoryModule.class).ifPresent(mod -> {
+            if (UHC.getInstance().arena.currentState() == UHCArena.State.RUNNING)
+                UHC.getInstance().getServer().getScheduler().runTaskLater(UHC.getInstance(), () -> mod.giveInventoryItem(player), 5L);
+        });
     }
 
     @Override
     public void onLeave(Player player) {
         player.setDisplayName(player.getName());
-        UHC.getInstance().arena.getTeamInventoryHandler().takeInventoryItem(player);
+        ModuleRegistry.getLoadedModule(TeamInventoryModule.class).ifPresent(p -> p.takeInventoryItem(player));
     }
 
     @Override

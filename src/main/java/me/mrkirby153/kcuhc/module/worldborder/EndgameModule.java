@@ -1,17 +1,23 @@
-package me.mrkirby153.kcuhc.arena.handler;
+package me.mrkirby153.kcuhc.module.worldborder;
 
+import me.mrkirby153.kcuhc.arena.GameStateChangeEvent;
 import me.mrkirby153.kcuhc.arena.UHCArena;
+import me.mrkirby153.kcuhc.module.ModuleRegistry;
+import me.mrkirby153.kcuhc.module.UHCModule;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.utils.UtilTime;
+import me.mrkirby153.kcutils.event.UpdateEvent;
+import me.mrkirby153.kcutils.event.UpdateType;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.WorldBorder;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 
-public class EndgameHandler implements Runnable {
+public class EndgameModule extends UHCModule {
 
-    private final UHCArena arena;
     protected long nextEndgamePhaseOn = -1;
     protected int currEgPhase = EndgamePhase.NORMALGAME.ordinal();
 
@@ -21,8 +27,9 @@ public class EndgameHandler implements Runnable {
 
     private long nextWBShrink = -1;
 
-    public EndgameHandler(UHCArena arena) {
-        this.arena = arena;
+    public EndgameModule() {
+        super(Material.BARRIER, 0, "Endgame Worldborder", true, "Shrinks the world border to one block");
+        addDepends(WorldBorderModule.class);
     }
 
     public void activateNextPhase() {
@@ -31,7 +38,7 @@ public class EndgameHandler implements Runnable {
         currEgPhase++;
         BaseComponent text = UtilChat.generateBoldChat(getCurrentEndgamePhase().name, net.md_5.bungee.api.ChatColor.LIGHT_PURPLE);
         text.addExtra(UtilChat.generateBoldChat(" active!", net.md_5.bungee.api.ChatColor.DARK_RED));
-        for (Player p : arena.players()) {
+        for (Player p : getPlugin().arena.players()) {
             p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F);
             p.spigot().sendMessage(text);
         }
@@ -42,7 +49,7 @@ public class EndgameHandler implements Runnable {
             lastSecond = secondsUntil;
             BaseComponent text = UtilChat.generateBoldChat(getNextEndgamePhase().getName(), ChatColor.LIGHT_PURPLE);
             text.addExtra(UtilChat.generateBoldChat(" in " + UtilTime.format(1, (long) (secondsUntil * 1000), UtilTime.TimeUnit.FIT), ChatColor.GREEN));
-            for (Player p : arena.players()) {
+            for (Player p : getPlugin().arena.players()) {
                 p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
                 p.spigot().sendMessage(text);
             }
@@ -53,10 +60,12 @@ public class EndgameHandler implements Runnable {
         switch (getCurrentEndgamePhase()) {
             case SHRINKING_WORLDBORDER:
                 if (System.currentTimeMillis() > nextWBShrink) {
-                    WorldBorder wb = arena.getWorld().getWorldBorder();
-                    if (wb.getSize() > 1)
-                        wb.setSize(wb.getSize() - 2, 1);
-                    nextWBShrink = System.currentTimeMillis() + 3000;
+                    ModuleRegistry.getLoadedModule(WorldBorderModule.class).ifPresent(wb -> {
+                        if(wb.getOverworldBorder().getSize() > 1){
+                            wb.setWorldBorder(wb.getOverworldBorder().getSize() - 2, 1);
+                        }
+                        nextWBShrink = System.currentTimeMillis() + 3000;
+                    });
                 }
                 break;
         }
@@ -64,6 +73,17 @@ public class EndgameHandler implements Runnable {
 
     public EndgamePhase getCurrentEndgamePhase() {
         return EndgamePhase.values()[currEgPhase];
+    }
+
+    @Override
+    public void onEnable() {
+        Bukkit.broadcastMessage(UtilChat.message("Endgame enabled!"));
+        reset();
+    }
+
+    @Override
+    public void onDisable() {
+        Bukkit.broadcastMessage(UtilChat.message("Endgame disabled!"));
     }
 
     public void setCurrentEndgamePhase(EndgamePhase currentEndgamePhase) {
@@ -86,22 +106,33 @@ public class EndgameHandler implements Runnable {
         this.running = false;
     }
 
-    @Override
-    public void run() {
-        if (arena.getProperties().ENABLE_ENDGAME.get()) {
-            if (shouldStart() && !running)
-                start();
-            if (nextEndgamePhaseOn == -1)
-                return;
-            long time = nextEndgamePhaseOn - System.currentTimeMillis();
-            double secondsUntil = Math.ceil(time / 1000D);
-            if (secondsUntil > 0)
-                announce(secondsUntil, false);
-            if (time <= 0)
-                activateNextPhase();
-            if (running)
-                endgameAction();
+    @EventHandler(ignoreCancelled = true)
+    public void onGameStateChange(GameStateChangeEvent event) {
+        if (event.getTo() == UHCArena.State.RUNNING)
+            reset();
+        if (event.getTo() == UHCArena.State.INITIALIZED)
+            reset();
+        if (event.getTo() == UHCArena.State.ENDGAME) {
+            reset();
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onUpdate(UpdateEvent event) {
+        if (event.getType() != UpdateType.TICK)
+            return;
+        if (shouldStart() && !running)
+            start();
+        if (nextEndgamePhaseOn == -1)
+            return;
+        long time = nextEndgamePhaseOn - System.currentTimeMillis();
+        double secondsUntil = Math.ceil(time / 1000D);
+        if (secondsUntil > 0)
+            announce(secondsUntil, false);
+        if (time <= 0)
+            activateNextPhase();
+        if (running)
+            endgameAction();
     }
 
     public void setNextEndgamePhaseIn(long nextEndgamePhaseIn) {
@@ -109,7 +140,7 @@ public class EndgameHandler implements Runnable {
     }
 
     public boolean shouldStart() {
-        return arena.currentState() == UHCArena.State.RUNNING && arena.getWorld().getWorldBorder().getSize() <= arena.getProperties().WORLDBORDER_END_SIZE.get();
+        return getPlugin().arena.currentState() == UHCArena.State.RUNNING && getPlugin().arena.getWorld().getWorldBorder().getSize() <= getPlugin().arena.getProperties().WORLDBORDER_END_SIZE.get();
     }
 
     public void start() {

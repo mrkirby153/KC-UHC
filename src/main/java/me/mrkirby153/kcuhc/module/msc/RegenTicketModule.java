@@ -1,19 +1,17 @@
-package me.mrkirby153.kcuhc.handler;
+package me.mrkirby153.kcuhc.module.msc;
 
-
+import me.mrkirby153.kcuhc.arena.GameStateChangeEvent;
+import me.mrkirby153.kcuhc.arena.UHCArena;
+import me.mrkirby153.kcuhc.module.UHCModule;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import net.minecraft.server.v1_11_R1.NBTTagCompound;
 import net.minecraft.server.v1_11_R1.NBTTagList;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.craftbukkit.v1_11_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -29,77 +27,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-public class RegenTicket implements Listener {
+public class RegenTicketModule extends UHCModule {
 
-    private static HashMap<UUID, ItemStack> regenTickets = new HashMap<>();
+    private HashMap<UUID, ItemStack> regenTickets = new HashMap<>();
+    private TeamHandler teamHandler;
 
-    private static TeamHandler teamHandler;
-
-    public static void setTeamHandler(TeamHandler teamHandler){
-        RegenTicket.teamHandler = teamHandler;
+    public RegenTicketModule(TeamHandler teamHandler) {
+        super(Material.PAPER, 0, "Regen Tickets", true, "Gives everyone a regen ticket");
+        this.teamHandler = teamHandler;
     }
 
-    @EventHandler
-    public void onDrop(PlayerDropItemEvent event) {
-        if (isTicket(event.getItemDrop().getItemStack()))
-            event.setCancelled(true);
+    public void clearRegenTickets() {
+        regenTickets.clear();
     }
 
-    @EventHandler
-    public void onClick(PlayerInteractEvent event) {
-        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            ItemStack stack = event.getItem();
-            if (isTicket(stack)) {
-                if (!canUse(event.getPlayer(), stack)) {
-                    event.getPlayer().spigot().sendMessage(UtilChat.generateError("You cannot use someone else's regen ticket!"));
-                    return;
-                }
-                Player clicker = event.getPlayer();
-                if (clicker.getHealth() >= clicker.getMaxHealth()) {
-                    event.getPlayer().spigot().sendMessage(UtilChat.generateError("You cannot use this while you have full health!"));
-                    return;
-                }
-                double target = clicker.getMaxHealth() - 4;
-                if (clicker.getHealth() >= target) {
-                    event.getPlayer().spigot().sendMessage(UtilChat.generateError("You cannot use this while you have more than " + target / 2 + " hearts!"));
-                    return;
-                }
-                remove(clicker, true);
-            }
-        }
-    }
-
-    @EventHandler
-    public void inventoryMove(InventoryClickEvent event) {
-        ItemStack is = event.getCurrentItem();
-        if (isTicket(is)) {
-            InventoryType topInv = event.getView().getTopInventory().getType();
-            if (topInv != InventoryType.PLAYER && topInv != InventoryType.CRAFTING)
-                event.setCancelled(true);
-//                event.setCancelled(true);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onDamage(EntityDamageByEntityEvent event) {
-        if (event.isCancelled())
-            return;
-        if (!(event.getDamager() instanceof Player) || !(event.getEntity() instanceof Player)) {
-            return; // Not involving a player
-        }
-        // Check if the player hit a player
-        if (event.getEntity() instanceof Player) {
-            // They hit a player, remove the item
-            remove((Player) event.getDamager(), false);
-        }
-        // Check if the player is hit by a player
-        if (event.getDamager() instanceof Player) {
-            // They were hit by a player, remove the item
-            remove((Player) event.getEntity(), false);
-        }
-    }
-
-    public static ItemStack createRegenTicket(Player player) {
+    public ItemStack createRegenTicket(Player player) {
         ItemStack item = new ItemStack(Material.PAPER, 1);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(ChatColor.GOLD + "Regen Ticket" + ChatColor.GREEN + " (Right Click)");
@@ -133,12 +75,101 @@ public class RegenTicket implements Listener {
         return finalStack;
     }
 
-    public static void give(Player player) {
+    public void give(Player player) {
         if (teamHandler.isSpectator(player))
             return;
         player.spigot().sendMessage(UtilChat.generateFormattedChat("You have been given a regen ticket. This ticket will restore " +
                 "you to full health. However, once PvP damage is given or delt, it is removed!", net.md_5.bungee.api.ChatColor.DARK_GREEN, 8));
         player.getInventory().addItem(createRegenTicket(player));
+    }
+
+
+    @EventHandler
+    public void inventoryMove(InventoryClickEvent event) {
+        ItemStack is = event.getCurrentItem();
+        if (isTicket(is)) {
+            InventoryType topInv = event.getView().getTopInventory().getType();
+            if (topInv != InventoryType.PLAYER && topInv != InventoryType.CRAFTING) {
+                event.getWhoClicked().sendMessage(UtilChat.generateLegacyError("You cannot move your regen ticket out of your inventory"));
+                event.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onClick(PlayerInteractEvent event) {
+        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            ItemStack stack = event.getItem();
+            if (isTicket(stack)) {
+                if (!canUse(event.getPlayer(), stack)) {
+                    event.getPlayer().spigot().sendMessage(UtilChat.generateError("You cannot use someone else's regen ticket!"));
+                    return;
+                }
+                Player clicker = event.getPlayer();
+                if (clicker.getHealth() >= clicker.getMaxHealth()) {
+                    event.getPlayer().spigot().sendMessage(UtilChat.generateError("You cannot use this while you have full health!"));
+                    return;
+                }
+                double target = clicker.getMaxHealth() - 4;
+                if (clicker.getHealth() >= target) {
+                    event.getPlayer().spigot().sendMessage(UtilChat.generateError("You cannot use this while you have more than " + target / 2 + " hearts!"));
+                    return;
+                }
+                remove(clicker, true);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onDamage(EntityDamageByEntityEvent event) {
+        if (event.isCancelled())
+            return;
+        if (!(event.getDamager() instanceof Player) || !(event.getEntity() instanceof Player)) {
+            return; // Not involving a player
+        }
+        // Check if the player hit a player
+        if (event.getEntity() instanceof Player) {
+            // They hit a player, remove the item
+            remove((Player) event.getDamager(), false);
+        }
+        // Check if the player is hit by a player
+        if (event.getDamager() instanceof Player) {
+            // They were hit by a player, remove the item
+            remove((Player) event.getEntity(), false);
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        regenTickets.forEach(((uuid, itemStack) -> {
+            Player p = Bukkit.getPlayer(uuid);
+            if (p != null)
+                remove(p, false);
+        }));
+    }
+
+    @EventHandler
+    public void onDrop(PlayerDropItemEvent event) {
+        if (isTicket(event.getItemDrop().getItemStack())) {
+            event.getPlayer().sendMessage(UtilChat.message("You cannot drop your regen ticket"));
+            event.setCancelled(true);
+        }
+    }
+
+    @Override
+    public void onEnable() {
+
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onGameStateChange(GameStateChangeEvent event) {
+        if (event.getTo() == UHCArena.State.RUNNING) {
+            for (Player p : getPlugin().arena.players()) {
+                give(p);
+            }
+        }
+        if(event.getTo() == UHCArena.State.ENDGAME)
+            clearRegenTickets();
     }
 
     private boolean canUse(Player player, ItemStack stack) {
@@ -148,10 +179,6 @@ public class RegenTicket implements Listener {
             return false;
         UUID u = UUID.fromString(tag.getString("owner"));
         return u.equals(player.getUniqueId());
-    }
-
-    public static void clearRegenTickets() {
-        regenTickets.clear();
     }
 
     private boolean isTicket(ItemStack stack) {

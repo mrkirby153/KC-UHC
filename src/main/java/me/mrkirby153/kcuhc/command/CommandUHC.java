@@ -5,9 +5,11 @@ import me.mrkirby153.kcuhc.arena.ArenaProperties;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.gui.admin.GameAdminInventory;
 import me.mrkirby153.kcuhc.handler.FreezeHandler;
-import me.mrkirby153.kcuhc.handler.listener.GameListener;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
-import me.mrkirby153.kcuhc.handler.RegenTicket;
+import me.mrkirby153.kcuhc.handler.listener.GameListener;
+import me.mrkirby153.kcuhc.module.ModuleRegistry;
+import me.mrkirby153.kcuhc.module.msc.RegenTicketModule;
+import me.mrkirby153.kcuhc.module.player.SpreadPlayersModule;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCPlayerTeam;
 import me.mrkirby153.kcuhc.team.UHCTeam;
@@ -20,6 +22,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.lang.reflect.Field;
+import java.util.Optional;
 import java.util.UUID;
 
 public class CommandUHC extends BaseCommand {
@@ -85,18 +88,12 @@ public class CommandUHC extends BaseCommand {
                 plugin.arena.initialize();
                 return true;
             }
-            if (args[0].equalsIgnoreCase("disable")) {
-                plugin.arena.essentiallyDisable();
-                Bukkit.broadcastMessage(UtilChat.message("Disabling UHC plugin!"));
-                return true;
-            }
             if (args[0].equalsIgnoreCase("debugStart")) {
                 if (plugin.arena.getProperties().CHECK_ENDING.get())
                     plugin.arena.toggleShouldEndCheck();
-                if (plugin.arena.getProperties().SPREAD_PLAYERS.get())
-                    plugin.arena.toggleSpreadingPlayers();
+                ModuleRegistry.getLoadedModule(SpreadPlayersModule.class).ifPresent(ModuleRegistry::unloadModule);
                 if (teamHandler.getTeamByName("debug") == null)
-                   teamHandler.registerTeam(new UHCPlayerTeam("Debug", ChatColor.GOLD));
+                    teamHandler.registerTeam(new UHCPlayerTeam("Debug", ChatColor.GOLD));
                 for (Player p : Bukkit.getOnlinePlayers())
                     teamHandler.joinTeam(teamHandler.getTeamByName("debug"), p);
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -109,10 +106,6 @@ public class CommandUHC extends BaseCommand {
             }
             if (args[0].equalsIgnoreCase("toggleending")) {
                 plugin.arena.toggleShouldEndCheck();
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("togglespread")) {
-                plugin.arena.toggleSpreadingPlayers();
                 return true;
             }
             if (args[0].equalsIgnoreCase("freeze")) {
@@ -128,8 +121,24 @@ public class CommandUHC extends BaseCommand {
                 FreezeHandler.freezebypass(player);
                 return true;
             }
-            if(args[0].equalsIgnoreCase("spread")){
-                plugin.arena.distributeTeams(plugin.arena.getProperties().MIN_DISTANCE_BETWEEN_TEAMS.get());
+            if (args[0].equalsIgnoreCase("spread")) {
+                Optional<SpreadPlayersModule> module = ModuleRegistry.getLoadedModule(SpreadPlayersModule.class);
+                if (!module.isPresent()) {
+                    // Load the spread players module
+                    Optional<SpreadPlayersModule> toLoad = ModuleRegistry.getModule(SpreadPlayersModule.class);
+                    if (!toLoad.isPresent()) {
+                        sender.sendMessage(UtilChat.generateLegacyError("Could not find module " + SpreadPlayersModule.class));
+                        return true;
+                    }
+                    ModuleRegistry.loadModule(toLoad.get());
+                    module = ModuleRegistry.getLoadedModule(SpreadPlayersModule.class);
+                    if (!module.isPresent()) {
+                        sender.sendMessage(UtilChat.generateLegacyError("Could not load the spread players module!"));
+                        return true;
+                    }
+                    module.get().distributeTeams();
+                    ModuleRegistry.unloadModule(module.get());
+                }
                 return true;
             }
         }
@@ -240,8 +249,15 @@ public class CommandUHC extends BaseCommand {
                 Player p = Bukkit.getPlayer(args[1]);
                 if (p == null) {
                     sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
+                    return true;
                 }
-                RegenTicket.give(p);
+                if (!ModuleRegistry.isLoaded(RegenTicketModule.class)) {
+                    sender.sendMessage(UtilChat.generateLegacyError("Regen tickets aren't enabled!"));
+                    return true;
+                }
+                ModuleRegistry.getLoadedModule(RegenTicketModule.class).ifPresent(m -> m.give(p));
+                sender.sendMessage(UtilChat.message("Given " + ChatColor.GOLD + p.getName() + ChatColor.GRAY + " a regen ticket"));
+                return true;
             }
         }
         if (args.length == 3) {

@@ -1,30 +1,39 @@
-package me.mrkirby153.kcuhc.handler;
+package me.mrkirby153.kcuhc.module.worldborder;
 
-import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.module.UHCModule;
 import me.mrkirby153.kcuhc.utils.UtilChat;
-import me.mrkirby153.kcutils.Module;
+import me.mrkirby153.kcutils.event.UpdateEvent;
+import me.mrkirby153.kcutils.event.UpdateType;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
 import java.util.UUID;
 
-public class BorderBumper extends Module<UHC> implements Runnable {
+public class BorderBumper extends UHCModule {
 
     private HashMap<UUID, Long> bumperCooldown = new HashMap<>();
 
-    private static final double BUMP_POWER = 0.25;
 
-    public BorderBumper(UHC plugin) {
-        super("Border Bumper", "1.0", plugin);
+    public BorderBumper() {
+        super(Material.PISTON_BASE, 0, "Border Bumper", false, "Bump players back inside the worldborder");
     }
 
     @Override
-    public void run() {
+    public void onEnable() {
+
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onUpdate(UpdateEvent event) {
+        if(event.getType() != UpdateType.TICK)
+            return;
         for (Player player : Bukkit.getOnlinePlayers()) {
             if (bumperCooldown.get(player.getUniqueId()) != null) {
                 if (System.currentTimeMillis() < bumperCooldown.get(player.getUniqueId()))
@@ -85,11 +94,6 @@ public class BorderBumper extends Module<UHC> implements Runnable {
         player.setVelocity(bumpVector);
         player.sendMessage(UtilChat.message(ChatColor.BOLD + "Stay inside the world border!".toUpperCase()));
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BASS, 1F, 1F);
-    }
-
-    @Override
-    protected void init() {
-        scheduleRepeating(this, 0L, 1L);
     }
 
 

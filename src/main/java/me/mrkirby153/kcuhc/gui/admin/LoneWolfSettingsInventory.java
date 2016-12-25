@@ -21,7 +21,8 @@ public class LoneWolfSettingsInventory extends PropertyGui {
         booleanButton(properties.LONE_WOLF_CREATES_TEAMS, new ItemFactory(Material.APPLE).name("Create Teams").construct(), 4);
         integerProperty(properties.LONE_WOLF_TEAM_SIZE, Material.SLIME_BALL, "Lone Wolf Max Team Size", 22, 1, 3);
         addButton(27, new ItemFactory(Material.ARROW).name("Back").construct(), ((player, clickType) -> {
-            new TeamSelectInventory(plugin, UHC.getInstance().teamHandler, player);
+            player.closeInventory();
+            new GameSettingsInventory(plugin, player);
         }));
     }
 }

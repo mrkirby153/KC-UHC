@@ -1,6 +1,7 @@
 package me.mrkirby153.kcuhc.gui.admin;
 
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.module.ModuleGui;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.gui.Gui;
 import net.md_5.bungee.api.ChatColor;
@@ -23,16 +24,12 @@ public class GameAdminInventory extends Gui<UHC> {
             player.closeInventory();
         });
         addButton(13, new ItemFactory(Material.GOLDEN_APPLE).data(1).name("Kirbycraft UHC").construct(), null);
-        addButton(14, /*new ShopItem(Material.REDSTONE_BLOCK, 1, ChatColor.RED+"Stop Game", new String[]{
-                "Click to stop the game"*/
-                new ItemFactory(Material.REDSTONE_BLOCK).name(ChatColor.RED + "Stop Game").lore("", "Click to stop the game").construct(), (player, clickType) -> {
-                    plugin.arena.stop("Nobody");
-                    player.closeInventory();
-                });
-
-        addButton(26, new ItemFactory(Material.ANVIL).name("Configure Game").construct(), ((player, clickType) -> {
+        addButton(14, new ItemFactory(Material.REDSTONE_BLOCK).name(ChatColor.RED + "Stop Game").lore("", "Click to stop the game").construct(), (player, clickType) -> {
+            plugin.arena.stop("Nobody");
             player.closeInventory();
-            new GameSettingsInventory(plugin, player);
-        }));
+        });
+
+        addButton(26, new ItemFactory(Material.ANVIL).name("Configure Game").construct(), (player, clickType) -> new GameSettingsInventory(plugin, player));
+        addButton(25, new ItemFactory(Material.BEACON).name("Modules").construct(), ((player, clickType) -> new ModuleGui(plugin, player)));
     }
 }

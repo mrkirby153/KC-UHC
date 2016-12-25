@@ -3,27 +3,29 @@ package me.mrkirby153.kcuhc.arena;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.module.ModuleRegistry;
+import me.mrkirby153.kcuhc.module.UHCModule;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.HashSet;
 
 public class ArenaProperties {
 
     public transient String name;
 
-    public Property<Boolean> SPREAD_PLAYERS = new Property<>("spread_players", true);
     public Property<Boolean> CHECK_ENDING = new Property<>("check_ending", true);
 
-    public Property<Boolean> DROP_PLAYER_HEAD = new Property<>("drop_head", true);
-    public Property<Boolean> ENABLE_HEAD_APPLE = new Property<>("head_apple", true);
 
     public Property<Integer> WORLDBORDER_START_SIZE = new Property<>("wb_max", 1500);
     public Property<Integer> WORLDBORDER_END_SIZE = new Property<>("wb_min", 60);
     public Property<Integer> WORLDBORDER_TRAVEL_TIME = new Property<>("wb_travel", 30);
     public Property<LocationProperty> WORLDBORDER_CENTER = new Property<>("wb_location", new LocationProperty(0, 0, 0));
-    public Property<Boolean> ENABLE_WORLDBORDER_WARNING = new Property<>("wb_warn", true);
     public Property<Integer> WORLDBORDER_WARN_DISTANCE = new Property<>("wb_warn_dist", 50);
 
     public Property<String> WORLD = new Property<>("world", "world");
@@ -31,21 +33,13 @@ public class ArenaProperties {
     public Property<Integer> MIN_DISTANCE_BETWEEN_TEAMS = new Property<>("min_distance", 50);
 
     public Property<Integer> REJOIN_MINUTES = new Property<>("rejoin_mins", 5);
-    public Property<Boolean> ENABLE_ENDGAME = new Property<>("endgame_enable", true);
-
-    public Property<Boolean> GIVE_COMPASS_ON_START = new Property<>("give_compass", true);
-    public Property<Boolean> COMPASS_PLAYER_TRACKER = new Property<>("compass_tracks_players", true);
-
-    public Property<Boolean> REGEN_TICKET_ENABLE = new Property<>("regen_ticket", true);
 
     public Property<Integer> PVP_GRACE_MINS = new Property<>("pvp_grace", 10);
-    public Property<Boolean> TEAM_INV_ENABLED = new Property<>("team_inv", true);
 
     public Property<Integer> LONE_WOLF_TEAM_SIZE = new Property<>("lone_wolf_team_size", 2);
     public Property<Boolean> LONE_WOLF_CREATES_TEAMS = new Property<>("lone_wolf_creates_teams", false);
 
-    public Property<Boolean> NETHER_ENABLED = new Property<>("nether_enabled", true);
-    public Property<Boolean> END_ENABLED = new Property<>("end_enabled", true);
+    private HashSet<String> LOADED_MODULES = new HashSet<>();
 
     public static ArenaProperties loadProperties(String fileName) {
         File file = new File(UHC.getInstance().getDataFolder(), "presets/" + fileName + ".json");
@@ -66,6 +60,22 @@ public class ArenaProperties {
             FileReader reader = new FileReader(file);
             ArenaProperties props = new Gson().fromJson(reader, ArenaProperties.class);
             props.name = fileName;
+            HashSet<String> modulesLoaded = new HashSet<>();
+            for(String s : props.LOADED_MODULES){
+                for(UHCModule m : ModuleRegistry.allModules()){
+                    if(m.getInternalName().equals(s)){
+                        if(!m.isLoaded())
+                            ModuleRegistry.loadModule(m);
+                        modulesLoaded.add(s);
+                        break;
+                    }
+                }
+            }
+            for(UHCModule m : ModuleRegistry.allModules()){
+                if(m.isLoaded() && !modulesLoaded.contains(m.getInternalName())){
+                    ModuleRegistry.unloadModule(m);
+                }
+            }
             reader.close();
             return props;
         } catch (IOException e) {
@@ -81,7 +91,12 @@ public class ArenaProperties {
 
     public static void saveProperties(ArenaProperties properties, String fileName) {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
+        if(properties.LOADED_MODULES == null)
+            properties.LOADED_MODULES = new HashSet<>();
+        properties.LOADED_MODULES.clear();
+        for(UHCModule m : ModuleRegistry.loadedModules()){
+            properties.LOADED_MODULES.add(m.getInternalName());
+        }
         String json = gson.toJson(properties);
 
         try {
@@ -125,7 +140,7 @@ public class ArenaProperties {
 
     public static class Property<T> {
 
-        private final T defaultValue;
+        private transient final T defaultValue;
         private String name;
         private T value;
 

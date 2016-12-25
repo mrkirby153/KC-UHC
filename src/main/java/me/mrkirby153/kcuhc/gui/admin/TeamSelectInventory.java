@@ -1,6 +1,8 @@
 package me.mrkirby153.kcuhc.gui.admin;
 
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.module.ModuleRegistry;
+import me.mrkirby153.kcuhc.module.player.LoneWolfModule;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCPlayerTeam;
 import me.mrkirby153.kcuhc.team.UHCTeam;
@@ -18,8 +20,10 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class TeamSelectInventory extends Gui<UHC> {
 
@@ -80,9 +84,14 @@ public class TeamSelectInventory extends Gui<UHC> {
                 }
             });
             // Assign everyone who's not on a team to lone wolves
-            Bukkit.getOnlinePlayers().stream().filter(p -> teamHandler.getTeamForPlayer(p) == null).forEach(p -> {
-                plugin.loneWolfHandler.addLoneWolf(p);
-            });
+
+            List<Player> loneWolves = Bukkit.getOnlinePlayers().stream().filter(p -> teamHandler.getTeamForPlayer(p) == null).collect(Collectors.toList());
+            if(loneWolves.size() > 0){
+                if(!ModuleRegistry.isLoaded(LoneWolfModule.class)){
+                    ModuleRegistry.getModule(LoneWolfModule.class).ifPresent(ModuleRegistry::loadModule);
+                }
+                ModuleRegistry.getLoadedModule(LoneWolfModule.class).ifPresent(mod -> loneWolves.forEach(mod::addLoneWolf));
+            }
             build();
         });
         addButton(5, new ItemFactory(Material.GOLD_SWORD).name("Single Person Teams").lore("Create a team for everyone online").construct(), (player, clickType) -> {
@@ -97,10 +106,6 @@ public class TeamSelectInventory extends Gui<UHC> {
                 teamHandler.joinTeam(teamHandler.getTeamByName(p.getName().toLowerCase()), p);
             }
             build();
-        });
-        addButton(8, new ItemFactory(Material.APPLE).name("Lone Wolf Settings").construct(), (player, clickType)->{
-            player.closeInventory();
-            new LoneWolfSettingsInventory(plugin, player);
         });
     }
 

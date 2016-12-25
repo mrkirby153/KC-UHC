@@ -3,6 +3,11 @@ package me.mrkirby153.kcuhc.gui.admin;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.ArenaProperties;
 import me.mrkirby153.kcuhc.gui.PropertyGui;
+import me.mrkirby153.kcuhc.module.ModuleRegistry;
+import me.mrkirby153.kcuhc.module.worldborder.WorldBorderWarning;
+import me.mrkirby153.kcuhc.module.player.LoneWolfModule;
+import me.mrkirby153.kcuhc.module.player.PvPGraceModule;
+import me.mrkirby153.kcuhc.module.player.SpreadPlayersModule;
 import me.mrkirby153.kcutils.ItemFactory;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -17,34 +22,30 @@ public class GameSettingsInventory extends PropertyGui {
     @Override
     public void build() {
         ArenaProperties properties = UHC.getInstance().arena.getProperties();
-        booleanButton(properties.SPREAD_PLAYERS, new ItemFactory(Material.ENDER_PEARL).name("Spread Players").construct(), 0);
-        booleanButton(properties.END_ENABLED, new ItemFactory(Material.ENDER_PORTAL_FRAME).name("The End").construct(), 1);
-        booleanButton(properties.NETHER_ENABLED, new ItemFactory(Material.NETHERRACK).name("The Nether").construct(), 2);
-        booleanButton(properties.CHECK_ENDING, new ItemFactory(Material.CAKE).name("End Check").construct(), 3);
-        booleanButton(properties.DROP_PLAYER_HEAD, new ItemFactory(Material.SKULL_ITEM).data(3).name("Drop Player Heads").construct(), 4);
-        booleanButton(properties.ENABLE_HEAD_APPLE, new ItemFactory(Material.GOLDEN_APPLE).name("Head Apples").construct(), 6);
-        booleanButton(properties.GIVE_COMPASS_ON_START, new ItemFactory(Material.COMPASS).name("Give Compass on Start").construct(), 8);
 
-        booleanButton(properties.TEAM_INV_ENABLED,new ItemFactory(Material.CHEST).name("Team Inventories").construct(), 27);
-        booleanButton(properties.COMPASS_PLAYER_TRACKER, new ItemFactory(Material.EYE_OF_ENDER).name("Compass Tracks Players").construct(), 29);
-        booleanButton(properties.ENABLE_ENDGAME, new ItemFactory(Material.TNT).name("Endgame").construct(), 31);
-        booleanButton(properties.REGEN_TICKET_ENABLE, new ItemFactory(Material.PAPER).name("Regen Tickets").construct(), 33);
+        if(ModuleRegistry.isLoaded(PvPGraceModule.class)) {
+            integerProperty(properties.PVP_GRACE_MINS, Material.DIAMOND_HELMET, "PvP Grace (mins)", 4, 1, 3);
+        }
+        if(ModuleRegistry.isLoaded(SpreadPlayersModule.class)){
+            integerProperty(properties.MIN_DISTANCE_BETWEEN_TEAMS, Material.PISTON_BASE, "Min Distance between teams (blocks)", 13);
+        }
 
-        addButton(45, new ItemFactory(Material.ARROW).name("Back").construct(), (player, clickType) -> {
-            player.closeInventory();
-            new GameAdminInventory(plugin, player);
-        });
+        if(ModuleRegistry.isLoaded(WorldBorderWarning.class)){
+            integerProperty(properties.WORLDBORDER_WARN_DISTANCE, Material.NOTE_BLOCK, "World Border Warn Distance", 22);
+        }
 
-        addButton(53, new ItemFactory(Material.BARRIER).name("World Border Settings").construct(), (player, clickType) -> {
-            player.closeInventory();
-            new WorldborderSettingsInventory(plugin, player);
-        });
+        if(ModuleRegistry.isLoaded(LoneWolfModule.class)) {
+            addButton(37, new ItemFactory(Material.APPLE).name("Lone Wolf Settings").construct(), (player, clickType) -> {
+                new LoneWolfSettingsInventory(plugin, player);
+            });
+        }
+        addButton(39, new ItemFactory(Material.DIAMOND_SWORD).name("Team Settings").construct(), (player, clickType) -> new TeamSelectInventory(plugin, plugin.teamHandler, player));
 
-        addButton(45, new ItemFactory(Material.DIAMOND_SWORD).name("Team Settings").construct(), (player, clickType) -> {
-            player.closeInventory();
-            new TeamSelectInventory(plugin, plugin.teamHandler, player);
-        });
-        integerProperty(properties.PVP_GRACE_MINS, Material.DIAMOND_HELMET, "PvP Grace (mins)", 49, 1, 3);
+        addButton(45, new ItemFactory(Material.ARROW).name("Back").construct(), (player, clickType) -> new GameAdminInventory(plugin, player));
+
+        addButton(53, new ItemFactory(Material.BARRIER).name("World Border Settings").construct(), (player, clickType) -> new WorldborderSettingsInventory(plugin, player));
+
+        addButton(45, new ItemFactory(Material.ARROW).name("Back").construct(), ((player, clickType) -> new GameAdminInventory(plugin, player)));
     }
 
 }

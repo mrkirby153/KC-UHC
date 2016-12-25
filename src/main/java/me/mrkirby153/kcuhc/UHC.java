@@ -1,13 +1,32 @@
 package me.mrkirby153.kcuhc;
 
 import me.mrkirby153.kcuhc.arena.UHCArena;
-import me.mrkirby153.kcuhc.arena.handler.lonewolf.LoneWolfHandler;
 import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.handler.*;
+import me.mrkirby153.kcuhc.module.ModuleRegistry;
+import me.mrkirby153.kcuhc.module.dimension.EndModule;
+import me.mrkirby153.kcuhc.module.dimension.NetherModule;
+import me.mrkirby153.kcuhc.module.head.DropPlayerHeadModule;
+import me.mrkirby153.kcuhc.module.head.HeadAppleModule;
+import me.mrkirby153.kcuhc.module.health.HardcoreHeartsModule;
+import me.mrkirby153.kcuhc.module.health.NaturalRegenerationModule;
+import me.mrkirby153.kcuhc.module.msc.EpisodeMarkerHandler;
+import me.mrkirby153.kcuhc.module.worldborder.EndgameModule;
+import me.mrkirby153.kcuhc.module.msc.RegenTicketModule;
+import me.mrkirby153.kcuhc.module.worldborder.BorderBumper;
+import me.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
+import me.mrkirby153.kcuhc.module.worldborder.WorldBorderWarning;
+import me.mrkirby153.kcuhc.module.player.LoneWolfModule;
+import me.mrkirby153.kcuhc.module.player.PvPGraceModule;
+import me.mrkirby153.kcuhc.module.player.SpreadPlayersModule;
+import me.mrkirby153.kcuhc.module.player.TeamInventoryModule;
+import me.mrkirby153.kcuhc.module.tracker.CompassModule;
+import me.mrkirby153.kcuhc.module.tracker.PlayerTrackerModule;
 import me.mrkirby153.kcuhc.scoreboard.ScoreboardManager;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcutils.BossBar;
 import me.mrkirby153.kcutils.command.CommandManager;
+import me.mrkirby153.kcutils.event.UpdateEventHandler;
 import me.mrkirby153.uhc.bot.network.UHCNetwork;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -20,20 +39,15 @@ public class UHC extends JavaPlugin {
     public static UHCNetwork uhcNetwork;
     private static UHC plugin;
     public UHCArena arena;
-    public PlayerTrackerHandler playerTracker;
     public VelocityTracker velocityTracker;
     public ExtraHealthHandler extraHealthHelper;
 
     public TeamHandler teamHandler;
     public MOTDHandler motdHandler;
-    public BorderBumper borderBumper;
-    public EpisodeMarkerHandler markerHandler;
     public SpectatorHandler spectatorHandler;
     public BossBar bossBar;
     public DiscordHandler discordHandler;
     public TeamChatHandler teamChatHandler;
-    public LoneWolfHandler loneWolfHandler;
-    public DimensionHandler dimensionHandler;
 
     public static UHC getInstance() {
         return plugin;
@@ -74,6 +88,8 @@ public class UHC extends JavaPlugin {
         discordHandler.load();
         uhcNetwork = discordHandler.network;
 
+        new UpdateEventHandler(this).load();
+
         new FreezeHandler(this);
 
 
@@ -87,32 +103,19 @@ public class UHC extends JavaPlugin {
         bossBar = new BossBar(plugin);
         bossBar.load();
 
-        playerTracker = new PlayerTrackerHandler(this, teamHandler);
-        playerTracker.load();
 
         motdHandler = new MOTDHandler(this);
         motdHandler.load();
-
-        borderBumper = new BorderBumper(this);
-        borderBumper.load();
-
-        markerHandler = new EpisodeMarkerHandler(this);
-        markerHandler.load();
 
         extraHealthHelper = new ExtraHealthHandler(this);
         extraHealthHelper.load();
 
         velocityTracker = new VelocityTracker(this);
 
-        loneWolfHandler = new LoneWolfHandler(this, teamHandler);
-        loneWolfHandler.load();
 
-        dimensionHandler = new DimensionHandler(this);
-        dimensionHandler.load();
-
+        registerModules();
 
         getServer().getPluginManager().registerEvents(new ScoreboardManager(plugin), this);
-        getServer().getPluginManager().registerEvents(new RegenTicket(), this);
 
         // Register commands
         getCommand("uhc").setExecutor(new CommandUHC(this, teamHandler));
@@ -123,6 +126,33 @@ public class UHC extends JavaPlugin {
         getCommand("saycoords").setExecutor(new CommandSayCoords(teamHandler));
 
         getServer().getScheduler().scheduleSyncRepeatingTask(this, new UHCArena.PlayerActionBarUpdater(teamHandler), 0, 1);
+
+
+        ModuleRegistry.loadModulesOnStart();
+    }
+
+    public void registerModules() {
+        ModuleRegistry.registerModule(new NetherModule());
+        ModuleRegistry.registerModule(new EndModule());
+        ModuleRegistry.registerModule(new WorldBorderWarning());
+        ModuleRegistry.registerModule(new CompassModule());
+        ModuleRegistry.registerModule(new PlayerTrackerModule(teamHandler));
+        ModuleRegistry.registerModule(new TeamInventoryModule(teamHandler));
+        ModuleRegistry.registerModule(new EndgameModule());
+        ModuleRegistry.registerModule(new SpreadPlayersModule());
+        ModuleRegistry.registerModule(new DropPlayerHeadModule());
+        ModuleRegistry.registerModule(new HeadAppleModule());
+        ModuleRegistry.registerModule(new PvPGraceModule());
+        ModuleRegistry.registerModule(new RegenTicketModule(teamHandler));
+        ModuleRegistry.registerModule(new LoneWolfModule(teamHandler));
+        ModuleRegistry.registerModule(new NaturalRegenerationModule());
+        ModuleRegistry.registerModule(new BorderBumper());
+        ModuleRegistry.registerModule(new WorldBorderModule());
+        ModuleRegistry.registerModule(new EpisodeMarkerHandler());
+
+        if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
+            ModuleRegistry.registerModule(new HardcoreHeartsModule());
+        }
     }
 
     public String serverId() {

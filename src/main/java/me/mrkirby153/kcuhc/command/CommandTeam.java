@@ -2,6 +2,7 @@ package me.mrkirby153.kcuhc.command;
 
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.UHCArena;
+import me.mrkirby153.kcuhc.team.LoneWolfTeam;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCPlayerTeam;
 import me.mrkirby153.kcuhc.team.UHCTeam;
@@ -89,13 +90,6 @@ public class CommandTeam extends BaseCommand {
                 sender.sendMessage(UtilChat.message("Removed all teams and loaded teams"));
                 return true;
             }
-            if (args[0].equalsIgnoreCase("spread")) {
-                if (restrictAdmin(sender))
-                    return true;
-                plugin.arena.distributeTeams(50);
-                sender.sendMessage(UtilChat.message("Spread teams!"));
-                return true;
-            }
             if (args[0].equalsIgnoreCase("load")) {
                 if (restrictAdmin(sender))
                     return true;
@@ -181,7 +175,7 @@ public class CommandTeam extends BaseCommand {
                 }
                 name = name.trim();
                 UHCTeam teamByName = teamHandler.getTeamByName(team);
-                if (teamByName == null) {
+                if (teamByName == null || teamByName instanceof LoneWolfTeam) {
                     sender.sendMessage(UtilChat.generateLegacyError("That team does not exist!"));
                     return true;
                 }

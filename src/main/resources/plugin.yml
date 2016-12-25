@@ -2,6 +2,7 @@ name: KC-UHC
 version: ${project.version}
 author: mrkirby153
 main: me.mrkirby153.kcuhc.UHC
+softdepend: [ProtocolLib]
 commands:
   uhc:
     usage: /uhc
