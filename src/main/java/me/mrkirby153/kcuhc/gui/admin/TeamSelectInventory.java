@@ -134,7 +134,7 @@ public class TeamSelectInventory extends Gui<UHC> {
         int row = 2;
         int col = 2;
 
-        for (UHCTeam team : teamHandler.teams()) {
+        for (UHCTeam team : teamHandler.teams(false)) {
             int slot = (9 * (row - 1)) + col - 1;
             addButton(slot, new ItemFactory(Material.WOOL).data(getDye(team).getWoolData()).name(team.getColor()+ WordUtils.capitalize(team.getFriendlyName())).construct(),
                     (player, clickType) -> setTeam(team));

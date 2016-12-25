@@ -12,7 +12,10 @@ import me.mrkirby153.kcuhc.handler.RegenTicket;
 import me.mrkirby153.kcuhc.handler.listener.GameListener;
 import me.mrkirby153.kcuhc.handler.listener.PregameListener;
 import me.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
-import me.mrkirby153.kcuhc.team.*;
+import me.mrkirby153.kcuhc.team.LoneWolfTeam;
+import me.mrkirby153.kcuhc.team.TeamHandler;
+import me.mrkirby153.kcuhc.team.TeamSpectator;
+import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.utils.UtilTime;
 import me.mrkirby153.kcuhc.utils.UtilTitle;
@@ -58,6 +61,7 @@ import org.bukkit.potion.PotionEffectType;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static me.mrkirby153.kcuhc.UHC.uhcNetwork;
 import static me.mrkirby153.kcuhc.arena.UHCArena.State.*;
@@ -644,11 +648,17 @@ public class UHCArena implements Runnable, Listener {
                 }
                 if (teamCountLeft() <= 1 && properties.CHECK_ENDING.get()) {
                     if (teamsLeft().size() > 0) {
-                        UHCPlayerTeam team = teamsLeft().get(0);
-                        this.winningTeamColor = team.toColor();
-                        stop(team.getFriendlyName());
+                        UHCTeam team = teamsLeft().get(0);
+                        if(team instanceof LoneWolfTeam) {
+                            if(team.getPlayers().size() <= 1) {
+                                this.winningTeamColor = team.toColor();
+                                stop(team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).collect(Collectors.toList()).get(0).getDisplayName());
+                            }
+                        } else {
+                            this.winningTeamColor = team.toColor();
+                            stop(team.getFriendlyName());
+                        }
                     }
-                    state = ENDGAME;
                 }
                 if (worldBorderHandler.getOverworld().getSize() <= properties.WORLDBORDER_END_SIZE.get()) {
                     if (!notifiedDisabledSpawn) {
@@ -915,22 +925,19 @@ public class UHCArena implements Runnable, Listener {
         return teamsLeft().size();
     }
 
-    public ArrayList<UHCPlayerTeam> teamsLeft() {
-        ArrayList<UHCPlayerTeam> uniqueTeams = new ArrayList<>();
-        for (Player p : players) {
-            if (queuedTeamRemovals.contains(p.getUniqueId()))
+    public ArrayList<UHCTeam> teamsLeft() {
+        HashSet<UHCTeam> uniqueTeams = new HashSet<>();
+        for(Player p : players){
+            if(queuedTeamRemovals.contains(p.getUniqueId()))
                 continue;
             UHCTeam team = teamHandler.getTeamForPlayer(p);
-            if (!(team instanceof UHCPlayerTeam))
+            if(team == null)
                 continue;
-            UHCPlayerTeam pTeam = (UHCPlayerTeam) team;
-            if (pTeam == teamHandler.getTeamByName(TeamHandler.SPECTATOR_TEAM_NAME))
+            if(team instanceof TeamSpectator)
                 continue;
-            if (!uniqueTeams.contains(pTeam)) {
-                uniqueTeams.add(pTeam);
-            }
+            uniqueTeams.add(team);
         }
-        return uniqueTeams;
+        return new ArrayList<>(uniqueTeams);
     }
 
     //todo: Remove me

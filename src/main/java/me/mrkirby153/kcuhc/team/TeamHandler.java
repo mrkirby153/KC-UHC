@@ -103,7 +103,8 @@ public class TeamHandler extends Module<UHC> {
     }
 
     public void unregisterTeam(UHCTeam team) {
-        teams.removeIf(uhcTeam -> uhcTeam == team);
+        if(team instanceof UHCPlayerTeam)
+            teams.removeIf(uhcTeam -> uhcTeam == team);
     }
 
     public TeamSpectator spectatorsTeam() {

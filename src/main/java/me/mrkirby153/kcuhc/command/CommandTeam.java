@@ -119,6 +119,7 @@ public class CommandTeam extends BaseCommand {
             }
             if (args[0].equalsIgnoreCase("leave")) {
                 teamHandler.leaveTeam(p);
+                p.sendMessage(UtilChat.message("You have left your team"));
             }
             if (teamToJoin.equalsIgnoreCase("spectators")) {
                 p.spigot().sendMessage(UtilChat.generateError("Use /spectate to join the spectators team!"));
@@ -149,6 +150,10 @@ public class CommandTeam extends BaseCommand {
                     if (p == null)
                         continue;
                     teamHandler.leaveTeam(p);
+                }
+                if(!(teamByName instanceof UHCPlayerTeam)){
+                    sender.sendMessage(UtilChat.generateLegacyError("You cannot remove non-player teams!"));
+                    return true;
                 }
                 teamHandler.unregisterTeam(teamByName);
                 sender.sendMessage(UtilChat.message("Removed team " + ChatColor.GOLD + args[1]));

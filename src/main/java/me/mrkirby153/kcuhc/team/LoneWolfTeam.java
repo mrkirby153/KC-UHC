@@ -9,6 +9,8 @@ public class LoneWolfTeam extends UHCTeam {
 
     public LoneWolfTeam() {
         super("lonewolf", ChatColor.DARK_GRAY);
+        setFriendlyFire(true);
+        setSeeInvisible(false);
     }
 
     @Override

@@ -67,6 +67,8 @@ public class LoneWolfHandler extends Module<UHC> implements Listener, Runnable {
     @Override
     public void run() {
         // Only work when the game is running
+        if(queuedLoneWolves.size() > 0)
+            System.out.println("Removing "+queuedLoneWolves.toString());
         loneWolves.removeAll(queuedLoneWolves);
         queuedLoneWolves.clear();
         if (getPlugin().arena.currentState() != UHCArena.State.RUNNING)
@@ -84,7 +86,6 @@ public class LoneWolfHandler extends Module<UHC> implements Listener, Runnable {
                 }
             }
             if (target != null) {
-                queuedLoneWolves.add(loneWolf.getUniqueId());
                 UHCTeam team = teamHandler.getTeamForPlayer(target);
                 if(team == null)
                     return;
@@ -120,6 +121,7 @@ public class LoneWolfHandler extends Module<UHC> implements Listener, Runnable {
     }
 
     private void assignLoneWolf(Player loneWolf, UHCTeam team) {
+        queuedLoneWolves.add(loneWolf.getUniqueId());
         getPlugin().arena.getTeamInventoryHandler().takeInventoryItem(loneWolf);
         teamHandler.leaveTeam(loneWolf);
         getPlugin().getServer().getScheduler().runTaskLater(getPlugin(), () -> teamHandler.joinTeam(team, loneWolf), 10);
