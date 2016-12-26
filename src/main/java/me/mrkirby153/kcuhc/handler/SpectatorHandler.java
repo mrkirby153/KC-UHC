@@ -9,13 +9,12 @@ import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcutils.Module;
-import net.minecraft.server.v1_11_R1.IChatBaseComponent;
-import net.minecraft.server.v1_11_R1.PacketPlayOutChat;
+import me.mrkirby153.kcutils.nms.NMS;
+import net.md_5.bungee.api.ChatColor;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_11_R1.entity.CraftPlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -34,11 +33,13 @@ public class SpectatorHandler extends Module<UHC> implements Runnable, Listener 
     private TeamHandler teamHandler;
     private UHC plugin;
     private SpectateListener spectateListener;
+    private NMS nms;
 
-    public SpectatorHandler(UHC plugin, TeamHandler teamHandler) {
+    public SpectatorHandler(UHC plugin, TeamHandler teamHandler, NMS nms) {
         super("Spectator Handler", "1.0", plugin);
         this.teamHandler = teamHandler;
         this.plugin = plugin;
+        this.nms = nms;
     }
 
     @Override
@@ -53,7 +54,7 @@ public class SpectatorHandler extends Module<UHC> implements Runnable, Listener 
             UUID target = spectatorTargets.get(p.getUniqueId());
             Entity currentTarget = p.getSpectatorTarget();
             if (target == null) {
-                sendActionBar(p, ChatColor.GOLD + "Right click a player to spectate!");
+                nms.actionBar(p, UtilChat.generateFormattedChat("Right click a player to spectate", ChatColor.GOLD));
                 continue;
             }
             if (currentTarget == null || !currentTarget.getUniqueId().equals(target)) {
@@ -69,9 +70,11 @@ public class SpectatorHandler extends Module<UHC> implements Runnable, Listener 
             }
             UHCTeam team = teamHandler.getTeamForPlayer(Bukkit.getPlayer(target));
             if (team == null) {
-                sendActionBar(p, "Spectating " + Bukkit.getPlayer(target).getName());
+                nms.actionBar(p, UtilChat.generateFormattedChat("Spectating "+Bukkit.getPlayer(target).getName(), ChatColor.WHITE));
             } else {
-                sendActionBar(p, "Spectating " + team.getColor() + Bukkit.getPlayer(target).getName());
+                TextComponent comp = (TextComponent) UtilChat.generateFormattedChat("Spectating ", ChatColor.WHITE);
+                comp.addExtra(UtilChat.generateFormattedChat(Bukkit.getPlayer(target).getName(), team.getColor()));
+                nms.actionBar(p, comp);
             }
         }
     }
@@ -92,11 +95,6 @@ public class SpectatorHandler extends Module<UHC> implements Runnable, Listener 
         event.getPlayer().setSpectatorTarget(toSpectate);
         event.getPlayer().sendMessage(UtilChat.message("Sneak to stop spectating"));
         spectatorTargets.put(event.getPlayer().getUniqueId(), toSpectate.getUniqueId());
-    }
-
-    private void sendActionBar(Player player, String message) {
-        PacketPlayOutChat chat = new PacketPlayOutChat(IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + message + "\"}"), (byte) 2);
-        ((CraftPlayer) player).getHandle().playerConnection.sendPacket(chat);
     }
 
     @Override

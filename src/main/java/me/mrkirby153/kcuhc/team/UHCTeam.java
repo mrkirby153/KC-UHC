@@ -3,7 +3,7 @@ package me.mrkirby153.kcuhc.team;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.md_5.bungee.api.ChatColor;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.lang.WordUtils;
 import org.bukkit.Color;
 import org.bukkit.entity.Player;
 

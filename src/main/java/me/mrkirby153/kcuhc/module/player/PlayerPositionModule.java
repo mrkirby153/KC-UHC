@@ -32,7 +32,8 @@ public class PlayerPositionModule extends UHCModule {
 
     @Override
     public void onEnable() {
-        running = UHC.getInstance().arena.currentState() == UHCArena.State.RUNNING;
+        if(UHC.getInstance().arena != null)
+            running = UHC.getInstance().arena.currentState() == UHCArena.State.RUNNING;
     }
 
     @EventHandler(ignoreCancelled = true)

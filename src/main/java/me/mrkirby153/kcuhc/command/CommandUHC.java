@@ -138,6 +138,8 @@ public class CommandUHC extends BaseCommand {
                     }
                     module.get().distributeTeams();
                     ModuleRegistry.unloadModule(module.get());
+                } else {
+                    module.get().distributeTeams();
                 }
                 return true;
             }

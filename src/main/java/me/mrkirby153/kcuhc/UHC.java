@@ -11,16 +11,17 @@ import me.mrkirby153.kcuhc.module.head.HeadAppleModule;
 import me.mrkirby153.kcuhc.module.health.HardcoreHeartsModule;
 import me.mrkirby153.kcuhc.module.health.NaturalRegenerationModule;
 import me.mrkirby153.kcuhc.module.msc.EpisodeMarkerHandler;
-import me.mrkirby153.kcuhc.module.player.*;
-import me.mrkirby153.kcuhc.module.worldborder.EndgameModule;
 import me.mrkirby153.kcuhc.module.msc.RegenTicketModule;
-import me.mrkirby153.kcuhc.module.worldborder.BorderBumper;
-import me.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
-import me.mrkirby153.kcuhc.module.worldborder.WorldBorderWarning;
+import me.mrkirby153.kcuhc.module.player.*;
 import me.mrkirby153.kcuhc.module.tracker.CompassModule;
 import me.mrkirby153.kcuhc.module.tracker.PlayerTrackerModule;
+import me.mrkirby153.kcuhc.module.worldborder.BorderBumper;
+import me.mrkirby153.kcuhc.module.worldborder.EndgameModule;
+import me.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
+import me.mrkirby153.kcuhc.module.worldborder.WorldBorderWarning;
 import me.mrkirby153.kcuhc.scoreboard.ScoreboardManager;
 import me.mrkirby153.kcuhc.team.TeamHandler;
+import me.mrkirby153.kcuhc.utils.UtilTitle;
 import me.mrkirby153.kcutils.BossBar;
 import me.mrkirby153.kcutils.command.CommandManager;
 import me.mrkirby153.kcutils.event.UpdateEventHandler;
@@ -75,6 +76,7 @@ public class UHC extends JavaPlugin {
         plugin = this;
 
         nms = new NMSFactory(this).getNMS();
+        UtilTitle.setNms(nms);
 
         teamHandler = new TeamHandler(this);
         teamHandler.load();
@@ -85,7 +87,7 @@ public class UHC extends JavaPlugin {
 
         registerModules();
         ModuleRegistry.loadModulesOnStart();
-        
+
         arena = new UHCArena(this, teamHandler);
         arena.initialize();
 
@@ -100,7 +102,7 @@ public class UHC extends JavaPlugin {
 
 
         // Load modules
-        spectatorHandler = new SpectatorHandler(this, teamHandler);
+        spectatorHandler = new SpectatorHandler(this, teamHandler, nms);
         spectatorHandler.load();
 
         teamChatHandler = new TeamChatHandler(this);
@@ -148,10 +150,7 @@ public class UHC extends JavaPlugin {
         ModuleRegistry.registerModule(new WorldBorderModule());
         ModuleRegistry.registerModule(new EpisodeMarkerHandler());
         ModuleRegistry.registerModule(new PlayerPositionModule(nms, teamHandler));
-
-        if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
-            ModuleRegistry.registerModule(new HardcoreHeartsModule());
-        }
+        ModuleRegistry.registerModule(new HardcoreHeartsModule());
     }
 
     public String serverId() {

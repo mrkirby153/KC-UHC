@@ -5,10 +5,7 @@ import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.module.UHCModule;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.utils.UtilChat;
-import net.minecraft.server.v1_11_R1.NBTTagCompound;
-import net.minecraft.server.v1_11_R1.NBTTagList;
 import org.bukkit.*;
-import org.bukkit.craftbukkit.v1_11_R1.inventory.CraftItemStack;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -57,22 +54,8 @@ public class RegenTicketModule extends UHCModule {
         lore.add(ChatColor.RED + "can only be used by " + ChatColor.GOLD + player.getName());
         meta.setLore(lore);
         item.setItemMeta(meta);
-        net.minecraft.server.v1_11_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(item);
-        NBTTagCompound tag;
-        if (!nmsStack.hasTag())
-            tag = new NBTTagCompound();
-        else
-            tag = nmsStack.getTag();
-        if (tag == null)
-            tag = new NBTTagCompound();
-        NBTTagList ench = nmsStack.getEnchantments() == null ? new NBTTagList() : null;
-        UUID playerUUID = player.getUniqueId();
-        tag.setString("owner", playerUUID.toString());
-        tag.set("ench", ench);
-        nmsStack.setTag(tag);
-        ItemStack finalStack = CraftItemStack.asBukkitCopy(nmsStack);
-        regenTickets.put(player.getUniqueId(), finalStack);
-        return finalStack;
+        regenTickets.put(player.getUniqueId(), item);
+        return item;
     }
 
     public void give(Player player) {
@@ -173,12 +156,8 @@ public class RegenTicketModule extends UHCModule {
     }
 
     private boolean canUse(Player player, ItemStack stack) {
-        net.minecraft.server.v1_11_R1.ItemStack nmsStack = CraftItemStack.asNMSCopy(stack);
-        NBTTagCompound tag = nmsStack.getTag();
-        if (tag == null)
-            return false;
-        UUID u = UUID.fromString(tag.getString("owner"));
-        return u.equals(player.getUniqueId());
+        ItemStack itemStack = regenTickets.get(player.getUniqueId());
+        return itemStack != null && itemStack.equals(stack);
     }
 
     private boolean isTicket(ItemStack stack) {

@@ -1,5 +1,10 @@
 package me.mrkirby153.kcuhc.module.player;
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.PacketContainer;
+import com.comphenix.protocol.injector.PacketConstructor;
+import com.google.common.base.Throwables;
 import me.mrkirby153.kcuhc.arena.GameStateChangeEvent;
 import me.mrkirby153.kcuhc.arena.SpawnUtils;
 import me.mrkirby153.kcuhc.arena.UHCArena;
@@ -9,15 +14,13 @@ import me.mrkirby153.kcuhc.team.LoneWolfTeam;
 import me.mrkirby153.kcuhc.team.TeamSpectator;
 import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.utils.UtilChat;
-import net.minecraft.server.v1_11_R1.PacketPlayOutEntityDestroy;
-import net.minecraft.server.v1_11_R1.PacketPlayOutNamedEntitySpawn;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_11_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class SpreadPlayersModule extends UHCModule {
@@ -129,11 +132,17 @@ public class SpreadPlayersModule extends UHCModule {
         System.out.println("Despawning players...");
         // Despawn all the players in attempt to prevent invisible players
         for (Player p : Bukkit.getOnlinePlayers()) {
-            PacketPlayOutEntityDestroy destroyPacket = new PacketPlayOutEntityDestroy(p.getEntityId());
+            PacketContainer destroyPacket = new PacketContainer(PacketType.Play.Server.ENTITY_DESTROY);
+            destroyPacket.getModifier().writeDefaults();
+            destroyPacket.getIntegerArrays().write(0, new int[]{p.getEntityId()});
             for (Player other : Bukkit.getOnlinePlayers()) {
                 if (other.getUniqueId().equals(p.getUniqueId()))
                     continue;
-                ((CraftPlayer) other).getHandle().playerConnection.sendPacket(destroyPacket);
+                try {
+                    ProtocolLibrary.getProtocolManager().sendServerPacket(other, destroyPacket);
+                } catch (InvocationTargetException e) {
+                    Throwables.propagate(e);
+                }
             }
         }
 
@@ -141,11 +150,17 @@ public class SpreadPlayersModule extends UHCModule {
         Bukkit.getServer().getScheduler().runTaskLater(getPlugin(), () -> {
             System.out.println("Respawning players");
             for (Player p : Bukkit.getOnlinePlayers()) {
-                PacketPlayOutNamedEntitySpawn spawn = new PacketPlayOutNamedEntitySpawn(((CraftPlayer) p).getHandle());
+                PacketConstructor spawnPacket = ProtocolLibrary.getProtocolManager().createPacketConstructor(PacketType.Play.Server.NAMED_ENTITY_SPAWN, p);
+                PacketContainer container = spawnPacket.createPacket(p);
+
                 for (Player other : Bukkit.getOnlinePlayers()) {
                     if (p.getUniqueId().equals(other.getUniqueId()))
                         continue;
-                    ((CraftPlayer) other).getHandle().playerConnection.sendPacket(spawn);
+                    try {
+                        ProtocolLibrary.getProtocolManager().sendServerPacket(other, container);
+                    } catch (InvocationTargetException e) {
+                        Throwables.propagate(e);
+                    }
                 }
             }
         }, 5L);

@@ -1,6 +1,9 @@
 package me.mrkirby153.kcuhc.arena;
 
 
+import com.comphenix.protocol.PacketType;
+import com.comphenix.protocol.ProtocolLibrary;
+import com.comphenix.protocol.events.PacketContainer;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
 import me.mrkirby153.kcuhc.handler.FreezeHandler;
@@ -24,12 +27,10 @@ import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandToLobby;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandAssignTeams;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandNewTeam;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandRemoveTeam;
-import org.apache.commons.lang3.text.WordUtils;
+import org.apache.commons.lang.WordUtils;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.v1_11_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_11_R1.entity.CraftEntity;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -668,7 +669,12 @@ public class UHCArena implements Runnable, Listener {
     }
 
     private void detonateFirework(Firework firework) {
-        ((CraftWorld) firework.getWorld()).getHandle().broadcastEntityEffect(((CraftEntity) firework).getHandle(), (byte) 17);
+        PacketContainer container = new PacketContainer(PacketType.Play.Server.ENTITY_STATUS);
+        container.getModifier().writeDefaults();
+        container.getIntegers().write(0, firework.getEntityId());
+        container.getBytes().write(0, (byte) 17);
+        ProtocolLibrary.getProtocolManager().broadcastServerPacket(container);
+
         firework.remove();
     }
 
