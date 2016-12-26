@@ -99,7 +99,6 @@ public class UHC extends JavaPlugin {
 
         new UpdateEventHandler(this).load();
 
-        new FreezeHandler(this);
 
 
         // Load modules

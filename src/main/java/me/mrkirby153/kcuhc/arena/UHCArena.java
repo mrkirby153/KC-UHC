@@ -6,7 +6,6 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketContainer;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.gui.SpecInventory;
-import me.mrkirby153.kcuhc.handler.FreezeHandler;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
 import me.mrkirby153.kcuhc.handler.listener.GameListener;
 import me.mrkirby153.kcuhc.handler.listener.PregameListener;
@@ -79,11 +78,6 @@ public class UHCArena implements Runnable, Listener {
     private HashMap<UUID, String> uuidToStringMap = new HashMap<>();
     private HashMap<UUID, Long> logoutTimes = new HashMap<>();
     private ArrayList<UUID> queuedTeamRemovals = new ArrayList<>();
-
-    private int secondsRemaining;
-    private double overworldWorldborderSize;
-    private double netherWorldborderSize;
-    private long freezeStartTime;
 
     private boolean notifiedDisabledSpawn = false;
 
@@ -162,34 +156,6 @@ public class UHCArena implements Runnable, Listener {
 
     public State currentState() {
         return this.state;
-    }
-
-    public void freeze() {
-        int secondsPassed = Math.toIntExact((System.currentTimeMillis() - startTime) / 1000);
-
-        System.out.println("Duration: " + properties.WORLDBORDER_TRAVEL_TIME.get() * 60);
-        System.out.println("Seconds passed: " + secondsPassed);
-        this.secondsRemaining = properties.WORLDBORDER_TRAVEL_TIME.get() * 60 - secondsPassed;
-
-        System.out.println("Seconds remaining: " + secondsRemaining);
-        overworldWorldborderSize = getWorld().getWorldBorder().getSize();
-        getWorld().getWorldBorder().setSize(overworldWorldborderSize);
-        System.out.println("Worldborder size: " + overworldWorldborderSize);
-
-        freezeStartTime = System.currentTimeMillis();
-
-        if (getNether() != null) {
-            netherWorldborderSize = getNether().getWorldBorder().getSize();
-            getNether().getWorldBorder().setSize(netherWorldborderSize);
-        }
-        this.state = FROZEN;
-        Bukkit.getOnlinePlayers().stream().filter(p -> !teamHandler.isSpectator(p)).forEach(FreezeHandler::freezePlayer);
-        getWorld().getEntities().stream().filter(e -> e.getType() != EntityType.PLAYER).forEach(e -> FreezeHandler.frozenEntities.put(e, e.getLocation()));
-
-        getWorld().setGameRuleValue("doDaylightCycle", "false");
-        FreezeHandler.pvpEnabled = false;
-
-        Bukkit.broadcastMessage(UtilChat.message("The game is now frozen"));
     }
 
     public void generate() {
@@ -600,35 +566,6 @@ public class UHCArena implements Runnable, Listener {
             Bukkit.broadcastMessage(UtilChat.message("No longer checking if the game should end"));
     }
 
-
-    public void unfreeze() {
-        if (secondsRemaining > 0) {
-            getWorld().getWorldBorder().setSize(overworldWorldborderSize);
-            getWorld().getWorldBorder().setSize(properties.WORLDBORDER_END_SIZE.get(), secondsRemaining);
-            if (getNether() != null) {
-                getNether().getWorldBorder().setSize(netherWorldborderSize);
-                getNether().getWorldBorder().setSize(properties.WORLDBORDER_END_SIZE.get() * 2, secondsRemaining);
-            }
-        }
-        this.state = RUNNING;
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            if (!teamHandler.isSpectator(p)) {
-                FreezeHandler.unfreeze(p);
-            }
-        }
-        long frozenFor = System.currentTimeMillis() - freezeStartTime;
-        System.out.println("Frozen for: " + frozenFor);
-        this.startTime -= frozenFor;
-        Bukkit.getServer().getScheduler().runTaskLater(plugin, () -> {
-            FreezeHandler.restoreBlocks();
-            FreezeHandler.pvpEnabled = true;
-            Bukkit.broadcastMessage(UtilChat.message("Damage enabled"));
-        }, 100);
-        getWorld().setGameRuleValue("doDaylightCycle", "true");
-        Bukkit.broadcastMessage(UtilChat.message("The game was frozen for " + ChatColor.GOLD + UtilTime.format(1, frozenFor, UtilTime.TimeUnit.FIT)));
-        Bukkit.broadcastMessage(UtilChat.message("PvP will be enabled in 5 seconds"));
-        FreezeHandler.frozenEntities.clear();
-    }
 
     public void updateDisconnect() {
         Iterator<Map.Entry<UUID, Long>> iterator = logoutTimes.entrySet().iterator();

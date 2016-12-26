@@ -4,7 +4,6 @@ import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.arena.ArenaProperties;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.gui.admin.GameAdminInventory;
-import me.mrkirby153.kcuhc.handler.FreezeHandler;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
 import me.mrkirby153.kcuhc.handler.listener.GameListener;
 import me.mrkirby153.kcuhc.module.ModuleRegistry;
@@ -108,19 +107,6 @@ public class CommandUHC extends BaseCommand {
                 plugin.arena.toggleShouldEndCheck();
                 return true;
             }
-            if (args[0].equalsIgnoreCase("freeze")) {
-                plugin.arena.freeze();
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("unfreeze")) {
-                plugin.arena.unfreeze();
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("freezebypass")) {
-                Player player = (Player) sender;
-                FreezeHandler.freezebypass(player);
-                return true;
-            }
             if (args[0].equalsIgnoreCase("spread")) {
                 Optional<SpreadPlayersModule> module = ModuleRegistry.getLoadedModule(SpreadPlayersModule.class);
                 if (!module.isPresent()) {
@@ -212,22 +198,6 @@ public class CommandUHC extends BaseCommand {
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
-            }
-            if (args[0].equalsIgnoreCase("unfreeze")) {
-                Player p = Bukkit.getPlayer(args[1]);
-                if (p == null) {
-                    sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
-                    return true;
-                }
-                FreezeHandler.playerUnfreeze(p);
-            }
-            if (args[0].equalsIgnoreCase("freeze")) {
-                Player p = Bukkit.getPlayer(args[1]);
-                if (p == null) {
-                    sender.sendMessage(UtilChat.generateLegacyError("That player does not exist!"));
-                    return true;
-                }
-                FreezeHandler.freezePlayer(p);
             }
             if (args[0].equalsIgnoreCase("addHeartRow")) {
                 Player p = Bukkit.getPlayer(args[1]);
