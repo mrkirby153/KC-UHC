@@ -93,7 +93,7 @@ public abstract class UHCModule implements Listener {
         return UHC.getInstance();
     }
 
-    boolean load() {
+    public boolean load() {
         if (this.loaded) {
             throw new IllegalArgumentException("Attempted to load a module that was already loaded!");
         }
@@ -116,7 +116,7 @@ public abstract class UHCModule implements Listener {
         return true;
     }
 
-    boolean unload() {
+    public boolean unload() {
         if (!this.loaded) {
             throw new IllegalArgumentException("Attempted to unload a module that wasn't loaded!");
         }

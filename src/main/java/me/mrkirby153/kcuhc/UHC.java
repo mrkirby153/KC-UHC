@@ -3,6 +3,7 @@ package me.mrkirby153.kcuhc;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.handler.*;
+import me.mrkirby153.kcuhc.module.endgame.*;
 import me.mrkirby153.kcuhc.module.ModuleRegistry;
 import me.mrkirby153.kcuhc.module.dimension.EndModule;
 import me.mrkirby153.kcuhc.module.dimension.NetherModule;
@@ -151,6 +152,14 @@ public class UHC extends JavaPlugin {
         ModuleRegistry.registerModule(new EpisodeMarkerHandler());
         ModuleRegistry.registerModule(new PlayerPositionModule(nms, teamHandler));
         ModuleRegistry.registerModule(new HardcoreHeartsModule());
+        ModuleRegistry.registerModule(new EndgameScenarioModule());
+
+        // Register endgame scenarios
+        EndgameScenarioModule.registerScenario(new TeamsEndgame());
+        EndgameScenarioModule.registerScenario(new SpaceRace());
+        EndgameScenarioModule.registerScenario(new FFA());
+
+        EndgameScenarioModule.setDefault(TeamsEndgame.class);
     }
 
     public String serverId() {

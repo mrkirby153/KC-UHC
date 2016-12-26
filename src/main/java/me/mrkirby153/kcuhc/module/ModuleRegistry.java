@@ -100,9 +100,8 @@ public class ModuleRegistry {
      * @param module The module to load
      */
     public static void loadModule(UHCModule module) {
-        if (loadedModules.contains(module)) {
-            throw new IllegalArgumentException("Attempted to load an already loaded module!");
-        }
+        if(module.isLoaded())
+            return;
         ModuleLoadEvent event = new ModuleLoadEvent(module);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled())
@@ -153,9 +152,8 @@ public class ModuleRegistry {
      * @param module The module to unload
      */
     public static void unloadModule(UHCModule module) {
-        if (!loadedModules.contains(module)) {
-            throw new IllegalArgumentException("Attempted to unload a module that isn't loaded!");
-        }
+        if(!module.isLoaded())
+            return;
         ModuleUnloadEvent event = new ModuleUnloadEvent(module);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled())

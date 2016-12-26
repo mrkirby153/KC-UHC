@@ -5,6 +5,7 @@ import me.mrkirby153.kcuhc.module.ModuleGui;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.gui.Gui;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -25,7 +26,7 @@ public class GameAdminInventory extends Gui<UHC> {
         });
         addButton(13, new ItemFactory(Material.GOLDEN_APPLE).data(1).name("Kirbycraft UHC").construct(), null);
         addButton(14, new ItemFactory(Material.REDSTONE_BLOCK).name(ChatColor.RED + "Stop Game").lore("", "Click to stop the game").construct(), (player, clickType) -> {
-            plugin.arena.stop("Nobody");
+            plugin.arena.stop("Nobody", Color.WHITE);
             player.closeInventory();
         });
 

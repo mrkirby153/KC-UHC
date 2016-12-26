@@ -43,7 +43,6 @@ import org.bukkit.potion.PotionEffectType;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static me.mrkirby153.kcuhc.UHC.uhcNetwork;
 import static me.mrkirby153.kcuhc.arena.UHCArena.State.*;
@@ -346,20 +345,6 @@ public class UHCArena implements Runnable, Listener {
                 for (Player p : players) {
                     p.setGlowing(false);
                 }
-                if (teamCountLeft() <= 1 && properties.CHECK_ENDING.get()) {
-                    if (teamsLeft().size() > 0) {
-                        UHCTeam team = teamsLeft().get(0);
-                        if (team instanceof LoneWolfTeam) {
-                            if (team.getPlayers().size() <= 1) {
-                                this.winningTeamColor = team.toColor();
-                                stop(team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).collect(Collectors.toList()).get(0).getDisplayName());
-                            }
-                        } else {
-                            this.winningTeamColor = team.toColor();
-                            stop(team.getFriendlyName());
-                        }
-                    }
-                }
                 if (ModuleRegistry.isLoaded(WorldBorderModule.class)) {
                     Optional<WorldBorderModule> optWorldborderMod = ModuleRegistry.getLoadedModule(WorldBorderModule.class);
                     if(optWorldborderMod.isPresent()){
@@ -538,8 +523,9 @@ public class UHCArena implements Runnable, Listener {
         teamHandler.teams().forEach(t -> scoreboardUpdater.getScoreboard().addTeam(t));
     }
 
-    public void stop(String winner) {
+    public void stop(String winner, Color winningTeamColor) {
         this.winner = winner;
+        this.winningTeamColor = winningTeamColor;
 
         winner = WordUtils.capitalizeFully(winner.replace('_', ' '));
 
@@ -606,6 +592,10 @@ public class UHCArena implements Runnable, Listener {
             uniqueTeams.add(team);
         }
         return new ArrayList<>(uniqueTeams);
+    }
+
+    public List<UUID> getQueuedRemovals(){
+        return this.queuedTeamRemovals;
     }
 
     //todo: Remove me

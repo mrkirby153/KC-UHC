@@ -72,7 +72,7 @@ public class CommandUHC extends BaseCommand {
             }
             if (args[0].equalsIgnoreCase("stop")) {
                 sender.sendMessage(UtilChat.message("Stopped game"));
-                plugin.arena.stop("Nobody");
+                plugin.arena.stop("Nobody", Color.WHITE);
                 return true;
             }
             if (args[0].equalsIgnoreCase("state")) {

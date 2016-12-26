@@ -80,10 +80,10 @@ public class ScoreboardUpdater {
                         } else {
                             team = null;
                         }
-                        if (team == null) {
+                        if (team == null && Bukkit.getPlayer(op.getUniqueId()) == null || onlinePlayer == null) {
                             scoreboard.add(ChatColor.GRAY + op.getName());
                         } else {
-                            scoreboard.add(ChatColor.RED + "" + (int) +onlinePlayer.getHealth() + " " + team.getColor() + op.getName());
+                            scoreboard.add(ChatColor.RED + "" + (int) +onlinePlayer.getHealth() + " " + ((team != null)? team.getColor() : ChatColor.WHITE) + op.getName());
                         }
                     }
                 } else {
