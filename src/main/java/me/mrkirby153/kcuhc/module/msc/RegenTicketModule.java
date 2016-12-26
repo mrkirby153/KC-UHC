@@ -15,6 +15,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -70,12 +71,20 @@ public class RegenTicketModule extends UHCModule {
     @EventHandler
     public void inventoryMove(InventoryClickEvent event) {
         ItemStack is = event.getCurrentItem();
-        if (isTicket(is)) {
+        if (isTicket(is) && canUse((Player) event.getWhoClicked(), is)) {
             InventoryType topInv = event.getView().getTopInventory().getType();
             if (topInv != InventoryType.PLAYER && topInv != InventoryType.CRAFTING) {
                 event.getWhoClicked().sendMessage(UtilChat.generateLegacyError("You cannot move your regen ticket out of your inventory"));
                 event.setCancelled(true);
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerPickupItem(PlayerPickupItemEvent event) {
+        if(isTicket(event.getItem().getItemStack())){
+            if(!canUse(event.getPlayer(), event.getItem().getItemStack()))
+                event.setCancelled(true);
         }
     }
 
@@ -134,8 +143,10 @@ public class RegenTicketModule extends UHCModule {
     @EventHandler
     public void onDrop(PlayerDropItemEvent event) {
         if (isTicket(event.getItemDrop().getItemStack())) {
-            event.getPlayer().sendMessage(UtilChat.message("You cannot drop your regen ticket"));
-            event.setCancelled(true);
+            if(canUse(event.getPlayer(), event.getItemDrop().getItemStack())) {
+                event.getPlayer().sendMessage(UtilChat.message("You cannot drop your regen ticket"));
+                event.setCancelled(true);
+            }
         }
     }
 
