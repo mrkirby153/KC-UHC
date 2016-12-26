@@ -47,6 +47,8 @@ public class PvPGraceModule extends UHCModule {
             Bukkit.broadcastMessage(UtilChat.message(org.bukkit.ChatColor.BOLD + "" + org.bukkit.ChatColor.GOLD + "PVP is disabled for " +
                     UtilTime.format(1, graceUntil - System.currentTimeMillis(), UtilTime.TimeUnit.FIT)));
         }
+        if(event.getTo() == UHCArena.State.ENDGAME)
+            this.graceUntil = -1;
     }
 
     @EventHandler(ignoreCancelled = true)
