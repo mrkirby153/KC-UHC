@@ -6,6 +6,7 @@ import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.team.TeamSpectator;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -37,8 +38,23 @@ public class CommandSpectate extends BaseCommand {
                 player.teleport(plugin.arena.getCenter().add(0, 2, 0));
                 player.sendMessage(UtilChat.message("You are no longer a spectator"));
             }
-        else
+        else {
+            if (args.length == 1) {
+                if (args[0].equalsIgnoreCase("vanilla")) {
+                    if (player.getGameMode() == GameMode.SURVIVAL) {
+                        player.setGameMode(GameMode.SPECTATOR);
+                        player.sendMessage(UtilChat.message("Entered vanilla spectator mode. Type " + ChatColor.GOLD + "/spectate vanilla" + ChatColor.GRAY + " to leave"));
+                    } else {
+                        player.setGameMode(GameMode.SURVIVAL);
+                        player.setAllowFlight(true);
+                        player.setFlying(true);
+                        player.sendMessage(UtilChat.message("Returned to survival spectator mode"));
+                    }
+                    return true;
+                }
+            }
             player.spigot().sendMessage(UtilChat.generateError("You cannot join/leave the spectators team because the game has already started!"));
+        }
         return true;
     }
 }
