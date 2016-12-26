@@ -537,14 +537,6 @@ public class UHCArena implements Runnable, Listener {
         setState(ENDGAME);
     }
 
-    public void toggleShouldEndCheck() {
-        this.properties.CHECK_ENDING.setValue(!this.properties.CHECK_ENDING.get());
-        if (this.properties.CHECK_ENDING.get())
-            Bukkit.broadcastMessage(UtilChat.message("Checking if the game should end"));
-        else
-            Bukkit.broadcastMessage(UtilChat.message("No longer checking if the game should end"));
-    }
-
 
     private void detonateFirework(Firework firework) {
         PacketContainer container = new PacketContainer(PacketType.Play.Server.ENTITY_STATUS);

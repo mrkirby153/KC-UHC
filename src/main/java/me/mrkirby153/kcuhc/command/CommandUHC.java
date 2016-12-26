@@ -7,6 +7,7 @@ import me.mrkirby153.kcuhc.gui.admin.GameAdminInventory;
 import me.mrkirby153.kcuhc.handler.MOTDHandler;
 import me.mrkirby153.kcuhc.handler.listener.GameListener;
 import me.mrkirby153.kcuhc.module.ModuleRegistry;
+import me.mrkirby153.kcuhc.module.endgame.EndgameScenarioModule;
 import me.mrkirby153.kcuhc.module.msc.RegenTicketModule;
 import me.mrkirby153.kcuhc.module.player.SpreadPlayersModule;
 import me.mrkirby153.kcuhc.team.TeamHandler;
@@ -88,8 +89,7 @@ public class CommandUHC extends BaseCommand {
                 return true;
             }
             if (args[0].equalsIgnoreCase("debugStart")) {
-                if (plugin.arena.getProperties().CHECK_ENDING.get())
-                    plugin.arena.toggleShouldEndCheck();
+                ModuleRegistry.getLoadedModule(EndgameScenarioModule.class).ifPresent(ModuleRegistry::unloadModule);
                 ModuleRegistry.getLoadedModule(SpreadPlayersModule.class).ifPresent(ModuleRegistry::unloadModule);
                 if (teamHandler.getTeamByName("debug") == null)
                     teamHandler.registerTeam(new UHCPlayerTeam("Debug", ChatColor.GOLD));
@@ -101,10 +101,6 @@ public class CommandUHC extends BaseCommand {
                 }, 220);
                 plugin.arena.startCountdown();
                 sender.sendMessage(UtilChat.message("Debug starting"));
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("toggleending")) {
-                plugin.arena.toggleShouldEndCheck();
                 return true;
             }
             if (args[0].equalsIgnoreCase("spread")) {

@@ -19,9 +19,6 @@ public class ArenaProperties {
 
     public transient String name;
 
-    public Property<Boolean> CHECK_ENDING = new Property<>("check_ending", true);
-
-
     public Property<Integer> WORLDBORDER_START_SIZE = new Property<>("wb_max", 1500);
     public Property<Integer> WORLDBORDER_END_SIZE = new Property<>("wb_min", 60);
     public Property<Integer> WORLDBORDER_TRAVEL_TIME = new Property<>("wb_travel", 30);
