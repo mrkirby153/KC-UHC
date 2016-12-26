@@ -3,6 +3,7 @@ package me.mrkirby153.kcuhc.team;
 import com.google.common.base.Throwables;
 import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcutils.Module;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
@@ -31,11 +32,11 @@ public class TeamHandler extends Module<UHC> {
             return null;
     }
 
-    public UHCTeam getTeamForPlayer(Player player) {
+    public UHCTeam getTeamForPlayer(OfflinePlayer player) {
         return playerToTeamMap.get(player.getUniqueId());
     }
 
-    public boolean isSpectator(Player player) {
+    public boolean isSpectator(OfflinePlayer player) {
         return getTeamForPlayer(player) instanceof TeamSpectator;
     }
 

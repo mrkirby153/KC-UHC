@@ -5,6 +5,7 @@ import me.mrkirby153.kcuhc.team.TeamSpectator;
 import me.mrkirby153.kcuhc.team.UHCTeam;
 import org.bukkit.Color;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -29,13 +30,19 @@ public abstract class EndgameScenario extends UHCModule {
 
     public ArrayList<UHCTeam> teamsLeft() {
         HashSet<UHCTeam> uniqueTeams = new HashSet<>();
-        for (Player p : getPlugin().arena.players()) {
-            if (getPlugin().arena.getQueuedRemovals().contains(p.getUniqueId()))
-                continue;
+        for (Player p : getPlugin().arena.players(false)) {
             UHCTeam team = getPlugin().teamHandler.getTeamForPlayer(p);
             if (team == null)
                 continue;
             if (team instanceof TeamSpectator)
+                continue;
+            uniqueTeams.add(team);
+        }
+        for(OfflinePlayer p : getPlugin().arena.getDisconnectedPlayers()){
+            UHCTeam team = getPlugin().teamHandler.getTeamForPlayer(p);
+            if(team == null)
+                continue;
+            if(team instanceof TeamSpectator)
                 continue;
             uniqueTeams.add(team);
         }

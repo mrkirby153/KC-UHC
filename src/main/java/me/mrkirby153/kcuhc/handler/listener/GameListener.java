@@ -71,7 +71,7 @@ public class GameListener implements Listener {
     public void onJoin(PlayerJoinEvent event) {
         if (!isRunning())
             return;
-        plugin.arena.playerJoin(event.getPlayer());
+        plugin.arena.playerReconnect(event.getPlayer());
         event.setJoinMessage(ChatColor.BLUE + "Join> " + ChatColor.GRAY + event.getPlayer().getName());
         if (teamHandler.getTeamForPlayer(event.getPlayer()) == null)
             teamHandler.joinTeam(teamHandler.spectatorsTeam(), event.getPlayer());

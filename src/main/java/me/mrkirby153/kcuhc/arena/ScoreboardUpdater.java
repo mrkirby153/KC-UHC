@@ -11,11 +11,10 @@ import me.mrkirby153.kcutils.scoreboard.items.ElementHeadedText;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.util.List;
-import java.util.UUID;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ScoreboardUpdater {
@@ -57,53 +56,45 @@ public class ScoreboardUpdater {
                 scoreboard.add(" ");
                 break;
             case RUNNING:
-                List<UUID> players = arena.players(false).stream().map(Entity::getUniqueId).filter(u -> !teamHandler.spectatorsTeam().getPlayers().contains(u)).collect(Collectors.toList());
-                players.sort((o1, o2) -> {
-                    Player p1 = Bukkit.getPlayer(o1);
-                    Player p2 = Bukkit.getPlayer(o2);
-                    if (p1 == null)
-                        return 1;
-                    if (p2 == null)
-                        return -1;
-                    return (int) Math.floor(p2.getHealth() - p1.getHealth());
-                });
-                int spacesNeeded = players.size();
+                List<Player> players = arena.players(false);
+                // Sort the player list by health
+                players.sort(((o1, o2) -> (int) Math.floor(o2.getHealth() - o1.getHealth())));
+                // Offline players
+                List<OfflinePlayer> offlinePlayers = arena.getDisconnectedPlayers();
+                int spacesNeeded = players.size() + offlinePlayers.size();
                 if (spacesNeeded < 9) {
-                    for (UUID u : players) {
-                        OfflinePlayer op = Bukkit.getOfflinePlayer(u);
-                        Player onlinePlayer = null;
-                        UHCTeam team;
-                        if (op instanceof Player) {
-                            team = teamHandler.getTeamForPlayer((Player) op);
-                            onlinePlayer = (Player) op;
-                        } else {
-                            team = null;
-                        }
-                        if (team == null && Bukkit.getPlayer(op.getUniqueId()) == null || onlinePlayer == null) {
-                            scoreboard.add(ChatColor.GRAY + op.getName());
-                        } else {
-                            scoreboard.add(ChatColor.RED + "" + (int) +onlinePlayer.getHealth() + " " + ((team != null)? team.getColor() : ChatColor.WHITE) + op.getName());
-                        }
+                    for (Player p : players) {
+                        UHCTeam team = teamHandler.getTeamForPlayer(p);
+                        scoreboard.add(ChatColor.RED + "" + (int) +p.getHealth() + " " + (team != null ? team.getColor() : ChatColor.WHITE) + p.getName());
+                    }
+                    for (OfflinePlayer p : offlinePlayers) {
+                        scoreboard.add(ChatColor.GRAY + "" + ChatColor.STRIKETHROUGH + p.getName()+ ChatColor.RESET);
                     }
                 } else {
-                    List<UHCTeam> teamsIngame = teamHandler.teams().stream().filter(team -> team.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count() > 0).collect(Collectors.toList());
-                    teamsIngame.sort((t1, t2) -> t1.getPlayers().size() - t2.getPlayers().size());
+                    // Show the number of teams
+                    List<UHCTeam> teamsIngame = teamHandler.teams().stream().filter(team -> team.getPlayers().stream()
+                            .map(Bukkit::getPlayer).filter(Objects::nonNull).count() > 0).collect(Collectors.toList());
+                    // Sort the teams by size
+                    teamsIngame.sort(((o1, o2) -> o2.getPlayers().size() - o1.getPlayers().size()));
                     scoreboard.add(ChatColor.AQUA + "Teams: ");
-                    if (teamsIngame.size() > 9) {
+                    if (teamsIngame.size() > 8) {
                         scoreboard.add(ChatColor.GREEN + "" + teamsIngame.size() + ChatColor.WHITE + " alive");
+                        if (offlinePlayers.size() > 0)
+                            scoreboard.add(offlinePlayers.size() + "" + ChatColor.GRAY + " players offline");
                     } else {
                         teamsIngame.forEach(t -> {
-                            long online = t.getPlayers().stream().map(Bukkit::getPlayer).filter(p -> p != null).count();
+                            long online = t.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).count();
                             scoreboard.add(online + " " + t.getColor() + t.getFriendlyName());
                         });
+                        if (offlinePlayers.size() > 0)
+                            scoreboard.add(offlinePlayers.size() + "" + ChatColor.GRAY + " players offline");
                     }
+
                 }
                 scoreboard.add(" ");
-                // TODO: Reimplement endgame display
-//                if (arena.nextEndgamePhase == null && (arena.currentEndgamePhase == UHCArena.EndgamePhase.NORMALGAME || arena.currentEndgamePhase == UHCArena.EndgamePhase.SHRINKING_WORLDBORDER)) {
                 ModuleRegistry.getLoadedModule(WorldBorderModule.class).ifPresent(worldBorderModule -> {
                     double[] wbPos = worldBorderModule.worldborderLoc();
-                    scoreboard.add(new ElementHeadedText(ChatColor.YELLOW+""+ ChatColor.BOLD+"World Border:",
+                    scoreboard.add(new ElementHeadedText(ChatColor.YELLOW + "" + ChatColor.BOLD + "World Border:",
                             "from -" + UtilTime.trim(1, wbPos[0]) + " to +" + UtilTime.trim(1, wbPos[0])));
                 });
 
