@@ -11,15 +11,12 @@ import me.mrkirby153.kcuhc.module.head.HeadAppleModule;
 import me.mrkirby153.kcuhc.module.health.HardcoreHeartsModule;
 import me.mrkirby153.kcuhc.module.health.NaturalRegenerationModule;
 import me.mrkirby153.kcuhc.module.msc.EpisodeMarkerHandler;
+import me.mrkirby153.kcuhc.module.player.*;
 import me.mrkirby153.kcuhc.module.worldborder.EndgameModule;
 import me.mrkirby153.kcuhc.module.msc.RegenTicketModule;
 import me.mrkirby153.kcuhc.module.worldborder.BorderBumper;
 import me.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
 import me.mrkirby153.kcuhc.module.worldborder.WorldBorderWarning;
-import me.mrkirby153.kcuhc.module.player.LoneWolfModule;
-import me.mrkirby153.kcuhc.module.player.PvPGraceModule;
-import me.mrkirby153.kcuhc.module.player.SpreadPlayersModule;
-import me.mrkirby153.kcuhc.module.player.TeamInventoryModule;
 import me.mrkirby153.kcuhc.module.tracker.CompassModule;
 import me.mrkirby153.kcuhc.module.tracker.PlayerTrackerModule;
 import me.mrkirby153.kcuhc.scoreboard.ScoreboardManager;
@@ -27,6 +24,8 @@ import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcutils.BossBar;
 import me.mrkirby153.kcutils.command.CommandManager;
 import me.mrkirby153.kcutils.event.UpdateEventHandler;
+import me.mrkirby153.kcutils.nms.NMS;
+import me.mrkirby153.kcutils.nms.NMSFactory;
 import me.mrkirby153.uhc.bot.network.UHCNetwork;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -48,6 +47,8 @@ public class UHC extends JavaPlugin {
     public BossBar bossBar;
     public DiscordHandler discordHandler;
     public TeamChatHandler teamChatHandler;
+
+    private NMS nms;
 
     public static UHC getInstance() {
         return plugin;
@@ -72,6 +73,8 @@ public class UHC extends JavaPlugin {
     public void onEnable() {
         saveDefaultConfig();
         plugin = this;
+
+        nms = new NMSFactory(this).getNMS();
 
         teamHandler = new TeamHandler(this);
         teamHandler.load();
@@ -125,7 +128,6 @@ public class UHC extends JavaPlugin {
         getCommand("teaminventory").setExecutor(new CommandTeamInv(teamHandler, plugin));
         getCommand("saycoords").setExecutor(new CommandSayCoords(teamHandler));
 
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, new UHCArena.PlayerActionBarUpdater(teamHandler), 0, 1);
 
 
         ModuleRegistry.loadModulesOnStart();
@@ -149,6 +151,7 @@ public class UHC extends JavaPlugin {
         ModuleRegistry.registerModule(new BorderBumper());
         ModuleRegistry.registerModule(new WorldBorderModule());
         ModuleRegistry.registerModule(new EpisodeMarkerHandler());
+        ModuleRegistry.registerModule(new PlayerPositionModule(nms, teamHandler));
 
         if (getServer().getPluginManager().isPluginEnabled("ProtocolLib")) {
             ModuleRegistry.registerModule(new HardcoreHeartsModule());

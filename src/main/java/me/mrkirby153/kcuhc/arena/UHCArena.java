@@ -24,16 +24,12 @@ import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandToLobby;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandAssignTeams;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandNewTeam;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandRemoveTeam;
-import net.md_5.bungee.api.chat.TextComponent;
-import net.minecraft.server.v1_11_R1.IChatBaseComponent;
-import net.minecraft.server.v1_11_R1.PacketPlayOutChat;
 import org.apache.commons.lang3.text.WordUtils;
 import org.bukkit.*;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.craftbukkit.v1_11_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_11_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_11_R1.entity.CraftPlayer;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -727,33 +723,4 @@ public class UHCArena implements Runnable, Listener {
         ENDGAME
     }
 
-    public static class PlayerActionBarUpdater implements Runnable {
-
-        private TeamHandler teamHandler;
-
-        public PlayerActionBarUpdater(TeamHandler teamHandler) {
-            this.teamHandler = teamHandler;
-        }
-
-        @Override
-        public void run() {
-            if (UHC.getInstance().arena.state == State.RUNNING) {
-                for (Player p : Bukkit.getOnlinePlayers()) {
-                    if (teamHandler.isSpectator(p))
-                        continue;
-                    TextComponent bc;
-                    Location l = p.getLocation();
-                    bc = (TextComponent) UtilChat.generateFormattedChat("Current Position: ", net.md_5.bungee.api.ChatColor.GOLD, 0);
-                    bc.addExtra(UtilChat.generateFormattedChat("X: ", net.md_5.bungee.api.ChatColor.RED, 0));
-                    bc.addExtra(UtilChat.generateFormattedChat(String.format("%.2f", l.getX()), net.md_5.bungee.api.ChatColor.GREEN, 0));
-                    bc.addExtra(UtilChat.generateFormattedChat(" Y: ", net.md_5.bungee.api.ChatColor.RED, 0));
-                    bc.addExtra(UtilChat.generateFormattedChat(String.format("%.2f", l.getY()), net.md_5.bungee.api.ChatColor.GREEN, 0));
-                    bc.addExtra(UtilChat.generateFormattedChat(" Z: ", net.md_5.bungee.api.ChatColor.RED, 0));
-                    bc.addExtra(UtilChat.generateFormattedChat(String.format("%.2f", l.getZ()), net.md_5.bungee.api.ChatColor.GREEN, 0));
-                    PacketPlayOutChat chat = new PacketPlayOutChat(IChatBaseComponent.ChatSerializer.a("{\"text\":\"" + bc.toLegacyText() + "\"}"), (byte) 2);
-                    ((CraftPlayer) p).getHandle().playerConnection.sendPacket(chat);
-                }
-            }
-        }
-    }
 }
