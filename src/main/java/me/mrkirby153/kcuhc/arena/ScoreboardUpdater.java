@@ -14,7 +14,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -58,7 +57,7 @@ public class ScoreboardUpdater {
                 scoreboard.add(" ");
                 break;
             case RUNNING:
-                List<UUID> players = Arrays.stream(arena.players()).map(Entity::getUniqueId).filter(u -> !teamHandler.spectatorsTeam().getPlayers().contains(u)).collect(Collectors.toList());
+                List<UUID> players = arena.players(false).stream().map(Entity::getUniqueId).filter(u -> !teamHandler.spectatorsTeam().getPlayers().contains(u)).collect(Collectors.toList());
                 players.sort((o1, o2) -> {
                     Player p1 = Bukkit.getPlayer(o1);
                     Player p2 = Bukkit.getPlayer(o2);

@@ -1,14 +1,11 @@
 package me.mrkirby153.kcuhc.module.endgame;
 
 import me.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcuhc.arena.GameStateChangeEvent;
-import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 
 public class FFA extends EndgameScenario {
 
@@ -21,12 +18,6 @@ public class FFA extends EndgameScenario {
         Bukkit.broadcastMessage(UtilChat.message("Last person standing wins"));
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onGameStateChange(GameStateChangeEvent event) {
-        if (event.getTo() == UHCArena.State.COUNTDOWN) {
-            Bukkit.getServer().getOnlinePlayers().forEach(p -> UHC.getInstance().arena.addPlayer(p));
-        }
-    }
 
     @Override
     public void update() {
@@ -38,7 +29,7 @@ public class FFA extends EndgameScenario {
         }
         if (playerCount <= 1) {
             if (playerCount == 1) {
-                stop(UHC.getInstance().arena.players()[0].getDisplayName(), Color.WHITE);
+                stop(UHC.getInstance().arena.players().get(0).getDisplayName(), Color.WHITE);
             } else {
                 stop("Nobody", Color.WHITE);
             }

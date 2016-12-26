@@ -29,6 +29,7 @@ import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandNewTeam;
 import me.mrkirby153.uhc.bot.network.comm.commands.team.BotCommandRemoveTeam;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.*;
@@ -63,8 +64,6 @@ public class UHCArena implements Runnable, Listener {
     private boolean firstAnnounce = true;
     private boolean shouldAnnounce = false;
     private String lastAnnounced = "-1";
-
-    private ArrayList<Player> players = new ArrayList<>();
 
     private State state = State.INITIALIZED;
 
@@ -139,12 +138,6 @@ public class UHCArena implements Runnable, Listener {
         this(plugin, teamHandler, "default");
     }
 
-    public void addPlayer(Player player) {
-        // Remove old player object
-        players.removeIf(player1 -> player1.getUniqueId().equals(player.getUniqueId()));
-        this.players.add(player);
-    }
-
     public void bringEveryoneToLobby() {
         if (UHC.uhcNetwork != null) {
             new BotCommandToLobby(plugin.serverId()).publish();
@@ -165,7 +158,6 @@ public class UHCArena implements Runnable, Listener {
             event.setFormat(ChatColor.GRAY + "%s " + ChatColor.WHITE + "%s");
         }
     }
-
 
 
     public State currentState() {
@@ -241,6 +233,10 @@ public class UHCArena implements Runnable, Listener {
         this.properties = properties;
     }
 
+    public List<UUID> getQueuedRemovals() {
+        return this.queuedTeamRemovals;
+    }
+
     public World getWorld() {
         return Bukkit.getWorld(properties.WORLD.get());
     }
@@ -252,20 +248,18 @@ public class UHCArena implements Runnable, Listener {
         getWorld().setTime(1200);
         Bukkit.broadcastMessage(UtilChat.message("Initialized"));
         MOTDHandler.setMotd(ChatColor.GREEN + "Ready");
-        players = new ArrayList<>();
         launchedFw = 0;
         winningTeamColor = Color.WHITE;
         setState(INITIALIZED);
         queuedTeamRemovals.clear();
         uuidToStringMap.clear();
         logoutTimes.clear();
-        players.clear();
         previouslyOpped.clear();
     }
+
     public void playerDisconnect(Player player) {
         UHCTeam teamForPlayer = teamHandler.getTeamForPlayer(player);
         if (teamForPlayer == null || teamForPlayer instanceof TeamSpectator) {
-            players.remove(player);
             return;
         }
         uuidToStringMap.put(player.getUniqueId(), player.getName());
@@ -287,22 +281,22 @@ public class UHCArena implements Runnable, Listener {
         if (queuedTeamRemovals.contains(player.getUniqueId())) {
             queuedTeamRemovals.remove(player.getUniqueId());
             teamHandler.leaveTeam(player);
-            players.remove(player);
             spectate(player);
             player.sendMessage(UtilChat.message("You have disconnected more than five minutes ago and have been removed from the game"));
         }
     }
 
-    public Player[] players() {
-        return players.toArray(new Player[players.size()]);
+    public List<Player> players() {
+        List<Player> players = new ArrayList<>();
+        players.addAll(Bukkit.getOnlinePlayers());
+        return players;
     }
 
-    public void removePlayer(Player player) {
-        Iterator<Player> players = this.players.iterator();
-        while (players.hasNext()) {
-            if (players.next().getUniqueId().equals(player.getUniqueId()))
-                players.remove();
-        }
+    public List<Player> players(boolean spectators) {
+        List<Player> p = new ArrayList<>(players());
+        if (!spectators)
+            p.removeIf(teamHandler::isSpectator);
+        return p;
     }
 
     @Override
@@ -323,7 +317,7 @@ public class UHCArena implements Runnable, Listener {
                     countdownTask.setTaskId(plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, countdownTask, 0L, 1L));
                 }
                 if (countdown > 0) {
-                    for (Player p : players) {
+                    for (Player p : players()) {
 
                         if (countdown <= 3) {
                             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1, 0.5F);
@@ -341,17 +335,14 @@ public class UHCArena implements Runnable, Listener {
                 }
                 break;
             case RUNNING:
-                MOTDHandler.setMotd(ChatColor.RED + "Game in progress. " + ChatColor.AQUA + "" + (players.size() - getSpectatorCount()) + ChatColor.RED + " alive");
-                for (Player p : players) {
-                    p.setGlowing(false);
-                }
+                MOTDHandler.setMotd(ChatColor.RED + "Game in progress. " + ChatColor.AQUA + "" + (playerCount()) + ChatColor.RED + " alive");
                 if (ModuleRegistry.isLoaded(WorldBorderModule.class)) {
                     Optional<WorldBorderModule> optWorldborderMod = ModuleRegistry.getLoadedModule(WorldBorderModule.class);
-                    if(optWorldborderMod.isPresent()){
+                    if (optWorldborderMod.isPresent()) {
                         WorldBorderModule worldBorderModule = optWorldborderMod.get();
                         worldBorderModule.setWarningDistance(0);
-                        if(!notifiedDisabledSpawn && worldBorderModule.travelComplete()){
-                            for(Player p : Bukkit.getOnlinePlayers()){
+                        if (!notifiedDisabledSpawn && worldBorderModule.travelComplete()) {
+                            for (Player p : Bukkit.getOnlinePlayers()) {
                                 p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
                                 p.sendMessage(UtilChat.message("Natural mob spawning has been cut by 75%"));
                             }
@@ -425,7 +416,7 @@ public class UHCArena implements Runnable, Listener {
             teamHandler.teams().forEach(t -> t.getPlayers().forEach(u -> teams.put(u, t.getTeamName())));
             new BotCommandAssignTeams(plugin.serverId(), null, teams).publishBlocking();
 
-            ModuleRegistry.getLoadedModule(LoneWolfModule.class).ifPresent( loneWolfModule -> {
+            ModuleRegistry.getLoadedModule(LoneWolfModule.class).ifPresent(loneWolfModule -> {
                 for (UUID loneWolf : loneWolfModule.getLoneWolves()) {
                     plugin.getLogger().info("Assigning lone wolf to " + loneWolf.toString());
                     new BotCommandLoneWolf(plugin.serverId(), loneWolf, BotCommandLoneWolf.Command.ASSIGN).publishBlocking();
@@ -467,30 +458,30 @@ public class UHCArena implements Runnable, Listener {
         PotionEffect regen = new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 10, true, false);
         PotionEffect sat = new PotionEffect(PotionEffectType.SATURATION, 30 * 20, 20, true, false);
 
-        for (Player p : players) {
+        for (Player p : players()) {
             UtilTitle.title(p, null, ChatColor.GOLD + "The game has begun!", 10, 20 * 5, 20);
             p.sendMessage(UtilChat.message("The game has begun"));
             if (!teamHandler.isSpectator(p)) {
                 p.setGameMode(GameMode.SURVIVAL);
                 p.setAllowFlight(false);
             }
-            p.setHealth(p.getMaxHealth());
+            p.setHealth(p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
             p.setFoodLevel(20);
             if (!teamHandler.isSpectator(p)) {
                 p.getInventory().clear();
                 for (PotionEffect e : p.getActivePotionEffects()) {
                     p.removePotionEffect(e.getType());
                 }
-            } else
+                p.setBedSpawnLocation(getCenter(), true);
+                p.addPotionEffects(Arrays.asList(resist, regen, sat));
+                p.getInventory().clear();
+            } else {
                 new SpecInventory(plugin, p, teamHandler);
-            p.setBedSpawnLocation(getCenter(), true);
-            p.addPotionEffects(Arrays.asList(resist, regen, sat));
+            }
             if (p.isOp()) {
                 p.setOp(false);
                 previouslyOpped.add(p);
             }
-            p.getInventory().clear();
-            p.closeInventory();
         }
 
 
@@ -538,7 +529,7 @@ public class UHCArena implements Runnable, Listener {
         getWorld().setThundering(false);
         getWorld().setStorm(false);
 
-        for (Player p : players) {
+        for (Player p : players()) {
             UtilTitle.title(p, ChatColor.GOLD + winner, ChatColor.GOLD + "has won the game", 10, 20 * 5, 20);
             p.teleport(getCenter());
             p.setGameMode(GameMode.SURVIVAL);
@@ -581,7 +572,7 @@ public class UHCArena implements Runnable, Listener {
 
     public ArrayList<UHCTeam> teamsLeft() {
         HashSet<UHCTeam> uniqueTeams = new HashSet<>();
-        for (Player p : players) {
+        for (Player p : players()) {
             if (queuedTeamRemovals.contains(p.getUniqueId()))
                 continue;
             UHCTeam team = teamHandler.getTeamForPlayer(p);
@@ -592,10 +583,6 @@ public class UHCArena implements Runnable, Listener {
             uniqueTeams.add(team);
         }
         return new ArrayList<>(uniqueTeams);
-    }
-
-    public List<UUID> getQueuedRemovals(){
-        return this.queuedTeamRemovals;
     }
 
     //todo: Remove me
@@ -652,7 +639,6 @@ public class UHCArena implements Runnable, Listener {
                 Bukkit.broadcastMessage(generateBoldChat(playerName + " has been eliminated because they logged off 5 minutes ago!", net.md_5.bungee.api.ChatColor.WHITE).toLegacyText());
                 queuedTeamRemovals.add(entry.getKey());
                 iterator.remove();
-                players.removeIf(next -> next.getUniqueId().equals(entry.getKey()));
                 uuidToStringMap.remove(entry.getKey());
             }
         }
@@ -689,17 +675,8 @@ public class UHCArena implements Runnable, Listener {
         return false;
     }
 
-    private int getSpectatorCount() {
-        int count = 0;
-        for (Player p : players) {
-            if (teamHandler.isSpectator(p))
-                count++;
-        }
-        return count;
-    }
-
     private int playerCount() {
-        return this.players.size() - getSpectatorCount();
+        return this.players(false).size();
     }
 
     private String randomPlayer() {

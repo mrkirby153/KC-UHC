@@ -155,16 +155,6 @@ public class PregameListener implements Listener {
     }
 
     @EventHandler
-    public void onLogout(PlayerQuitEvent event) {
-        if (!isPregame())
-            return;
-        if (plugin.arena.currentState() != UHCArena.State.RUNNING) {
-            // Remove the player from the arena
-            plugin.arena.removePlayer(event.getPlayer());
-        }
-    }
-
-    @EventHandler
     public void vehicleDamage(VehicleDamageEvent event) {
         if (!isPregame())
             return;

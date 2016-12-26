@@ -29,7 +29,7 @@ public class CompassModule extends UHCModule {
     @EventHandler(ignoreCancelled = true)
     public void onGameStateChange(GameStateChangeEvent event) {
         if(event.getTo() == UHCArena.State.RUNNING){
-            for(Player p : getPlugin().arena.players()){
+            for(Player p : getPlugin().arena.players(false)){
                 p.getInventory().setItem(8, new ItemFactory(Material.COMPASS).construct());
             }
         }

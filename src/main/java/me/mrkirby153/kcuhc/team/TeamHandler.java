@@ -36,7 +36,7 @@ public class TeamHandler extends Module<UHC> {
     }
 
     public boolean isSpectator(Player player) {
-        return getTeamForPlayer(player) == spectatorTeam;
+        return getTeamForPlayer(player) instanceof TeamSpectator;
     }
 
     public void joinTeam(UHCTeam team, Player player) {
@@ -45,7 +45,6 @@ public class TeamHandler extends Module<UHC> {
         }
         team.addPlayer(player);
         playerToTeamMap.put(player.getUniqueId(), team);
-        getPlugin().arena.addPlayer(player);
     }
 
     public void leaveTeam(Player player) {

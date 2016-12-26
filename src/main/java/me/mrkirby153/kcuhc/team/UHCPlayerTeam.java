@@ -36,7 +36,6 @@ public class UHCPlayerTeam extends UHCTeam implements ConfigurationSerializable 
 
     @Override
     public void onJoin(Player player) {
-        UHC.getInstance().arena.addPlayer(player);
         player.setGameMode(GameMode.SURVIVAL);
         player.setDisplayName(getColor() + player.getName() + ChatColor.RESET);
 
