@@ -107,8 +107,8 @@ public class ModuleRegistry {
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled())
             return;
-        module.load();
-        loadedModules.add(module);
+        if (module.load())
+            loadedModules.add(module);
     }
 
     /**
@@ -143,6 +143,10 @@ public class ModuleRegistry {
         availableModules.add(module);
     }
 
+    public static void unloadAll() {
+
+    }
+
     /**
      * Unloads a module
      *
@@ -156,11 +160,7 @@ public class ModuleRegistry {
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled())
             return;
-        module.unload();
-        loadedModules.remove(module);
-    }
-
-    public static void unloadAll() {
-
+        if (module.unload())
+            loadedModules.remove(module);
     }
 }
