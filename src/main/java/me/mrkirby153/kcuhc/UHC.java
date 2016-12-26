@@ -83,6 +83,9 @@ public class UHC extends JavaPlugin {
 
         admins = (ArrayList<String>) getConfig().getStringList("admins");
 
+        registerModules();
+        ModuleRegistry.loadModulesOnStart();
+        
         arena = new UHCArena(this, teamHandler);
         arena.initialize();
 
@@ -115,9 +118,6 @@ public class UHC extends JavaPlugin {
 
         velocityTracker = new VelocityTracker(this);
 
-
-        registerModules();
-
         getServer().getPluginManager().registerEvents(new ScoreboardManager(plugin), this);
 
         // Register commands
@@ -127,10 +127,6 @@ public class UHC extends JavaPlugin {
         getCommand("admin").setExecutor(new CommandAdmin(teamHandler));
         getCommand("teaminventory").setExecutor(new CommandTeamInv(teamHandler, plugin));
         getCommand("saycoords").setExecutor(new CommandSayCoords(teamHandler));
-
-
-
-        ModuleRegistry.loadModulesOnStart();
     }
 
     public void registerModules() {
