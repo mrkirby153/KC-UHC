@@ -162,14 +162,16 @@ public class UHCArena implements Runnable, Listener {
         MOTDHandler.setMotd(ChatColor.DARK_RED + "Pregenerating world, come back soon!");
         setState(State.GENERATING_WORLD);
 
-        Integer worldborderSize = properties.WORLDBORDER_START_SIZE.get();
-        int minX = getCenter().getBlockX() - worldborderSize;
-        int maxX = getCenter().getBlockX() + worldborderSize;
-        int minZ = getCenter().getBlockZ() - worldborderSize;
-        int maxZ = getCenter().getBlockZ() + worldborderSize;
+        Double worldborderSize = properties.WORLDBORDER_START_SIZE.get() * (2D/3);
+        // TODO: 12/27/2016 Worldborder size is diameter?
+        int minX = (int) Math.ceil(getCenter().getBlockX() - worldborderSize);
+        int maxX = (int) Math.ceil(getCenter().getBlockX() + worldborderSize);
+        int minZ = (int) Math.ceil(getCenter().getBlockZ() - worldborderSize);
+        int maxZ = (int) Math.ceil(getCenter().getBlockZ() + worldborderSize);
 
-        generationTaskId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin,
-                new GenerationTask(plugin, this, getWorld(), minX / 512, minZ / 512, maxX / 512, maxZ / 512), 1L, 1L);
+
+        plugin.getLogger().info(String.format("[PREGENERATION] Generating blocks from (%s, %s) to (%s, %s)", minX, minZ, maxX, maxZ));
+        new GenerationTask(plugin, getWorld(), minX, maxX, minZ, maxZ);
         for (Player p : Bukkit.getOnlinePlayers()) {
             p.kickPlayer(net.md_5.bungee.api.ChatColor.RED + "We are pregenerating the world, come back later");
         }
@@ -327,7 +329,7 @@ public class UHCArena implements Runnable, Listener {
         Integer rejoinMinutes = getProperties().REJOIN_MINUTES.get();
         players().forEach(p -> p.spigot().sendMessage(C.formattedChat(player.getName() + " has disconnected " + rejoinMinutes + " minutes to rejoin", net.md_5.bungee.api.ChatColor.RED, C.Style.BOLD)));
         BukkitTask task = plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            players().forEach(p -> p.spigot().sendMessage(C.formattedChat(player.getName() + " been eliminated because they logged off "+rejoinMinutes+" ago", net.md_5.bungee.api.ChatColor.RED, C.Style.BOLD)));
+            players().forEach(p -> p.spigot().sendMessage(C.formattedChat(player.getName() + " been eliminated because they logged off " + rejoinMinutes + " ago", net.md_5.bungee.api.ChatColor.RED, C.Style.BOLD)));
             this.disconnectedPlayers.remove(player.getUniqueId());
             this.queuedRemovals.remove(player.getUniqueId());
         }, rejoinMinutes * 60 * 20);
@@ -338,18 +340,18 @@ public class UHCArena implements Runnable, Listener {
     public void playerReconnect(Player player) {
         if (this.disconnectedPlayers.remove(player.getUniqueId())) {
             BukkitTask task = queuedRemovals.remove(player.getUniqueId());
-            if(task == null){
+            if (task == null) {
                 spectate(player);
                 return;
             }
             task.cancel();
-            players().forEach(p -> p.spigot().sendMessage(C.formattedChat(player.getName()+" has reconnected!", net.md_5.bungee.api.ChatColor.GREEN, C.Style.BOLD)));
+            players().forEach(p -> p.spigot().sendMessage(C.formattedChat(player.getName() + " has reconnected!", net.md_5.bungee.api.ChatColor.GREEN, C.Style.BOLD)));
         } else {
             spectate(player);
         }
     }
 
-    public List<OfflinePlayer> getDisconnectedPlayers(){
+    public List<OfflinePlayer> getDisconnectedPlayers() {
         ArrayList<OfflinePlayer> players = new ArrayList<>();
         players.addAll(this.disconnectedPlayers.stream().map(Bukkit::getOfflinePlayer).filter(Objects::nonNull).collect(Collectors.toList()));
         return players;
