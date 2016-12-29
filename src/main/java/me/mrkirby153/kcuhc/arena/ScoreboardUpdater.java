@@ -68,7 +68,7 @@ public class ScoreboardUpdater {
                         scoreboard.add(ChatColor.RED + "" + (int) +p.getHealth() + " " + (team != null ? team.getColor() : ChatColor.WHITE) + p.getName());
                     }
                     for (OfflinePlayer p : offlinePlayers) {
-                        scoreboard.add(ChatColor.GRAY + "" + ChatColor.STRIKETHROUGH + p.getName()+ ChatColor.RESET);
+                        scoreboard.add(ChatColor.GRAY + "" + ChatColor.STRIKETHROUGH + p.getName() + ChatColor.RESET);
                     }
                 } else {
                     // Show the number of teams
@@ -124,6 +124,23 @@ public class ScoreboardUpdater {
                 scoreboard.add(ChatColor.GOLD + "Winner:");
                 scoreboard.add("   " + arena.winner);
                 scoreboard.add(" ");
+                break;
+            case GENERATING_WORLD:
+                scoreboard.add("");
+                scoreboard.add(ChatColor.GOLD + "" + ChatColor.BOLD + "Generating world...");
+                scoreboard.add("");
+                if (GenerationTask.instance != null) {
+                    if (GenerationTask.instance.percentDone() < 100) {
+                        scoreboard.add(GenerationTask.instance.generatedChunks + "/" + (int) GenerationTask.instance.totalChunks + " chunks");
+                        scoreboard.add("");
+                        scoreboard.add(String.format("%.2f", GenerationTask.instance.percentDone()) + "% complete");
+                    } else {
+                        scoreboard.add("Finishing up...");
+                    }
+                }
+                scoreboard.add("");
+                break;
+
         }
         scoreboard.draw();
     }

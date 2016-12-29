@@ -194,6 +194,6 @@ public class PregameListener implements Listener {
     }
 
     private boolean isPregame() {
-        return plugin.arena.currentState() == UHCArena.State.INITIALIZED || plugin.arena.currentState() == UHCArena.State.WAITING || plugin.arena.currentState() == UHCArena.State.ENDGAME;
+        return plugin.arena.currentState() == UHCArena.State.INITIALIZED || plugin.arena.currentState() == UHCArena.State.WAITING || plugin.arena.currentState() == UHCArena.State.ENDGAME || plugin.arena.currentState() == UHCArena.State.GENERATING_WORLD;
     }
 }

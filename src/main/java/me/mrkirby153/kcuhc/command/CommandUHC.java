@@ -66,6 +66,10 @@ public class CommandUHC extends BaseCommand {
                 return true;
             }
             if (args[0].equalsIgnoreCase("start")) {
+                if(plugin.arena.currentState() == UHCArena.State.GENERATING_WORLD){
+                    sender.sendMessage(UtilChat.generateLegacyError("The world is still generating! Wait until it finishes"));
+                    return true;
+                }
                 sender.sendMessage(UtilChat.message("Started countdown"));
                 plugin.arena.startCountdown();
                 return true;

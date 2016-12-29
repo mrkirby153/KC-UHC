@@ -159,7 +159,6 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public void generate() {
-        MOTDHandler.setMotd(ChatColor.DARK_RED + "Pregenerating world, come back soon!");
         setState(State.GENERATING_WORLD);
 
         Double worldborderSize = properties.WORLDBORDER_START_SIZE.get() * (2D/3);
@@ -172,16 +171,13 @@ public class UHCArena implements Runnable, Listener {
 
         plugin.getLogger().info(String.format("[PREGENERATION] Generating blocks from (%s, %s) to (%s, %s)", minX, minZ, maxX, maxZ));
         new GenerationTask(plugin, getWorld(), minX, maxX, minZ, maxZ);
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            p.kickPlayer(net.md_5.bungee.api.ChatColor.RED + "We are pregenerating the world, come back later");
-        }
     }
 
     public void generationComplete() {
         setState(State.WAITING);
         MOTDHandler.setMotd(ChatColor.GRAY + "Pending initialization");
         Bukkit.broadcastMessage(UtilChat.message("World generation complete"));
-        plugin.getServer().getScheduler().cancelTask(generationTaskId);
+        Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F));
         initialize();
     }
 
@@ -190,7 +186,7 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public World getNether() {
-        return Bukkit.getWorld(getWorld().getName() + "_nether");
+        return plugin.uhcWorld_nether;
     }
 
     public ArenaProperties getProperties() {
@@ -202,7 +198,7 @@ public class UHCArena implements Runnable, Listener {
     }
 
     public World getWorld() {
-        return Bukkit.getWorld(properties.WORLD.get());
+        return plugin.uhcWorld;
     }
 
     public void initialize() {

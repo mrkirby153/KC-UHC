@@ -1,10 +1,12 @@
 package me.mrkirby153.kcuhc.arena;
 
+import me.mrkirby153.kcuhc.UHC;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.utils.UtilTime;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -12,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GenerationTask implements Runnable {
+
+    public static GenerationTask instance;
 
     private static final long FREQUENCY = 1;
 
@@ -22,8 +26,8 @@ public class GenerationTask implements Runnable {
 
     private int taskId;
 
-    private int generatedChunks = 0;
-    private double totalChunks;
+    public int generatedChunks = 0;
+    public double totalChunks;
 
     private long nextNotifyTime = System.currentTimeMillis();
     private final long startTime;
@@ -68,6 +72,7 @@ public class GenerationTask implements Runnable {
             originalChunks.add(new ChunkXZ(c.getX(), c.getZ()));
         }
         taskId = Bukkit.getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, FREQUENCY);
+        instance = this;
     }
 
     @Override
@@ -75,7 +80,7 @@ public class GenerationTask implements Runnable {
         // Broadcast progress every five seconds or so
         if (System.currentTimeMillis() > nextNotifyTime) {
             broadcastProgress();
-            nextNotifyTime = System.currentTimeMillis() + 5000;
+            nextNotifyTime = System.currentTimeMillis() + 30000;
         }
 
         if (!moveToNext()) {
@@ -149,6 +154,7 @@ public class GenerationTask implements Runnable {
                 Bukkit.broadcastMessage("Generation done!");
                 log("Generation completed in " + UtilTime.format(1, System.currentTimeMillis() - this.startTime, UtilTime.TimeUnit.FIT));
                 Bukkit.getScheduler().cancelTask(taskId);
+                UHC.getInstance().arena.generationComplete();
                 return false;
             }
         }
@@ -156,12 +162,16 @@ public class GenerationTask implements Runnable {
     }
 
     private void broadcastProgress() {
-        if (percentDone() < 100)
+        if (percentDone() < 100) {
             Bukkit.getServer().broadcastMessage(UtilChat.message("Pregeneration " + ChatColor.GOLD + String.format("%.2f", percentDone()) + "%"
-                    + ChatColor.GRAY + " complete! (" + ChatColor.GOLD + generatedChunks + "/" + (int)totalChunks + ChatColor.GRAY + " chunks)"));
+                    + ChatColor.GRAY + " complete! (" + ChatColor.GOLD + generatedChunks + "/" + (int) totalChunks + ChatColor.GRAY + " chunks)"));
+            Bukkit.getOnlinePlayers().forEach(p -> {
+                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
+            });
+        }
     }
 
-    private double percentDone() {
+    public double percentDone() {
         return generatedChunks / totalChunks * 100;
     }
 

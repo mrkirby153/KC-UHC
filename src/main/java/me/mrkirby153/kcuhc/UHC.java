@@ -3,10 +3,13 @@ package me.mrkirby153.kcuhc;
 import me.mrkirby153.kcuhc.arena.UHCArena;
 import me.mrkirby153.kcuhc.command.*;
 import me.mrkirby153.kcuhc.handler.*;
-import me.mrkirby153.kcuhc.module.endgame.*;
 import me.mrkirby153.kcuhc.module.ModuleRegistry;
 import me.mrkirby153.kcuhc.module.dimension.EndModule;
 import me.mrkirby153.kcuhc.module.dimension.NetherModule;
+import me.mrkirby153.kcuhc.module.endgame.EndgameScenarioModule;
+import me.mrkirby153.kcuhc.module.endgame.FFA;
+import me.mrkirby153.kcuhc.module.endgame.SpaceRace;
+import me.mrkirby153.kcuhc.module.endgame.TeamsEndgame;
 import me.mrkirby153.kcuhc.module.head.DropPlayerHeadModule;
 import me.mrkirby153.kcuhc.module.head.HeadAppleModule;
 import me.mrkirby153.kcuhc.module.health.HardcoreHeartsModule;
@@ -29,6 +32,8 @@ import me.mrkirby153.kcutils.event.UpdateEventHandler;
 import me.mrkirby153.kcutils.nms.NMS;
 import me.mrkirby153.kcutils.nms.NMSFactory;
 import me.mrkirby153.uhc.bot.network.UHCNetwork;
+import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -42,6 +47,9 @@ public class UHC extends JavaPlugin {
     public UHCArena arena;
     public VelocityTracker velocityTracker;
     public ExtraHealthHandler extraHealthHelper;
+
+    public World uhcWorld;
+    public World uhcWorld_nether;
 
     public TeamHandler teamHandler;
     public MOTDHandler motdHandler;
@@ -73,6 +81,10 @@ public class UHC extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // Initialize worlds
+        uhcWorld = Bukkit.getWorlds().get(0);
+        uhcWorld_nether = Bukkit.getWorld(uhcWorld.getName()+"_nether");
+
         saveDefaultConfig();
         plugin = this;
 
