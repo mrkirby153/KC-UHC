@@ -58,19 +58,21 @@ public class ArenaProperties {
             ArenaProperties props = new Gson().fromJson(reader, ArenaProperties.class);
             props.name = fileName;
             HashSet<String> modulesLoaded = new HashSet<>();
-            for(String s : props.LOADED_MODULES){
-                for(UHCModule m : ModuleRegistry.allModules()){
-                    if(m.getInternalName().equals(s)){
-                        if(!m.isLoaded())
-                            ModuleRegistry.loadModule(m);
-                        modulesLoaded.add(s);
-                        break;
+            if(props.LOADED_MODULES.size() > 0) {
+                for (String s : props.LOADED_MODULES) {
+                    for (UHCModule m : ModuleRegistry.allModules()) {
+                        if (m.getInternalName().equals(s)) {
+                            if (!m.isLoaded())
+                                ModuleRegistry.loadModule(m);
+                            modulesLoaded.add(s);
+                            break;
+                        }
                     }
                 }
-            }
-            for(UHCModule m : ModuleRegistry.allModules()){
-                if(m.isLoaded() && !modulesLoaded.contains(m.getInternalName())){
-                    ModuleRegistry.unloadModule(m);
+                for (UHCModule m : ModuleRegistry.allModules()) {
+                    if (m.isLoaded() && !modulesLoaded.contains(m.getInternalName())) {
+                        ModuleRegistry.unloadModule(m);
+                    }
                 }
             }
             reader.close();
