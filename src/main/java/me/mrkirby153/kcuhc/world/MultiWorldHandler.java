@@ -98,7 +98,7 @@ public class MultiWorldHandler extends Module<UHC> implements Listener {
 
         if (type == PortalType.NETHER) {
             event.getPortalTravelAgent().setCanCreatePortal(true);
-            event.setTo(event.getPortalTravelAgent().findOrCreate(scale(loc, to, from)));
+            event.setTo(event.getPortalTravelAgent().findOrCreate(scale(loc, to, from, event.getFrom().getWorld().getMaxHeight(), loc.getWorld().getMaxHeight())));
         }
 
         if (type == PortalType.ENDER) {
@@ -109,7 +109,7 @@ public class MultiWorldHandler extends Module<UHC> implements Listener {
                     event.getPlayer().teleport(loc.getWorld().getSpawnLocation());
             }
             if (to == World.Environment.THE_END) {
-                event.getPlayer().teleport(loc);
+                event.setTo(loc);
             }
         }
     }
@@ -202,7 +202,7 @@ public class MultiWorldHandler extends Module<UHC> implements Listener {
         }
     }
 
-    private Location scale(Location location, World.Environment from, World.Environment to) {
+    private Location scale(Location location, World.Environment from, World.Environment to, double fromMaxHeight, double toMaxHeight) {
         Location newLoc = location.clone();
         double fromScaling = 1;
         double toScaling = 1;
@@ -212,10 +212,10 @@ public class MultiWorldHandler extends Module<UHC> implements Listener {
         if (to == World.Environment.NETHER) {
             toScaling = 8;
         }
-        double scale = 1D * (fromScaling / toScaling);
-
+        double scale = 1D * (toScaling / fromScaling);
         newLoc.setX(newLoc.getX() * scale);
         newLoc.setZ(newLoc.getZ() * scale);
+        newLoc.setY(newLoc.getY() * (toMaxHeight / fromMaxHeight));
         return newLoc;
     }
 }
