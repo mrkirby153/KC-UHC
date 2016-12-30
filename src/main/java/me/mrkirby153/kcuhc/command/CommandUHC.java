@@ -24,8 +24,10 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.File;
 import java.lang.reflect.Field;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -75,13 +77,26 @@ public class CommandUHC extends BaseCommand {
                 return true;
             }
             if (args[0].equalsIgnoreCase("worlds")) {
-                List<String> worlds = Bukkit.getWorlds().stream().filter(w -> w.getEnvironment() == World.Environment.NORMAL)
-                        .filter(w -> w.getName().startsWith("UHC_")).map(World::getName).collect(Collectors.toList());
+                File[] files = Bukkit.getWorldContainer().listFiles(pathname -> {
+                    if (pathname == null)
+                        return false;
+                    if (!pathname.isDirectory())
+                        return false;
+                    return pathname.getName().startsWith("UHC_") && !(pathname.getName().contains("nether") || pathname.getName().contains("end"));
+                });
+                ArrayList<String> worlds = new ArrayList<>();
+                if(files != null){
+                    worlds.addAll(Arrays.stream(files).map(File::getName).collect(Collectors.toList()));
+                }
                 String worldList = "";
                 for (String s : worlds) {
                     worldList += s + ", ";
                 }
-                worldList = worldList.substring(0, worldList.length() - 2);
+                if(worldList.length() == 0){
+                    sender.sendMessage(UtilChat.message("No worlds!"));
+                    return true;
+                }
+                worldList = worldList.substring(0, worldList.length()-2);
                 sender.sendMessage(UtilChat.message("Available worlds: " + ChatColor.GOLD + worldList));
                 return true;
             }
@@ -182,7 +197,7 @@ public class CommandUHC extends BaseCommand {
             }
             if (args[0].equalsIgnoreCase("setworld")) {
                 String id = args[1];
-                if (Bukkit.getWorld("UHC_" + id) == null) {
+                if (!new File(Bukkit.getWorldContainer(), "UHC_"+id).exists()) {
                     sender.sendMessage(UtilChat.generateLegacyError("That world does not exist!"));
                     return true;
                 }
@@ -192,7 +207,7 @@ public class CommandUHC extends BaseCommand {
             }
             if (args[0].equalsIgnoreCase("delete")) {
                 String id = args[1];
-                if (Bukkit.getWorld("UHC_" + id) == null) {
+                if (!new File(Bukkit.getWorldContainer(), "UHC_"+id).exists()) {
                     sender.sendMessage(UtilChat.generateLegacyError("That world does not exist!"));
                     return true;
                 }

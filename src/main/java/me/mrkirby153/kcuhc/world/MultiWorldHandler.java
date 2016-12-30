@@ -160,13 +160,18 @@ public class MultiWorldHandler extends Module<UHC> implements Listener {
     }
 
     public void deleteUHCWorld(String name) {
-        worldsQueuedForDelete.add(name);
-        worldsQueuedForDelete.add(name + "_nether");
-        worldsQueuedForDelete.add(name + "_the_end");
+        queueOrDelete(name);
+        queueOrDelete(name+"_nether");
+        queueOrDelete(name+"_the_end");
+    }
 
-        Bukkit.unloadWorld(name, true);
-        Bukkit.unloadWorld(name + "_nether", true);
-        Bukkit.unloadWorld(name + "_the_end", true);
+    private void queueOrDelete(String world){
+        if(Bukkit.getWorld(world) == null)
+            deleteWorld(world);
+        else{
+            worldsQueuedForDelete.add(world);
+            Bukkit.unloadWorld(world, true);
+        }
     }
 
     private void deleteWorld(String world) {
@@ -181,9 +186,9 @@ public class MultiWorldHandler extends Module<UHC> implements Listener {
     }
 
     public void setWorld(String id) {
-        getPlugin().uhcWorld = Bukkit.getWorld("UHC_" + id);
-        getPlugin().uhcWorld_nether = Bukkit.getWorld("UHC_" + id + "_nether");
-        getPlugin().uhcWorld_end = Bukkit.getWorld("UHC_" + id + "_the_end");
+        getPlugin().uhcWorld = Bukkit.createWorld(new WorldCreator("UHC_" + id));
+        getPlugin().uhcWorld_nether = Bukkit.createWorld(new WorldCreator("UHC_" + id + "_nether").environment(World.Environment.NETHER));
+        getPlugin().uhcWorld_end = Bukkit.createWorld(new WorldCreator("UHC_" + id + "_the_end").environment(World.Environment.THE_END));
     }
 
     public void setStatus(String world, WorldStatus status) {
