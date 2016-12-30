@@ -19,6 +19,7 @@ import me.mrkirby153.kcuhc.team.TeamSpectator;
 import me.mrkirby153.kcuhc.team.UHCTeam;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import me.mrkirby153.kcuhc.utils.UtilTitle;
+import me.mrkirby153.kcuhc.world.WorldStatus;
 import me.mrkirby153.kcutils.C;
 import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandAssignSpectator;
 import me.mrkirby153.uhc.bot.network.comm.commands.BotCommandLoneWolf;
@@ -175,6 +176,7 @@ public class UHCArena implements Runnable, Listener {
 
     public void generationComplete() {
         setState(State.WAITING);
+        UHC.getInstance().multiWorldHandler.setStatus(getWorld(), WorldStatus.PREGENERATED);
         MOTDHandler.setMotd(ChatColor.GRAY + "Pending initialization");
         Bukkit.broadcastMessage(UtilChat.message("World generation complete"));
         Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.ENTITY_ENDERDRAGON_GROWL, 1F, 1F));

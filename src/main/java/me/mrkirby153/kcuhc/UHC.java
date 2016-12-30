@@ -26,6 +26,7 @@ import me.mrkirby153.kcuhc.module.worldborder.WorldBorderWarning;
 import me.mrkirby153.kcuhc.scoreboard.ScoreboardManager;
 import me.mrkirby153.kcuhc.team.TeamHandler;
 import me.mrkirby153.kcuhc.utils.UtilTitle;
+import me.mrkirby153.kcuhc.world.MultiWorldHandler;
 import me.mrkirby153.kcutils.BossBar;
 import me.mrkirby153.kcutils.command.CommandManager;
 import me.mrkirby153.kcutils.event.UpdateEventHandler;
@@ -50,6 +51,7 @@ public class UHC extends JavaPlugin {
 
     public World uhcWorld;
     public World uhcWorld_nether;
+    public World uhcWorld_end;
 
     public TeamHandler teamHandler;
     public MOTDHandler motdHandler;
@@ -57,6 +59,7 @@ public class UHC extends JavaPlugin {
     public BossBar bossBar;
     public DiscordHandler discordHandler;
     public TeamChatHandler teamChatHandler;
+    public MultiWorldHandler multiWorldHandler;
 
     private NMS nms;
 
@@ -131,6 +134,9 @@ public class UHC extends JavaPlugin {
         extraHealthHelper.load();
 
         velocityTracker = new VelocityTracker(this);
+
+        multiWorldHandler = new MultiWorldHandler(this);
+        multiWorldHandler.load();
 
         getServer().getPluginManager().registerEvents(new ScoreboardManager(plugin), this);
 
