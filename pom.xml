@@ -15,11 +15,11 @@
         </repository>
         <repository>
             <id>mrkirby153</id>
-            <url>http://repo.mrkirby153.tk/nexus/content/groups/public/</url>
+            <url>https://repo.mrkirby153.tk/repository/maven-public/</url>
         </repository>
         <repository>
-            <id>quarxel</id>
-            <url>http://repo.mrkirby153.tk/nexus/content/repositories/quarxel/</url>
+            <id>mrkirby153-spigot</id>
+            <url>https://repo.mrkirby153.tk/repository/spigot/</url>
         </repository>
         <repository>
             <id>sonatype</id>
