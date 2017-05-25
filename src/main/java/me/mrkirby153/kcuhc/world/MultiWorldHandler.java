@@ -186,6 +186,12 @@ public class MultiWorldHandler extends Module<UHC> implements Listener {
     }
 
     public void setWorld(String id) {
+        // Unload current world
+        if(!getPlugin().uhcWorld.getName().equals(Bukkit.getWorlds().get(0).getName())) {
+            Bukkit.unloadWorld(getPlugin().uhcWorld, true);
+            Bukkit.unloadWorld(getPlugin().uhcWorld_nether, true);
+            Bukkit.unloadWorld(getPlugin().uhcWorld_end, true);
+        }
         getPlugin().uhcWorld = Bukkit.createWorld(new WorldCreator("UHC_" + id));
         getPlugin().uhcWorld_nether = Bukkit.createWorld(new WorldCreator("UHC_" + id + "_nether").environment(World.Environment.NETHER));
         getPlugin().uhcWorld_end = Bukkit.createWorld(new WorldCreator("UHC_" + id + "_the_end").environment(World.Environment.THE_END));

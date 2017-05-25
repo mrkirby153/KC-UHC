@@ -1,6 +1,7 @@
 package me.mrkirby153.kcuhc.command;
 
 import me.mrkirby153.kcuhc.UHC;
+import me.mrkirby153.kcuhc.gui.admin.WorldSettingsInventory;
 import me.mrkirby153.kcuhc.utils.UtilChat;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -19,6 +20,12 @@ public class CommandUHCWorlds extends BaseCommand {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (restrictAdmin(sender))
             return true;
+        if(args.length == 0){
+            if(restrictPlayer(sender))
+                return true;
+            new WorldSettingsInventory(UHC.getInstance(), (Player) sender).open();
+            return true;
+        }
         if (args.length == 1) {
             if (args[0].equalsIgnoreCase("worlds")) {
                 File[] files = Bukkit.getWorldContainer().listFiles(pathname -> pathname != null && pathname.isDirectory()
