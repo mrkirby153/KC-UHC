@@ -7,6 +7,10 @@ commands:
   uhc:
     usage: /uhc
     description: Handles uhc stuff
+  uhc-worlds:
+    aliases: ['uhcw', 'uhc-world']
+    usage: /uhc-worlds
+    description: Handles UHC worlds
   team:
     usage: /team
     description: Handles team stuff

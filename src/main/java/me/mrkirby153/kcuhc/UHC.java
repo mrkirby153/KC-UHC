@@ -147,6 +147,7 @@ public class UHC extends JavaPlugin {
         getCommand("admin").setExecutor(new CommandAdmin(teamHandler));
         getCommand("teaminventory").setExecutor(new CommandTeamInv(teamHandler, plugin));
         getCommand("saycoords").setExecutor(new CommandSayCoords(teamHandler));
+        getCommand("uhc-worlds").setExecutor(new CommandUHCWorlds());
 
         getLogger().info("Removing ocean biomes....");
         nms.removeOceans();

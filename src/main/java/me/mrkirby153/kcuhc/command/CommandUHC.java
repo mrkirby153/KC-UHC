@@ -19,18 +19,13 @@ import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.io.File;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class CommandUHC extends BaseCommand {
 
@@ -68,36 +63,6 @@ public class CommandUHC extends BaseCommand {
                 Player player = (Player) sender;
                 Location l = player.getLocation();
                 player.sendMessage(UtilChat.message(String.format("You are at " + ChatColor.GOLD + "%.2f, %.2f, %.2f " + ChatColor.GRAY + " in world " + ChatColor.GOLD + "%s", l.getX(), l.getY(), l.getZ(), l.getWorld().getName())));
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("createworld")) {
-                sender.sendMessage(UtilChat.message("Generating world..."));
-                String name = UHC.getInstance().multiWorldHandler.createWorld().getName();
-                sender.sendMessage(UtilChat.message("Creation of " + ChatColor.GOLD + name + ChatColor.GRAY + " complete!"));
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("worlds")) {
-                File[] files = Bukkit.getWorldContainer().listFiles(pathname -> {
-                    if (pathname == null)
-                        return false;
-                    if (!pathname.isDirectory())
-                        return false;
-                    return pathname.getName().startsWith("UHC_") && !(pathname.getName().contains("nether") || pathname.getName().contains("end"));
-                });
-                ArrayList<String> worlds = new ArrayList<>();
-                if(files != null){
-                    worlds.addAll(Arrays.stream(files).map(File::getName).collect(Collectors.toList()));
-                }
-                String worldList = "";
-                for (String s : worlds) {
-                    worldList += s + ", ";
-                }
-                if(worldList.length() == 0){
-                    sender.sendMessage(UtilChat.message("No worlds!"));
-                    return true;
-                }
-                worldList = worldList.substring(0, worldList.length()-2);
-                sender.sendMessage(UtilChat.message("Available worlds: " + ChatColor.GOLD + worldList));
                 return true;
             }
             if (args[0].equalsIgnoreCase("whitelistTeams")) {
@@ -182,37 +147,6 @@ public class CommandUHC extends BaseCommand {
         }
         if (args.length == 2) {
             if (restrictAdmin(sender)) {
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("tpworld")) {
-                World w = Bukkit.getWorld(args[1]);
-                if (w == null) {
-                    sender.sendMessage(UtilChat.generateLegacyError("That world does not exist!"));
-                    return true;
-                }
-                if (restrictPlayer(sender))
-                    return true;
-                ((Player) sender).teleport(w.getSpawnLocation());
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("setworld")) {
-                String id = args[1];
-                if (!new File(Bukkit.getWorldContainer(), "UHC_"+id).exists()) {
-                    sender.sendMessage(UtilChat.generateLegacyError("That world does not exist!"));
-                    return true;
-                }
-                UHC.getInstance().multiWorldHandler.setWorld(id);
-                sender.sendMessage(UtilChat.message("Selected world " + ChatColor.GOLD + id));
-                return true;
-            }
-            if (args[0].equalsIgnoreCase("delete")) {
-                String id = args[1];
-                if (!new File(Bukkit.getWorldContainer(), "UHC_"+id).exists()) {
-                    sender.sendMessage(UtilChat.generateLegacyError("That world does not exist!"));
-                    return true;
-                }
-                UHC.getInstance().multiWorldHandler.deleteUHCWorld("UHC_" + id);
-                sender.sendMessage(UtilChat.message("Deleted world " + ChatColor.GOLD + id));
                 return true;
             }
             if (args[0].equalsIgnoreCase("respawn")) {
