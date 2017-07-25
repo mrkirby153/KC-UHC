@@ -6,7 +6,10 @@ import co.aikar.commands.MinecraftMessageKeys;
 import com.mrkirby153.kcuhc.game.GameCommand;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
+import com.mrkirby153.kcuhc.game.team.CommandTeam;
+import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.player.UHCPlayer;
+import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.command.CommandManager;
 import me.mrkirby153.kcutils.event.UpdateEventHandler;
 import me.mrkirby153.kcutils.flags.FlagModule;
@@ -67,6 +70,7 @@ public class UHC extends JavaPlugin {
             Arrays.stream(GameState.values()).map(GameState::name).forEach(states::add);
             return states;
         });
+        manager.getCommandCompletions().registerCompletion("teams", c -> this.game.getTeams().keySet());
 
         // Register resolvers
         manager.getCommandContexts().registerContext(GameState.class, c -> GameState.valueOf(c.popFirstArg()));
@@ -79,7 +83,17 @@ public class UHC extends JavaPlugin {
             }
             return UHCPlayer.getPlayer(player);
         });
+        manager.getCommandContexts().registerContext(UHCTeam.class, c -> {
+            String name = c.popFirstArg();
+            UHCTeam team = this.game.getTeam(name);
+            if(team == null){
+                c.getSender().sendMessage(C.m("Error", "There is no team by the name of {team}", "{team}", name).toLegacyText());
+                throw new InvalidCommandArgument(true);
+            }
+            return team;
+        });
 
         manager.registerCommand(new GameCommand(game, this));
+        manager.registerCommand(new CommandTeam(this));
     }
 }
