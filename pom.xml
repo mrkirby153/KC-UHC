@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>me.mrkirby153</groupId>
     <artifactId>KC-UHC</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>2.0-SNAPSHOT</version>
     <name>KC UHC</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -15,7 +15,7 @@
         </repository>
         <repository>
             <id>mrkirby153</id>
-            <url>https://repo.mrkirby153.tk/repository/maven-public/</url>
+            <url>https://repo.mrkirby153.com/repository/maven-public/</url>
         </repository>
         <repository>
             <id>mrkirby153-spigot</id>
@@ -33,6 +33,10 @@
             <id>dmulloy2-repo</id>
             <url>http://repo.dmulloy2.net/content/groups/public/</url>
         </repository>
+        <repository>
+            <id>aikar</id>
+            <url>https://repo.aikar.co/nexus/content/groups/aikar/</url>
+        </repository>
     </repositories>
 
     <pluginRepositories>
@@ -47,10 +51,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
+                <version>3.1</version>
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>
@@ -67,8 +74,8 @@
                         </goals>
                         <configuration>
                             <target>
-                                <copy file="./target/${project.artifactId}-${project.version}.jar"
-                                      tofile="./testserver/plugins/${project.artifactId}-dev.jar"/>
+                                <copy file="${project.build.directory}/${project.artifactId}-${project.version}.jar"
+                                      tofile="${project.basedir}/testserver/plugins/${project.artifactId}-dev.jar"/>
                             </target>
                         </configuration>
                     </execution>
@@ -85,13 +92,13 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <createDependencyReducedPom>false</createDependencyReducedPom>
-                            <!--                            <relocations>
-                                                            <relocation>
-                                                                <pattern>me.mrkirby153.kcutils</pattern>
-                                                                <shadedPattern>me.mrkirby153.kcuhc.kcutils</shadedPattern>
-                                                            </relocation>
-                                                        </relocations>-->
+                            <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
+                            <relocations>
+                                <relocation>
+                                    <pattern>co.aikar.commands</pattern>
+                                    <shadedPattern>com.mrkirby153.kcuhc.acf</shadedPattern>
+                                </relocation>
+                            </relocations>
                         </configuration>
                     </execution>
                 </executions>
@@ -144,6 +151,11 @@
             <groupId>me.mrkirby153</groupId>
             <artifactId>KirbyUtils-Bukkit</artifactId>
             <version>1.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>co.aikar</groupId>
+            <artifactId>acf-bukkit</artifactId>
+            <version>0.5.0-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
