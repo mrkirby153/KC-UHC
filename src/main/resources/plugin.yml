@@ -1,34 +1,5 @@
 name: KC-UHC
 version: ${project.version}
 author: mrkirby153
-main: me.mrkirby153.kcuhc.UHC
+main: com.mrkirby153.kcuhc.UHC
 depend: [ProtocolLib]
-commands:
-  uhc:
-    usage: /uhc
-    description: Handles uhc stuff
-  uhc-worlds:
-    aliases: ['uhcw', 'uhc-world']
-    usage: /uhc-worlds
-    description: Handles UHC worlds
-  team:
-    usage: /team
-    description: Handles team stuff
-  discord:
-    usage: /discord
-    description: Handles discord interaction
-  spectate:
-    usage: /spectate
-    description: Toggles spectating or not. Cannot be used while ingame
-  teaminventory:
-    aliases: ['teaminv']
-    usage: /teaminventory
-    description: Opens your team's shared inventory
-  admin:
-    aliases: ['a']
-    usage: /a <message>
-    description: Contact an admin
-  saycoords:
-    aliases: ['whereami', 'coords']
-    usage: /saycoords
-    description: Sends your coordinates to your team

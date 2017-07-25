@@ -45,23 +45,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>com.demonwav</groupId>
-                <artifactId>bukkitstart</artifactId>
-                <version>1.1-SNAPSHOT</version>
-                <configuration>
-                    <acceptEula>true</acceptEula>
-                    <url>LATEST_SPIGOT</url>
-                    <runDirectory>testServer</runDirectory>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>setup-server</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
@@ -134,11 +117,6 @@
             <version>2.4</version>
         </dependency>
         <dependency>
-            <groupId>me.mrkirby153</groupId>
-            <artifactId>KC-UHC-Network</artifactId>
-            <version>2.2-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
@@ -157,17 +135,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>me.mrkirby153</groupId>
-            <artifactId>KirbyUtils</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.demonwav</groupId>
-            <artifactId>bukkitstart</artifactId>
-            <version>1.1-SNAPSHOT</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
             <groupId>com.comphenix.protocol</groupId>
             <artifactId>ProtocolLib</artifactId>
             <version>4.1.0-SNAPSHOT</version>
@@ -178,11 +145,11 @@
     <distributionManagement>
         <snapshotRepository>
             <id>mrkirby153-snapshots</id>
-            <url>http://repo.mrkirby153.tk/nexus/content/repositories/snapshots/</url>
+            <url>https://repo.mrkirby153.com/nexus/content/repositories/snapshots/</url>
         </snapshotRepository>
         <repository>
             <id>mrkirby153-releases</id>
-            <url>http://repo.mrkirby153.tk/nexus/content/repositories/releases/</url>
+            <url>https://repo.mrkirby153.com/nexus/content/repositories/releases/</url>
         </repository>
     </distributionManagement>
 </project>
