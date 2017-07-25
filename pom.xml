@@ -140,6 +140,11 @@
             <version>4.1.0-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>me.mrkirby153</groupId>
+            <artifactId>KirbyUtils-Bukkit</artifactId>
+            <version>1.2-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <distributionManagement>
