@@ -4,17 +4,22 @@ import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
+import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 
 import java.util.HashMap;
 
 /**
  * The main game class
  */
-public class UHCGame {
+public class UHCGame implements Listener {
+
     /**
      * The current state of the game
      */
@@ -37,6 +42,21 @@ public class UHCGame {
 
     public UHCGame(UHC plugin) {
         this.plugin = plugin;
+        this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onGameStateChange(GameStateChangeEvent event) {
+        if(event.getTo() == GameState.COUNTDOWN){
+            new CountdownTimer(plugin, 10, 20, time -> Bukkit.getOnlinePlayers().forEach(p -> {
+                if(time == 0){
+                    setCurrentState(GameState.ALIVE);
+                    return;
+                }
+                p.spigot().sendMessage(C.m("Game", "Starting in {time} seconds", "{time}", time));
+                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
+            }));
+        }
     }
 
     /**
@@ -86,16 +106,6 @@ public class UHCGame {
     }
 
     /**
-     * Gets a team by its name
-     *
-     * @param name The name of the team
-     * @return The team, or null if it doesn't exist
-     */
-    public UHCTeam getTeam(String name) {
-        return teams.get(name.toLowerCase());
-    }
-
-    /**
      * Gets the team the player is on
      *
      * @param player The Player to get the team for
@@ -112,6 +122,16 @@ public class UHCGame {
     }
 
     /**
+     * Gets a team by its name
+     *
+     * @param name The name of the team
+     * @return The team, or null if it doesn't exist
+     */
+    public UHCTeam getTeam(String name) {
+        return teams.get(name.toLowerCase());
+    }
+
+    /**
      * Gets all the teams currently registered
      *
      * @return The team
@@ -119,4 +139,5 @@ public class UHCGame {
     public HashMap<String, UHCTeam> getTeams() {
         return teams;
     }
+
 }

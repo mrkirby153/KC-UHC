@@ -9,6 +9,7 @@ import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.team.CommandTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.player.UHCPlayer;
+import com.mrkirby153.kcuhc.scoreboard.ScoreboardUpdater;
 import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.command.CommandManager;
 import me.mrkirby153.kcutils.event.UpdateEventHandler;
@@ -27,6 +28,7 @@ public class UHC extends JavaPlugin {
 
     private UpdateEventHandler tickEventHandler;
     private FlagModule flagModule;
+    private ScoreboardUpdater scoreboardUpdater;
 
     private UHCGame game;
 
@@ -59,6 +61,8 @@ public class UHC extends JavaPlugin {
 
         // Initialize the game
         game = new UHCGame(this);
+
+        scoreboardUpdater = new ScoreboardUpdater(this);
 
         registerCommands();
     }

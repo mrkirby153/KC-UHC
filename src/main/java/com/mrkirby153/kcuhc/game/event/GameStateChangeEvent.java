@@ -30,4 +30,8 @@ public class GameStateChangeEvent extends Event {
     public GameState getTo() {
         return to;
     }
+
+    public static HandlerList getHandlerList(){
+        return handlerList;
+    }
 }
