@@ -8,6 +8,7 @@ import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.team.CommandTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
+import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.player.UHCPlayer;
 import com.mrkirby153.kcuhc.scoreboard.ScoreboardUpdater;
 import me.mrkirby153.kcutils.C;
@@ -63,6 +64,8 @@ public class UHC extends JavaPlugin {
         game = new UHCGame(this);
 
         scoreboardUpdater = new ScoreboardUpdater(this);
+
+        ModuleRegistry.INSTANCE.loadAll();
 
         registerCommands();
     }

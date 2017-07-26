@@ -1,0 +1,94 @@
+package com.mrkirby153.kcuhc.module;
+
+import com.mrkirby153.kcuhc.UHC;
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+
+/**
+ * Abstract module for various game elements
+ */
+public abstract class UHCModule implements Listener {
+
+    private final String moduleName;
+    private final Material guiItem;
+    private final int damage;
+    protected boolean autoLoad = false;
+    private boolean loaded = false;
+
+    public UHCModule(String moduleName, Material guiItem, int damage) {
+        this.moduleName = moduleName;
+        this.guiItem = guiItem;
+        this.damage = damage;
+    }
+
+    public UHCModule(String moduleName, Material guiItem) {
+        this(moduleName, guiItem, 0);
+    }
+
+    /**
+     * Gets if the plugin should load on startup
+     *
+     * @return True if the plugin should load on startup
+     */
+    public boolean autoLoad() {
+        return autoLoad;
+    }
+
+    /**
+     * Loads the module
+     */
+    public boolean load() {
+        if (this.loaded) {
+            throw new IllegalArgumentException("Attempted to load a module that was already loaded!");
+        }
+        Bukkit.getServer().getPluginManager().registerEvents(this, getPlugin());
+        try {
+            onLoad();
+        } catch (Exception e) {
+            getPlugin().getLogger().severe("An error occurred when loading the module " + this.moduleName + ". It will remain unloaded");
+            return false;
+        }
+        this.loaded = true;
+        return true;
+    }
+
+    /**
+     * Called when the module is loaded
+     */
+    public void onLoad() {
+
+    }
+
+    /**
+     * Called when the module is unloaded
+     */
+    public void onUnload() {
+
+    }
+
+    /**
+     * Unloads the module
+     */
+    public boolean unload() {
+        try {
+            onUnload();
+            HandlerList.unregisterAll(this);
+        } catch (Exception e) {
+            getPlugin().getLogger().severe("An error occurred when unloading the module " + this.moduleName + ". It will remain loaded");
+            return false;
+        }
+        this.loaded = false;
+        return true;
+    }
+
+    /**
+     * Gets the main plugin instance
+     *
+     * @return The plugin instance
+     */
+    protected UHC getPlugin() {
+        return UHC.getPlugin(UHC.class);
+    }
+}
