@@ -37,6 +37,24 @@ public abstract class UHCModule implements Listener {
     }
 
     /**
+     * Gets the internal name of the module
+     *
+     * @return The module's internal name
+     */
+    public String getInternalName() {
+        return this.moduleName.toLowerCase().replace(' ', '-');
+    }
+
+    /**
+     * Gets the module's friendly name
+     *
+     * @return The name of the module
+     */
+    public String getName() {
+        return moduleName;
+    }
+
+    /**
      * Loads the module
      */
     public boolean load() {

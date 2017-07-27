@@ -23,6 +23,15 @@ public class ModuleRegistry {
     private HashSet<UHCModule> availableModules = new HashSet<>();
 
     /**
+     * Gets all the modules available
+     *
+     * @return The module lost
+     */
+    public HashSet<UHCModule> availableModules() {
+        return new HashSet<>(this.availableModules);
+    }
+
+    /**
      * Gets a list of all the loaded modules
      *
      * @return The module list
@@ -45,6 +54,20 @@ public class ModuleRegistry {
         for (UHCModule mod : availableModules) {
             if (mod.getClass().equals(clazz))
                 return (T) mod;
+        }
+        return null;
+    }
+
+    /**
+     * Gets a module by its internal name
+     *
+     * @param internalName The name of the module
+     * @return The module, or null if it doesn't exist
+     */
+    public UHCModule getModuleByName(String internalName) {
+        for (UHCModule m : availableModules) {
+            if (m.getInternalName().equals(internalName))
+                return m;
         }
         return null;
     }
@@ -80,6 +103,19 @@ public class ModuleRegistry {
                 e.printStackTrace();
             }
         });
+    }
+
+    /**
+     * Checks if a module is loaded
+     * @param clazz The module to check if loaded
+     * @return True if the module is loaded
+     */
+    public boolean loaded(Class<? extends UHCModule> clazz) {
+        for(UHCModule m : this.loadedModules){
+            if(m.getClass().equals(clazz))
+                return true;
+        }
+        return false;
     }
 
     /**
