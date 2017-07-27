@@ -17,6 +17,8 @@ import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.command.CommandManager;
 import me.mrkirby153.kcutils.event.UpdateEventHandler;
 import me.mrkirby153.kcutils.flags.FlagModule;
+import me.mrkirby153.kcutils.flags.WorldFlags;
+import me.mrkirby153.kcutils.protocollib.ProtocolLib;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -33,8 +35,10 @@ public class UHC extends JavaPlugin {
     private static BukkitCommandManager manager;
 
     private UpdateEventHandler tickEventHandler;
-    private FlagModule flagModule;
+    public FlagModule flagModule;
     private ScoreboardUpdater scoreboardUpdater;
+
+    private ProtocolLib protocolLibManager;
 
     private UHCGame game;
 
@@ -63,7 +67,22 @@ public class UHC extends JavaPlugin {
         // Initialize the world flags
         flagModule = new FlagModule(this);
         flagModule.load();
-        flagModule.initialize(getServer().getWorlds().get(0));
+        World world = getServer().getWorlds().get(0);
+        flagModule.initialize(world);
+
+        Arrays.stream(WorldFlags.values()).forEach(f -> {
+            flagModule.set(world, f, false, false);
+        });
+
+        // Initialize protocol lib
+        protocolLibManager = new ProtocolLib(this);
+        protocolLibManager.load();
+
+        if(protocolLibManager.isErrored()){
+            getLogger().severe("Could not initialize ProtocolLib. Aborting");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
 
         // Initialize the game
         game = new UHCGame(this);

@@ -7,6 +7,7 @@ import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
+import me.mrkirby153.kcutils.flags.WorldFlags;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
@@ -18,6 +19,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -155,6 +157,12 @@ public class UHCGame implements Listener {
                 p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 5, true));
             });
         }
+        if(event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING){
+            Arrays.stream(WorldFlags.values()).forEach(f -> plugin.flagModule.set(UHC.getUHCWorld(), f, false, false));
+        }
+        if(event.getTo() == GameState.ALIVE){
+            Arrays.stream(WorldFlags.values()).forEach(f -> plugin.flagModule.set(UHC.getUHCWorld(), f, true, false));
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -166,6 +174,7 @@ public class UHCGame implements Listener {
                 if (!p.getAllowFlight())
                     p.setAllowFlight(true);
                 p.setFoodLevel(20);
+                p.setHealth(p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
             });
         }
     }
