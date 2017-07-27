@@ -5,13 +5,18 @@ import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import me.mrkirby153.kcutils.C;
+import me.mrkirby153.kcutils.event.UpdateEvent;
+import me.mrkirby153.kcutils.event.UpdateType;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.HashMap;
 
@@ -43,20 +48,6 @@ public class UHCGame implements Listener {
     public UHCGame(UHC plugin) {
         this.plugin = plugin;
         this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onGameStateChange(GameStateChangeEvent event) {
-        if(event.getTo() == GameState.COUNTDOWN){
-            new CountdownTimer(plugin, 10, 20, time -> Bukkit.getOnlinePlayers().forEach(p -> {
-                if(time == 0){
-                    setCurrentState(GameState.ALIVE);
-                    return;
-                }
-                p.spigot().sendMessage(C.m("Game", "Starting in {time} seconds", "{time}", time));
-                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
-            }));
-        }
     }
 
     /**
@@ -138,6 +129,45 @@ public class UHCGame implements Listener {
      */
     public HashMap<String, UHCTeam> getTeams() {
         return teams;
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onGameStateChange(GameStateChangeEvent event) {
+        if (event.getTo() == GameState.COUNTDOWN) {
+            new CountdownTimer(plugin, 10, 20, time -> Bukkit.getOnlinePlayers().forEach(p -> {
+                if (time == 0) {
+                    setCurrentState(GameState.ALIVE);
+                    return;
+                }
+                p.spigot().sendMessage(C.m("Game", "Starting in {time} seconds", "{time}", time));
+                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
+            }));
+        }
+        if (event.getTo() == GameState.ALIVE) {
+            Bukkit.getOnlinePlayers().stream().filter(p -> !this.spectators.getPlayers().contains(p.getUniqueId())).forEach(p -> {
+                p.setAllowFlight(false);
+                p.setFlying(false);
+                p.setHealth(p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
+                p.setFoodLevel(20);
+                p.setExhaustion(0);
+
+                p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 5, true));
+                p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 5, true));
+            });
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onUpdate(UpdateEvent event) {
+        if (event.getType() != UpdateType.SECOND)
+            return;
+        if (getCurrentState() == GameState.WAITING || getCurrentState() == GameState.ENDING || getCurrentState() == GameState.ENDED) {
+            Bukkit.getOnlinePlayers().forEach(p -> {
+                if (!p.getAllowFlight())
+                    p.setAllowFlight(true);
+                p.setFoodLevel(20);
+            });
+        }
     }
 
 }
