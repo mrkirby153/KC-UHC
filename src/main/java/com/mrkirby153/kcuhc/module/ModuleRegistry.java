@@ -1,8 +1,11 @@
 package com.mrkirby153.kcuhc.module;
 
+import com.mrkirby153.kcuhc.UHC;
 import org.bukkit.Bukkit;
 import org.reflections.Reflections;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -97,8 +100,18 @@ public class ModuleRegistry {
         modules.forEach(c -> {
             System.out.println("[MODULE] Attempting to register " + c.getName());
             try {
-                UHCModule e = c.newInstance();
-                availableModules.add(e);
+                // Find a constructor with a JavaPlugin
+                UHCModule m;
+                try {
+                    Constructor constructor =  c.getConstructor(UHC.class);
+                    m = (UHCModule) constructor.newInstance(UHC.getPlugin(UHC.class));
+                } catch (NoSuchMethodException e) {
+                    m = c.newInstance();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                    return;
+                }
+                availableModules.add(m);
             } catch (InstantiationException | IllegalAccessException e) {
                 e.printStackTrace();
             }
