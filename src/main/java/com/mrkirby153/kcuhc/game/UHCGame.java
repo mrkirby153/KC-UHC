@@ -146,7 +146,7 @@ public class UHCGame implements Listener {
             }));
         }
         if (event.getTo() == GameState.ALIVE) {
-            Bukkit.getOnlinePlayers().stream().filter(p -> !this.spectators.getPlayers().contains(p.getUniqueId())).forEach(p -> {
+            Bukkit.getOnlinePlayers().stream().filter(p -> !this.spectators.getPlayers().contains(p.getUniqueId())).filter(Player::isValid).forEach(p -> {
                 p.setAllowFlight(false);
                 p.setFlying(false);
                 p.setHealth(p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
@@ -170,7 +170,7 @@ public class UHCGame implements Listener {
         if (event.getType() != UpdateType.SECOND)
             return;
         if (getCurrentState() == GameState.WAITING || getCurrentState() == GameState.ENDING || getCurrentState() == GameState.ENDED) {
-            Bukkit.getOnlinePlayers().forEach(p -> {
+            Bukkit.getOnlinePlayers().stream().filter(Player::isValid).forEach(p -> {
                 if (!p.getAllowFlight())
                     p.setAllowFlight(true);
                 p.setFoodLevel(20);
