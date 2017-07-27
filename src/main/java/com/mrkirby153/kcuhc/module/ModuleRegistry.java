@@ -103,6 +103,8 @@ public class ModuleRegistry {
                 e.printStackTrace();
             }
         });
+        // Load all modules set to autoload
+        availableModules.stream().filter(UHCModule::autoLoad).forEach(this::load);
     }
 
     /**
