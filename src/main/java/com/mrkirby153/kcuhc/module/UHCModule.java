@@ -14,17 +14,20 @@ public abstract class UHCModule implements Listener {
     private final String moduleName;
     private final Material guiItem;
     private final int damage;
+    private final String description;
+
     protected boolean autoLoad = false;
     private boolean loaded = false;
 
-    public UHCModule(String moduleName, Material guiItem, int damage) {
+    public UHCModule(String moduleName, String description, Material guiItem, int damage) {
         this.moduleName = moduleName;
         this.guiItem = guiItem;
         this.damage = damage;
+        this.description = description;
     }
 
-    public UHCModule(String moduleName, Material guiItem) {
-        this(moduleName, guiItem, 0);
+    public UHCModule(String moduleName, String description, Material guiItem) {
+        this(moduleName, description, guiItem, 0);
     }
 
     /**
@@ -34,6 +37,15 @@ public abstract class UHCModule implements Listener {
      */
     public boolean autoLoad() {
         return autoLoad;
+    }
+
+    /**
+     * Gets the module's description
+     *
+     * @return The description
+     */
+    public String getDescription() {
+        return description;
     }
 
     /**

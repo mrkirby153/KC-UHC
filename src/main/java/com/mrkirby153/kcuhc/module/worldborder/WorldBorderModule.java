@@ -23,7 +23,8 @@ public class WorldBorderModule extends UHCModule {
     private int duration = 300; // Default to 5 minutes
 
     public WorldBorderModule() {
-        super("World Border", Material.BARRIER);
+        super("World Border", "Controls an automatic worldborder", Material.BARRIER);
+        autoLoad = true;
     }
 
     /**
