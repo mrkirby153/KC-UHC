@@ -51,12 +51,16 @@ public class CommandTeam extends BaseCommand {
     @CommandCompletion("@teams @players")
     public void joinTeam(Player sender, UHCTeam team, @Optional OnlinePlayer player) {
         if(player != null){
+            if(uhc.getGame().getTeam(player.player) != null)
+                uhc.getGame().getTeam(player.player).removePlayer(player.player);
             team.addPlayer(player.player);
             player.player.spigot().sendMessage(C.m("Team", "You have been assigned to {team} by {assignee}",
                     "{team}", team.getTeamName(), "{assignee}", sender.getName()));
             sender.sendMessage(C.m("Team", "Assigned {player} to {team}",
                     "{player}", player.player.getName(), "{team}", team.getTeamName()).toLegacyText());
         } else {
+            if(uhc.getGame().getTeam(sender) != null)
+                uhc.getGame().getTeam(sender).removePlayer(sender);
             team.addPlayer(sender);
             sender.spigot().sendMessage(C.m("Team", "You have joined team {team}", "{team}", team.getTeamName()));
         }
