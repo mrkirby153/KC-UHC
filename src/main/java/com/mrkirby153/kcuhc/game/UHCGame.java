@@ -133,6 +133,17 @@ public class UHCGame implements Listener {
         return teams;
     }
 
+    /**
+     * Checks if the player is a spectator
+     *
+     * @param player The player to check
+     * @return True if the player is a spectator, false if otherwise
+     */
+    public boolean isSpectator(Player player) {
+        ScoreboardTeam team = getTeam(player);
+        return team != null && team instanceof SpectatorTeam;
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.COUNTDOWN) {
@@ -157,10 +168,10 @@ public class UHCGame implements Listener {
                 p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 5, true));
             });
         }
-        if(event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING){
+        if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
             Arrays.stream(WorldFlags.values()).forEach(f -> plugin.flagModule.set(UHC.getUHCWorld(), f, false, false));
         }
-        if(event.getTo() == GameState.ALIVE){
+        if (event.getTo() == GameState.ALIVE) {
             Arrays.stream(WorldFlags.values()).forEach(f -> plugin.flagModule.set(UHC.getUHCWorld(), f, true, false));
         }
     }
@@ -178,5 +189,4 @@ public class UHCGame implements Listener {
             });
         }
     }
-
 }
