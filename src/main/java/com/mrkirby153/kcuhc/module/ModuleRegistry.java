@@ -117,7 +117,7 @@ public class ModuleRegistry {
             }
         });
         // Load all modules set to autoload
-        availableModules.stream().filter(UHCModule::autoLoad).forEach(this::load);
+        availableModules.stream().filter(UHCModule::autoLoad).filter(m -> !loaded(m.getClass())).forEach(this::load);
     }
 
     /**
