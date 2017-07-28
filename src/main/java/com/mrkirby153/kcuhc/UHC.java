@@ -11,6 +11,7 @@ import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.CommandModule;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.UHCModule;
+import com.mrkirby153.kcuhc.module.player.TeamInventoryModule;
 import com.mrkirby153.kcuhc.player.UHCPlayer;
 import com.mrkirby153.kcuhc.scoreboard.ScoreboardUpdater;
 import me.mrkirby153.kcutils.C;
@@ -33,14 +34,24 @@ import java.util.stream.Collectors;
 public class UHC extends JavaPlugin {
 
     private static BukkitCommandManager manager;
-
-    private UpdateEventHandler tickEventHandler;
     public FlagModule flagModule;
+    public ProtocolLib protocolLibManager;
+    private UpdateEventHandler tickEventHandler;
     private ScoreboardUpdater scoreboardUpdater;
-
-    private ProtocolLib protocolLibManager;
-
     private UHCGame game;
+
+    /**
+     * Gets the ACF command manager
+     *
+     * @return The manager
+     */
+    public static BukkitCommandManager getCommandManager() {
+        return manager;
+    }
+
+    public static World getUHCWorld() {
+        return Bukkit.getWorlds().get(0);
+    }
 
     /**
      * Gets the {@link UHCGame}
@@ -78,7 +89,7 @@ public class UHC extends JavaPlugin {
         protocolLibManager = new ProtocolLib(this);
         protocolLibManager.load();
 
-        if(protocolLibManager.isErrored()){
+        if (protocolLibManager.isErrored()) {
             getLogger().severe("Could not initialize ProtocolLib. Aborting");
             getServer().getPluginManager().disablePlugin(this);
             return;
@@ -112,7 +123,7 @@ public class UHC extends JavaPlugin {
             return modules.stream().map(UHCModule::getInternalName).collect(Collectors.toList());
         });
         manager.getCommandCompletions().registerCompletion("loadedModules",
-                c-> ModuleRegistry.INSTANCE.getLoadedModules().stream().map(UHCModule::getInternalName).collect(Collectors.toList()));
+                c -> ModuleRegistry.INSTANCE.getLoadedModules().stream().map(UHCModule::getInternalName).collect(Collectors.toList()));
 
         // Register resolvers
         manager.getCommandContexts().registerContext(GameState.class, c -> GameState.valueOf(c.popFirstArg()));
@@ -137,7 +148,7 @@ public class UHC extends JavaPlugin {
         manager.getCommandContexts().registerContext(UHCModule.class, c -> {
             String internalName = c.popFirstArg();
             UHCModule mod = ModuleRegistry.INSTANCE.getModuleByName(internalName);
-            if(mod == null){
+            if (mod == null) {
                 c.getSender().sendMessage(C.m("Error", "There is no module by the name of {module}",
                         "{module}", internalName
                 ).toLegacyText());
@@ -149,9 +160,6 @@ public class UHC extends JavaPlugin {
         manager.registerCommand(new GameCommand(game, this));
         manager.registerCommand(new CommandTeam(this));
         manager.registerCommand(new CommandModule());
-    }
-
-    public static World getUHCWorld(){
-        return Bukkit.getWorlds().get(0);
+        manager.registerCommand(new TeamInventoryModule.TeamInventoryCommand(this));
     }
 }
