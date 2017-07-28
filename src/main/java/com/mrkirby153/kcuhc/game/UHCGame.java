@@ -16,6 +16,7 @@ import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -45,11 +46,12 @@ public class UHCGame implements Listener {
     /**
      * The spectator team
      */
-    private SpectatorTeam spectators = new SpectatorTeam();
+    private SpectatorTeam spectators;
 
     public UHCGame(UHC plugin) {
         this.plugin = plugin;
         this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        this.spectators = new SpectatorTeam(plugin);
     }
 
     /**
@@ -174,6 +176,16 @@ public class UHCGame implements Listener {
         if (event.getTo() == GameState.ALIVE) {
             Arrays.stream(WorldFlags.values()).forEach(f -> plugin.flagModule.set(UHC.getUHCWorld(), f, true, false));
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        // Join the spectator team
+        Bukkit.getServer().getScheduler().runTask(plugin, () -> {
+            if (getTeam(event.getPlayer()) != null)
+                getTeam(event.getPlayer()).removePlayer(event.getPlayer());
+            this.spectators.addPlayer(event.getPlayer());
+        });
     }
 
     @EventHandler(ignoreCancelled = true)

@@ -6,6 +6,7 @@ import co.aikar.commands.MinecraftMessageKeys;
 import com.mrkirby153.kcuhc.game.GameCommand;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
+import com.mrkirby153.kcuhc.game.spectator.SpectatorHandler;
 import com.mrkirby153.kcuhc.game.team.CommandTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.CommandModule;
@@ -39,6 +40,7 @@ public class UHC extends JavaPlugin {
     private UpdateEventHandler tickEventHandler;
     private ScoreboardUpdater scoreboardUpdater;
     private UHCGame game;
+    private SpectatorHandler spectatorHandler;
 
     /**
      * Gets the ACF command manager
@@ -99,6 +101,8 @@ public class UHC extends JavaPlugin {
         game = new UHCGame(this);
 
         scoreboardUpdater = new ScoreboardUpdater(this);
+
+        spectatorHandler = new SpectatorHandler(this);
 
         ModuleRegistry.INSTANCE.loadAll();
 
