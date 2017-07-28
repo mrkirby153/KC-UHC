@@ -9,6 +9,7 @@ import org.bukkit.DyeColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 
 public class SpectatorInventory extends Inventory<UHC> {
 
@@ -20,23 +21,27 @@ public class SpectatorInventory extends Inventory<UHC> {
     @Override
     public void build() {
         clear();
-        addItem(hotbarSlot(1), new ItemFactory(Material.COMPASS).name("Spectate " + ChatColor.GREEN + "(Right Click)").construct(), (player1, clickType) -> {
-            // TODO: 7/28/2017 Open Spectator Inventory
+        addItem(hotbarSlot(1), new ItemFactory(Material.COMPASS).name("Spectate " + ChatColor.GREEN + "( Right Click)").construct(), (player1, clickType) -> {
+            new SpectatorGui(plugin, player1).open();
         });
         if (player.getGameMode() != GameMode.SPECTATOR)
-            addItem(hotbarSlot(3), new ItemFactory(Material.BARRIER).name("Enter Vanilla Spectator").construct(), (player1, clickType) -> {
-                player1.setGameMode(GameMode.SPECTATOR);
-                player1.spigot().sendMessage(C.m("Spectator", "You have entered vanilla spectator mode. Type {spec} to return to survival",
-                        "{spec}", "/spectate"));
-                build();
+            addItem(hotbarSlot(3), new ItemFactory(Material.BARRIER).name("Enter Vanilla Spectator"+ChatColor.GREEN+" (Right Click)").construct(), (player1, clickType) -> {
+                if(clickType == ClickType.RIGHT) {
+                    player1.setGameMode(GameMode.SPECTATOR);
+                    player1.spigot().sendMessage(C.m("Spectator", "You have entered vanilla spectator mode. Type {spec} to return to survival",
+                            "{spec}", "/spectate"));
+                    build();
+                }
             });
         else
-            addItem(hotbarSlot(3), new ItemFactory(Material.WOOL).data(DyeColor.RED.getWoolData()).name("Return to Survival").construct(), (p, clickType) -> {
-                p.setGameMode(GameMode.SURVIVAL);
-                p.setAllowFlight(true);
-                p.setFlying(true);
-                p.spigot().sendMessage(C.m("Spectator", "You have returned to survival mode."));
-                build();
+            addItem(hotbarSlot(3), new ItemFactory(Material.WOOL).data(DyeColor.RED.getWoolData()).name("Return to Survival"+ChatColor.GREEN+"(Right Click)").construct(), (p, clickType) -> {
+               if(clickType == ClickType.RIGHT) {
+                   p.setGameMode(GameMode.SURVIVAL);
+                   p.setAllowFlight(true);
+                   p.setFlying(true);
+                   p.spigot().sendMessage(C.m("Spectator", "You have returned to survival mode."));
+                   build();
+               }
             });
     }
 }

@@ -13,6 +13,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.event.vehicle.VehicleEntityCollisionEvent;
 
 /**
@@ -52,6 +53,13 @@ public class SpectatorListener implements Listener {
             if (game.isSpectator((Player) event.getDamager()))
                 event.setCancelled(true);
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onVehicleDamage(VehicleDamageEvent event) {
+        if(event.getAttacker().getType() == EntityType.PLAYER)
+            if(game.isSpectator((Player) event.getAttacker()))
+                event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
