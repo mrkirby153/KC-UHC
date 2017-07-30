@@ -67,6 +67,15 @@ public abstract class UHCModule implements Listener {
     }
 
     /**
+     * Gets if the module is loaded
+     *
+     * @return True if the module is loaded
+     */
+    public boolean isLoaded() {
+        return loaded;
+    }
+
+    /**
      * Loads the module
      */
     public boolean load() {

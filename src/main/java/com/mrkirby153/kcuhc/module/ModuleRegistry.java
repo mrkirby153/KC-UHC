@@ -8,6 +8,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -32,6 +33,21 @@ public class ModuleRegistry {
      */
     public HashSet<UHCModule> availableModules() {
         return new HashSet<>(this.availableModules);
+    }
+
+    /**
+     * Gets a {@link UHCModule} if its loaded.
+     *
+     * @param clazz The module to get
+     * @return An {@link Optional} of the module.
+     */
+    public <T extends UHCModule> Optional<T> getLoadedModule(Class<T> clazz) {
+        T m = getModule(clazz);
+        if (m.isLoaded()) {
+            return Optional.of(m);
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
@@ -103,7 +119,7 @@ public class ModuleRegistry {
                 // Find a constructor with a JavaPlugin
                 UHCModule m;
                 try {
-                    Constructor constructor =  c.getConstructor(UHC.class);
+                    Constructor constructor = c.getConstructor(UHC.class);
                     m = (UHCModule) constructor.newInstance(UHC.getPlugin(UHC.class));
                 } catch (NoSuchMethodException e) {
                     m = c.newInstance();
@@ -122,12 +138,13 @@ public class ModuleRegistry {
 
     /**
      * Checks if a module is loaded
+     *
      * @param clazz The module to check if loaded
      * @return True if the module is loaded
      */
     public boolean loaded(Class<? extends UHCModule> clazz) {
-        for(UHCModule m : this.loadedModules){
-            if(m.getClass().equals(clazz))
+        for (UHCModule m : this.loadedModules) {
+            if (m.getClass().equals(clazz))
                 return true;
         }
         return false;
