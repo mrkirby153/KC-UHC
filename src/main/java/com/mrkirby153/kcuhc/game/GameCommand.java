@@ -3,9 +3,11 @@ package com.mrkirby153.kcuhc.game;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
+import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Subcommand;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
+import com.mrkirby153.kcuhc.module.msc.cornucopia.CornucopiaModule;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
 import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.Time;
@@ -28,6 +30,14 @@ public class GameCommand extends BaseCommand {
     public void setGameState(CommandSender sender, GameState state){
         game.setCurrentState(state);
         sender.sendMessage(C.m("Game", "Set game state to {state}", "{state}", state).toLegacyText());
+    }
+
+    @Subcommand("cornucopia")
+    @CommandCompletion("@world")
+    public void spawnCorn(CommandSender sender, @Default("100") Integer size){
+        ModuleRegistry.INSTANCE.getLoadedModule(CornucopiaModule.class).ifPresent(mod -> {
+            mod.spawnCornucopia(size);
+        });
     }
 
     @Subcommand("border")

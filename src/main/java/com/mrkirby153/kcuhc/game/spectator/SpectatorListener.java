@@ -55,20 +55,14 @@ public class SpectatorListener implements Listener {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onVehicleDamage(VehicleDamageEvent event) {
-        if(event.getAttacker().getType() == EntityType.PLAYER)
-            if(game.isSpectator((Player) event.getAttacker()))
-                event.setCancelled(true);
-    }
-
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onEntityTarget(EntityTargetEvent event) {
-        if (event.getTarget().getType() == EntityType.PLAYER) {
-            if (game.isSpectator((Player) event.getTarget())) {
-                event.setCancelled(true);
+        if (event.getTarget() != null)
+            if (event.getTarget().getType() == EntityType.PLAYER) {
+                if (game.isSpectator((Player) event.getTarget())) {
+                    event.setCancelled(true);
+                }
             }
-        }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -92,7 +86,7 @@ public class SpectatorListener implements Listener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-        if(game.isSpectator(event.getPlayer()))
+        if (game.isSpectator(event.getPlayer()))
             event.setCancelled(true);
     }
 
@@ -106,6 +100,13 @@ public class SpectatorListener implements Listener {
     public void onPlayerPickupItem(PlayerPickupItemEvent event) {
         if (game.isSpectator(event.getPlayer()))
             event.setCancelled(true);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onVehicleDamage(VehicleDamageEvent event) {
+        if (event.getAttacker().getType() == EntityType.PLAYER)
+            if (game.isSpectator((Player) event.getAttacker()))
+                event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
