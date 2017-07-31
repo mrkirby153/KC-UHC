@@ -6,10 +6,7 @@ import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.Time;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.WorldBorder;
+import org.bukkit.*;
 import org.bukkit.event.EventHandler;
 
 public class WorldBorderModule extends UHCModule {
@@ -115,5 +112,13 @@ public class WorldBorderModule extends UHCModule {
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
         });
         border.setSize(endSize, newDuration);
+    }
+
+    public double[] worldborderLoc() {
+        WorldBorder wb = UHC.getUHCWorld().getWorldBorder();
+        Location l = wb.getCenter();
+        double locX = (wb.getSize() / 2) + l.getX();
+        double locY = (wb.getSize() / 2) + l.getY();
+        return new double[]{locX, locY};
     }
 }

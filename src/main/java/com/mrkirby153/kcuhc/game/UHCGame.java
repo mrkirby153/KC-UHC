@@ -63,6 +63,8 @@ public class UHCGame implements Listener {
 
     private Color fireworkColor = Color.WHITE;
 
+    private long startTime = 0;
+
     public UHCGame(UHC plugin) {
         this.plugin = plugin;
         this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -93,6 +95,14 @@ public class UHCGame implements Listener {
      */
     public GameState getCurrentState() {
         return currentState;
+    }
+
+    /**
+     * Gets the timestamp when the game started
+     * @return The game start time
+     */
+    public long getStartTime() {
+        return startTime;
     }
 
     /**
@@ -190,6 +200,7 @@ public class UHCGame implements Listener {
         }
         if (event.getTo() == GameState.ALIVE) {
             Arrays.stream(WorldFlags.values()).forEach(f -> plugin.flagModule.set(UHC.getUHCWorld(), f, true, false));
+            this.startTime = System.currentTimeMillis();
         }
         if (event.getTo() == GameState.ENDING) {
             // Teleport everyone to the center
