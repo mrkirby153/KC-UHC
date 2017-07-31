@@ -11,7 +11,10 @@ import com.mrkirby153.kcuhc.module.msc.cornucopia.CornucopiaModule;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
 import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.Time;
+import org.bukkit.Color;
+import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 @CommandAlias("game")
 public class GameCommand extends BaseCommand {
@@ -33,11 +36,30 @@ public class GameCommand extends BaseCommand {
     }
 
     @Subcommand("cornucopia")
-    @CommandCompletion("@world")
     public void spawnCorn(CommandSender sender, @Default("100") Integer size){
         ModuleRegistry.INSTANCE.getLoadedModule(CornucopiaModule.class).ifPresent(mod -> {
             mod.spawnCornucopia(size);
         });
+    }
+
+    @Subcommand("start")
+    public void startGame(CommandSender sender){
+        this.game.setCurrentState(GameState.COUNTDOWN);
+        sender.sendMessage(C.m("Game", "Started").toLegacyText());
+        if(sender instanceof Player){
+            Player p = (Player) sender;
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
+        }
+    }
+
+    @Subcommand("stop")
+    public void stopGame(CommandSender sender){
+        this.game.stop("Nobody", Color.GREEN);
+        sender.sendMessage(C.m("Game", "Stopped!").toLegacyText());
+        if(sender instanceof Player){
+            Player p = (Player) sender;
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
+        }
     }
 
     @Subcommand("border")
