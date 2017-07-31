@@ -52,6 +52,12 @@ public class GameCommand extends BaseCommand {
         }
     }
 
+    @Subcommand("pregen|pregenerate")
+    public void pregenerateWorld(CommandSender sender){
+        this.game.generate();
+        sender.sendMessage(C.m("Game", "Pregeneration started!").toLegacyText());
+    }
+
     @Subcommand("stop")
     public void stopGame(CommandSender sender){
         this.game.stop("Nobody", Color.GREEN);

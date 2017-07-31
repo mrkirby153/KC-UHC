@@ -4,6 +4,8 @@ import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
+import com.mrkirby153.kcuhc.module.ModuleRegistry;
+import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
 import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
@@ -65,6 +67,8 @@ public class UHCGame implements Listener {
 
     private long startTime = 0;
 
+    private boolean generating = false;
+
     public UHCGame(UHC plugin) {
         this.plugin = plugin;
         this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -88,6 +92,27 @@ public class UHCGame implements Listener {
         this.teams.entrySet().removeIf(teamEntry -> teamEntry.getValue().equals(team));
     }
 
+    public void generate() {
+        if (generating)
+            return; // Don't start another generation cycle
+        ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class).ifPresent(module -> {
+            double wbSize = module.getStartSize() * (2D / 3);
+            WorldBorder wb = UHC.getUHCWorld().getWorldBorder();
+            int minX = (int) Math.ceil(wb.getCenter().getBlockX() - wbSize);
+            int maxX = (int) Math.ceil(wb.getCenter().getBlockX() + wbSize);
+            int minZ = (int) Math.ceil(wb.getCenter().getBlockZ() - wbSize);
+            int maxZ = (int) Math.ceil(wb.getCenter().getBlockZ() + wbSize);
+
+            new GenerationTask(plugin, UHC.getUHCWorld(), minX, maxX, minZ, maxZ, Void -> {
+                this.generating = false;
+                Bukkit.getServer().getOnlinePlayers().forEach(p -> {
+                    p.sendMessage(C.m("Pregeneration", "Pregeneration complete!").toLegacyText());
+                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
+                });
+            });
+        });
+    }
+
     /**
      * Gets the current state of the game
      *
@@ -95,14 +120,6 @@ public class UHCGame implements Listener {
      */
     public GameState getCurrentState() {
         return currentState;
-    }
-
-    /**
-     * Gets the timestamp when the game started
-     * @return The game start time
-     */
-    public long getStartTime() {
-        return startTime;
     }
 
     /**
@@ -123,6 +140,15 @@ public class UHCGame implements Listener {
      */
     public SpectatorTeam getSpectators() {
         return spectators;
+    }
+
+    /**
+     * Gets the timestamp when the game started
+     *
+     * @return The game start time
+     */
+    public long getStartTime() {
+        return startTime;
     }
 
     /**
@@ -217,7 +243,7 @@ public class UHCGame implements Listener {
                 if (team != null)
                     team.removePlayer(player);
 
-                plugin.protocolLibManager.title(player, ChatColor.GOLD+winner, "won the game", new TitleTimings(20, 60, 20));
+                plugin.protocolLibManager.title(player, ChatColor.GOLD + winner, "won the game", new TitleTimings(20, 60, 20));
             });
         }
     }
