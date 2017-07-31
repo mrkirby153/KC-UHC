@@ -194,9 +194,13 @@ public class UHCGame implements Listener {
                 p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 5, true));
                 p.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 5, true));
             });
+            UHC.getUHCWorld().setGameRuleValue("doDaylightCycle", "true");
+            UHC.getUHCWorld().setTime(0);
         }
         if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
             Arrays.stream(WorldFlags.values()).forEach(f -> plugin.flagModule.set(UHC.getUHCWorld(), f, false, false));
+            UHC.getUHCWorld().setGameRuleValue("doDaylightCycle", "false");
+            UHC.getUHCWorld().setTime(1200);
         }
         if (event.getTo() == GameState.ALIVE) {
             Arrays.stream(WorldFlags.values()).forEach(f -> plugin.flagModule.set(UHC.getUHCWorld(), f, true, false));
