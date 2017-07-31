@@ -1,6 +1,7 @@
 package com.mrkirby153.kcuhc.module.head;
 
 import com.google.common.collect.Iterators;
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
@@ -43,6 +44,7 @@ public class HeadAppleModule extends UHCModule {
 
     private UHC uhc;
 
+    @Inject
     public HeadAppleModule(UHC uhc) {
         super("Head Apple", "Player heads can be crafted into head apples", Material.APPLE);
         this.uhc = uhc;

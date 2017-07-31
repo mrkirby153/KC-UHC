@@ -3,8 +3,10 @@ package com.mrkirby153.kcuhc.module.player;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.Default;
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
+import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
@@ -28,11 +30,12 @@ public class TeamInventoryModule extends UHCModule {
 
     private HashMap<UHCTeam, Inventory> teamInventories = new HashMap<>();
 
-    private UHC uhc;
+    private UHCGame game;
 
-    public TeamInventoryModule(UHC uhc) {
+    @Inject
+    public TeamInventoryModule(UHCGame game) {
         super("Team Inventory", "A shared inventory between team members", Material.ENDER_CHEST);
-        this.uhc = uhc;
+        this.game = game;
     }
 
     /**
@@ -51,7 +54,7 @@ public class TeamInventoryModule extends UHCModule {
     @EventHandler
     public void gameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.ALIVE) {
-            this.uhc.getGame().getTeams().values().forEach(
+            this.game.getTeams().values().forEach(
                     t -> teamInventories.put(t, Bukkit.createInventory(null, 9 * 2, "Team Inventory: " + t.getTeamName())));
         }
         if (event.getTo() == GameState.ENDING) {
@@ -67,14 +70,14 @@ public class TeamInventoryModule extends UHCModule {
      * @return The inventory
      */
     public Inventory getInventory(Player player) {
-        if (uhc.getGame().getTeam(player) != null && !(uhc.getGame().getTeam(player) instanceof SpectatorTeam)) {
-            return getInventory((UHCTeam) uhc.getGame().getTeam(player));
+        if (game.getTeam(player) != null && !(game.getTeam(player) instanceof SpectatorTeam)) {
+            return getInventory((UHCTeam) game.getTeam(player));
         }
-        if (uhc.getGame().getTeam(player) instanceof SpectatorTeam) {
+        if (game.getTeam(player) instanceof SpectatorTeam) {
             player.spigot().sendMessage(C.e("Spectators do not have a team inventory!"));
             return null;
         }
-        if (uhc.getGame().getTeam(player) == null) {
+        if (game.getTeam(player) == null) {
             player.spigot().sendMessage(C.e("You are not on a team!"));
             return null;
         }
@@ -93,7 +96,7 @@ public class TeamInventoryModule extends UHCModule {
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
-        ScoreboardTeam team = this.uhc.getGame().getTeam(event.getEntity());
+        ScoreboardTeam team = this.game.getTeam(event.getEntity());
         if (team instanceof SpectatorTeam)
             return;
         if (team.getPlayers().size() <= 1) {

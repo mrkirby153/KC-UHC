@@ -1,8 +1,10 @@
 package com.mrkirby153.kcuhc.module.player;
 
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.SpawnUtils;
+import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
@@ -18,15 +20,16 @@ import java.util.*;
 
 public class SpreadPlayersModule extends UHCModule {
 
-    private UHC uhc;
+    private UHCGame game;
 
     private WorldBorderModule module;
 
     private int minDistance = 50;
 
-    public SpreadPlayersModule(UHC uhc) {
+    @Inject
+    public SpreadPlayersModule(UHCGame game) {
         super("Spread Players", "Distribute players randomly throughout the map", Material.ENDER_PEARL);
-        this.uhc = uhc;
+        this.game = game;
         this.autoLoad = true;
     }
 
@@ -41,7 +44,7 @@ public class SpreadPlayersModule extends UHCModule {
 
         Map<UHCTeam, Location> spawnLocations = new HashMap<>();
         List<Location> finalSpawnLocs = new ArrayList<>();
-        for (UHCTeam team : uhc.getGame().getTeams().values()) {
+        for (UHCTeam team : game.getTeams().values()) {
             Location randomSpawn = SpawnUtils.getRandomSpawn(UHC.getUHCWorld(), module.getStartSize());
             spawnLocations.put(team, randomSpawn);
         }

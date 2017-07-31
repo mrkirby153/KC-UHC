@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.module.msc;
 
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
@@ -28,6 +29,7 @@ public class LogoutEliminationModule extends UHCModule {
 
     private UHC uhc;
 
+    @Inject
     public LogoutEliminationModule(UHC uhc) {
         super("Eliminate on Logout", "Eliminates the player 5 minutes after they log out", Material.TNT);
         this.uhc = uhc;

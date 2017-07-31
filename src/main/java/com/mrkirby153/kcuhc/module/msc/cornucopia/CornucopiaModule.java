@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.module.msc.cornucopia;
 
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.SpawnUtils;
@@ -29,6 +30,7 @@ public class CornucopiaModule extends UHCModule {
     private static final int CORN_SIZE_Y = 6;
     private static final int CORN_SIZE_Z = 6;
 
+    @Inject
     public CornucopiaModule(UHC uhc) {
         super("Spawn Cornucopia", "Spawns a cornucopia in a random location", Material.CHEST);
         this.uhc = uhc;

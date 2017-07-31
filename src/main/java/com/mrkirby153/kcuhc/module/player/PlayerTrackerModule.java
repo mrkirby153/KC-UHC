@@ -1,7 +1,9 @@
 package com.mrkirby153.kcuhc.module.player;
 
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
+import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
@@ -28,10 +30,13 @@ public class PlayerTrackerModule extends UHCModule {
     private Map<Player, Player> targets = new HashMap<>();
 
     private UHC uhc;
+    private UHCGame game;
 
-    public PlayerTrackerModule(UHC uhc) {
+    @Inject
+    public PlayerTrackerModule(UHC uhc, UHCGame game) {
         super("Player Tracker", "Compasses will point towards the closest player", Material.ENDER_PEARL);
         this.uhc = uhc;
+
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -45,7 +50,7 @@ public class PlayerTrackerModule extends UHCModule {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        if (uhc.getGame().isSpectator(player))
+        if (game.isSpectator(player))
             return;
         if (event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_AIR) {
             return;
@@ -55,7 +60,7 @@ public class PlayerTrackerModule extends UHCModule {
             return;
         if (item.getType() == Material.COMPASS) {
             HashSet<UUID> toExclude = new HashSet<>();
-            UHCTeam team = (UHCTeam) uhc.getGame().getTeam(player);
+            UHCTeam team = (UHCTeam) game.getTeam(player);
             if (team != null) {
                 toExclude.addAll(team.getPlayers());
             }
@@ -89,7 +94,7 @@ public class PlayerTrackerModule extends UHCModule {
 
     @Override
     public void onUnload() {
-        uhc.getGame().getTeams().values().forEach(t -> t.getPlayers().stream()
+        game.getTeams().values().forEach(t -> t.getPlayers().stream()
                 .map(Bukkit::getPlayer)
                 .filter(Objects::nonNull)
                 .forEach(this::clearCompassMetadata));

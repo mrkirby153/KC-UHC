@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.module.msc;
 
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
@@ -33,6 +34,7 @@ public class RegenTicketModule extends UHCModule {
     private HashMap<UUID, ItemStack> regenTickets = new HashMap<>();
     private UHC uhc;
 
+    @Inject
     public RegenTicketModule(UHC uhc) {
         super("Regen Ticket", "Gives everyone a regen ticket", Material.PAPER);
         this.uhc = uhc;

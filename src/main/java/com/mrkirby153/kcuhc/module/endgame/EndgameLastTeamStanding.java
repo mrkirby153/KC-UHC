@@ -1,6 +1,6 @@
 package com.mrkirby153.kcuhc.module.endgame;
 
-import com.mrkirby153.kcuhc.UHC;
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
@@ -18,9 +18,10 @@ public class EndgameLastTeamStanding extends UHCModule {
 
     private UHCGame game;
 
-    public EndgameLastTeamStanding(UHC uhc) {
+    @Inject
+    public EndgameLastTeamStanding(UHCGame game) {
         super("Last Team Standing", "The game will automatically end when there is one team left.", Material.IRON_SWORD);
-        this.game = uhc.getGame();
+        this.game = game;
         this.autoLoad = true;
     }
 

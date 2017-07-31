@@ -1,7 +1,9 @@
 package com.mrkirby153.kcuhc.module.player;
 
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
+import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import me.mrkirby153.kcutils.C;
@@ -19,10 +21,13 @@ import org.bukkit.event.EventHandler;
 public class PlayerPositionModule extends UHCModule {
 
     private UHC uhc;
+    private UHCGame game;
 
-    public PlayerPositionModule(UHC uhc) {
+    @Inject
+    public PlayerPositionModule(UHC uhc, UHCGame game) {
         super("Player position", "Show the player's position above the hotbar", Material.MAP);
         this.uhc = uhc;
+        this.game = game;
         this.autoLoad = true;
     }
 
@@ -30,7 +35,7 @@ public class PlayerPositionModule extends UHCModule {
     public void onUpdate(UpdateEvent event) {
         if (event.getType() != UpdateType.FAST)
             return;
-        if (this.uhc.getGame().getCurrentState() != GameState.ALIVE)
+        if (game.getCurrentState() != GameState.ALIVE)
             return;
         Bukkit.getOnlinePlayers().stream()
                 .filter(Player::isValid)

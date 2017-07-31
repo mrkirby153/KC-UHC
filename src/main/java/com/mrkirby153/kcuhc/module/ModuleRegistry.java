@@ -1,11 +1,11 @@
 package com.mrkirby153.kcuhc.module;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.mrkirby153.kcuhc.UHC;
 import org.bukkit.Bukkit;
 import org.reflections.Reflections;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Optional;
@@ -113,9 +113,13 @@ public class ModuleRegistry {
         Reflections reflections = new Reflections("com.mrkirby153.kcuhc");
         Set<Class<? extends UHCModule>> modules = reflections.getSubTypesOf(UHCModule.class);
 
+        Injector injector = Guice.createInjector(new GuiceUHCModule(UHC.getPlugin(UHC.class)));
+
         modules.forEach(c -> {
             System.out.println("[MODULE] Attempting to register " + c.getName());
-            try {
+            UHCModule module = injector.getInstance(c);
+            availableModules.add(module);
+           /* try {
                 // Find a constructor with a JavaPlugin
                 UHCModule m;
                 try {
@@ -130,7 +134,7 @@ public class ModuleRegistry {
                 availableModules.add(m);
             } catch (InstantiationException | IllegalAccessException e) {
                 e.printStackTrace();
-            }
+            }*/
         });
         // Load all modules set to autoload
         availableModules.stream().filter(UHCModule::autoLoad).filter(m -> !loaded(m.getClass())).forEach(this::load);

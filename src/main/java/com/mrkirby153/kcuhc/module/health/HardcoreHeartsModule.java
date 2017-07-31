@@ -5,6 +5,7 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import org.bukkit.Material;
@@ -15,6 +16,7 @@ public class HardcoreHeartsModule extends UHCModule {
     private HardcoreHeartsListener listener;
     private UHC uhc;
 
+    @Inject
     public HardcoreHeartsModule(UHC uhc){
         super("Hardcore Hearts", "Show hardcore hearts", Material.DOUBLE_PLANT, 4);
         this.uhc = uhc;
