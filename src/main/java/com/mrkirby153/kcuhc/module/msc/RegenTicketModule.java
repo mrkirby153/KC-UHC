@@ -148,7 +148,7 @@ public class RegenTicketModule extends UHCModule {
     @EventHandler(ignoreCancelled = true)
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.ALIVE) {
-            Bukkit.getOnlinePlayers().stream().filter(p -> !this.isSpectator(p)).forEach(this::give);
+            Bukkit.getOnlinePlayers().forEach(this::give);
         }
         if (event.getTo() == GameState.ENDING)
             clearRegenTickets();
@@ -169,7 +169,7 @@ public class RegenTicketModule extends UHCModule {
 
     private boolean isSpectator(Player player) {
         ScoreboardTeam team = this.uhc.getGame().getTeam(player);
-        return team != null && !(team instanceof SpectatorTeam);
+        return team != null && (team instanceof SpectatorTeam);
     }
 
     private boolean isTicket(ItemStack stack) {

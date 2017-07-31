@@ -97,6 +97,8 @@ public class TeamInventoryModule extends UHCModule {
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         ScoreboardTeam team = this.game.getTeam(event.getEntity());
+        if(team == null)
+            return;
         if (team instanceof SpectatorTeam)
             return;
         if (team.getPlayers().size() <= 1) {

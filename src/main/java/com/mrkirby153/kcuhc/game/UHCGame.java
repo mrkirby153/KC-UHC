@@ -20,6 +20,7 @@ import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.potion.PotionEffect;
@@ -246,6 +247,12 @@ public class UHCGame implements Listener {
                 plugin.protocolLibManager.title(player, ChatColor.GOLD + winner, "won the game", new TitleTimings(20, 60, 20));
             });
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        if(getTeam(event.getEntity()) != null)
+            getTeam(event.getEntity()).removePlayer(event.getEntity());
     }
 
     @EventHandler(ignoreCancelled = true)

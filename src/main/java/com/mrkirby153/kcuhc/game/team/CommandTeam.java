@@ -21,7 +21,7 @@ public class CommandTeam extends BaseCommand {
     }
 
 
-    @Subcommand("create")
+    @Subcommand("create|add")
     public void createTeam(CommandSender sender, String name, ChatColor color) {
         uhc.getGame().createTeam(name, color);
         sender.sendMessage(C.m("Team", "Created team {team}!", "{team}", name).toLegacyText());
