@@ -16,6 +16,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -38,17 +39,29 @@ public class SpectatorHandler implements Listener {
     public void onJoin(PlayerLoginEvent event) {
         // Add players to the spectator team when the game is alive and they join
         // Hide all spectators from the player
+
+        // TODO: 7/30/2017 Fix rejoining being placed on spectator team
         Bukkit.getServer().getScheduler().runTask(uhc, ()->{
             uhc.getGame().getSpectators().getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(e -> {
                 event.getPlayer().hidePlayer(e);
             });
             if (uhc.getGame().getCurrentState() == GameState.ALIVE) {
                 ScoreboardTeam team = uhc.getGame().getTeam(event.getPlayer());
-                if (team == null || !(team instanceof SpectatorTeam)) {
+                if (team == null) {
                     uhc.getGame().getSpectators().addPlayer(event.getPlayer());
+                } else {
+                    if(team instanceof SpectatorTeam){
+                        team.removePlayer(event.getPlayer());
+                        team.addPlayer(event.getPlayer());
+                    }
                 }
             }
         });
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        uhc.getGame().getSpectators().removePlayer(event.getPlayer());
     }
 
     @EventHandler(ignoreCancelled = true)
