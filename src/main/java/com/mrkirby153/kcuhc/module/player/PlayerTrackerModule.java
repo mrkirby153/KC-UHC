@@ -30,7 +30,7 @@ public class PlayerTrackerModule extends UHCModule {
     private UHC uhc;
 
     public PlayerTrackerModule(UHC uhc) {
-        super("Player Tracker", "Compasses will point towards the closest player", Material.EYE_OF_ENDER);
+        super("Player Tracker", "Compasses will point towards the closest player", Material.ENDER_PEARL);
         this.uhc = uhc;
     }
 

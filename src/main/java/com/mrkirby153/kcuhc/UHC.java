@@ -164,7 +164,7 @@ public class UHC extends JavaPlugin {
 
         manager.registerCommand(new GameCommand(game, this));
         manager.registerCommand(new CommandTeam(this));
-        manager.registerCommand(new CommandModule());
+        manager.registerCommand(new CommandModule(this));
         manager.registerCommand(new TeamInventoryModule.TeamInventoryCommand(this));
         manager.registerCommand(new CommandSpectate(this));
     }

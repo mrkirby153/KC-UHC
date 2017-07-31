@@ -40,6 +40,15 @@ public abstract class UHCModule implements Listener {
     }
 
     /**
+     * Gets the item's damage
+     *
+     * @return The damage
+     */
+    public int getDamage() {
+        return damage;
+    }
+
+    /**
      * Gets the module's description
      *
      * @return The description
@@ -49,12 +58,30 @@ public abstract class UHCModule implements Listener {
     }
 
     /**
+     * Gets the material for the gui
+     *
+     * @return The material
+     */
+    public Material getGuiItem() {
+        return guiItem;
+    }
+
+    /**
      * Gets the internal name of the module
      *
      * @return The module's internal name
      */
     public String getInternalName() {
         return this.moduleName.toLowerCase().replace(' ', '-');
+    }
+
+    /**
+     * Gets the module's name
+     *
+     * @return The name of the module
+     */
+    public String getModuleName() {
+        return moduleName;
     }
 
     /**
