@@ -8,15 +8,18 @@ import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
 import me.mrkirby153.kcutils.flags.WorldFlags;
+import me.mrkirby153.kcutils.protocollib.TitleTimings;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.md_5.bungee.api.ChatColor;
-import org.bukkit.Bukkit;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -47,6 +50,18 @@ public class UHCGame implements Listener {
      * The spectator team
      */
     private SpectatorTeam spectators;
+
+    /**
+     * The winning person/team to be displayed in the title
+     */
+    private String winner = "Nobody";
+
+    /**
+     * The amount of fireworks that were spawned
+     */
+    private int spawnedFireworks = 0;
+
+    private Color fireworkColor = Color.WHITE;
 
     public UHCGame(UHC plugin) {
         this.plugin = plugin;
@@ -176,6 +191,20 @@ public class UHCGame implements Listener {
         if (event.getTo() == GameState.ALIVE) {
             Arrays.stream(WorldFlags.values()).forEach(f -> plugin.flagModule.set(UHC.getUHCWorld(), f, true, false));
         }
+        if (event.getTo() == GameState.ENDING) {
+            // Teleport everyone to the center
+            Location toTeleport = UHC.getUHCWorld().getWorldBorder().getCenter();
+            toTeleport = toTeleport.getWorld().getHighestBlockAt(toTeleport).getLocation().add(0, 0.5, 0);
+            Location finalToTeleport = toTeleport;
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                player.teleport(finalToTeleport);
+                ScoreboardTeam team = getTeam(player);
+                if (team != null)
+                    team.removePlayer(player);
+
+                plugin.protocolLibManager.title(player, ChatColor.GOLD+winner, "won the game", new TitleTimings(20, 60, 20));
+            });
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -190,15 +219,69 @@ public class UHCGame implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onUpdate(UpdateEvent event) {
-        if (event.getType() != UpdateType.SECOND)
-            return;
-        if (getCurrentState() == GameState.WAITING || getCurrentState() == GameState.ENDING || getCurrentState() == GameState.ENDED) {
-            Bukkit.getOnlinePlayers().stream().filter(Player::isValid).forEach(p -> {
-                if (!p.getAllowFlight())
-                    p.setAllowFlight(true);
-                p.setFoodLevel(20);
-                p.setHealth(p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
-            });
+        if (event.getType() == UpdateType.SECOND) {
+            if (getCurrentState() == GameState.WAITING || getCurrentState() == GameState.ENDING || getCurrentState() == GameState.ENDED) {
+                Bukkit.getOnlinePlayers().stream().filter(Player::isValid).forEach(p -> {
+                    if (!p.getAllowFlight())
+                        p.setAllowFlight(true);
+                    p.setFoodLevel(20);
+                    p.setHealth(p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
+                });
+            }
         }
+        if (event.getType() == UpdateType.SLOW) {
+            if (getCurrentState() == GameState.ENDING) {
+                // Spawn the fireworks
+                if (this.spawnedFireworks++ < 8) {
+                    spawnFireworks(UHC.getUHCWorld());
+                } else {
+                    setCurrentState(GameState.ENDED);
+                }
+            }
+        }
+    }
+
+    /**
+     * Stops the game with the specified winner
+     *
+     * @param winner    The winner
+     * @param teamColor The color of the fireworks
+     */
+    public void stop(String winner, Color teamColor) {
+        this.winner = winner;
+        this.spawnedFireworks = 0;
+        this.fireworkColor = teamColor;
+        setCurrentState(GameState.ENDING);
+    }
+
+    /**
+     * Spawns the fireworks for the endgame
+     *
+     * @param world The world to spawn in
+     */
+    private void spawnFireworks(World world) {
+        Location center = world.getWorldBorder().getCenter();
+        center = world.getHighestBlockAt(center).getLocation();
+        int distFromWB = 16;
+        double worldborderRadius = world.getWorldBorder().getSize() / 2d;
+        Location pZX = center.clone().add(worldborderRadius - distFromWB + (5 * Math.random()), 20, worldborderRadius - distFromWB + (5 * Math.random()));
+        Location pXnZ = center.clone().add(worldborderRadius - distFromWB + (5 * Math.random()), 20, -(worldborderRadius - distFromWB + (5 * Math.random())));
+        Location pZnX = center.clone().add(-(worldborderRadius - distFromWB) + (5 * Math.random()), 20, worldborderRadius - distFromWB + (5 * Math.random()));
+        Location nXZ = center.clone().add(-(worldborderRadius - distFromWB) + (5 * Math.random()), 20, -(worldborderRadius - distFromWB + (5 * Math.random())));
+
+        Firework fw_pZX = (Firework) world.spawnEntity(pZX, EntityType.FIREWORK);
+        Firework fw_pXnZ = (Firework) world.spawnEntity(pXnZ, EntityType.FIREWORK);
+        Firework fw_pZnX = (Firework) world.spawnEntity(pZnX, EntityType.FIREWORK);
+        Firework fw_nXZ = (Firework) world.spawnEntity(nXZ, EntityType.FIREWORK);
+
+        FireworkMeta meta = fw_pZX.getFireworkMeta();
+        FireworkEffect.Type type = FireworkEffect.Type.BALL_LARGE;
+        FireworkEffect eff = FireworkEffect.builder().flicker(true).withColor(this.fireworkColor).with(type).trail(true).build();
+        meta.addEffect(eff);
+        meta.setPower(1);
+        fw_pZX.setFireworkMeta(meta);
+        fw_pXnZ.setFireworkMeta(meta);
+        fw_pZnX.setFireworkMeta(meta);
+        fw_nXZ.setFireworkMeta(meta);
     }
 }
