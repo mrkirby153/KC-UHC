@@ -54,12 +54,15 @@ public class CornucopiaModule extends UHCModule {
         if (event.getType() == UpdateType.FAST && uhc.getGame().getCurrentState() == GameState.ALIVE) {
             // Spawn the cornucopia when the border travel is 75% complete
             ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class).ifPresent(worldBorderModule -> {
-                int endSize = worldBorderModule.getEndSize();
-
                 double currentSize = UHC.getUHCWorld().getWorldBorder().getSize();
 
-                double percentDone = endSize / currentSize;
+                double startSize = worldBorderModule.getStartSize();
+                double endSize = worldBorderModule.getEndSize();
 
+                double blocksTraveled = startSize - currentSize;
+                double totalBlocksToTravel = startSize - endSize;
+
+                double percentDone = blocksTraveled / totalBlocksToTravel;
 
                 if (percentDone >= 0.75 && !spawned) {
                     spawnCornucopia(currentSize);
