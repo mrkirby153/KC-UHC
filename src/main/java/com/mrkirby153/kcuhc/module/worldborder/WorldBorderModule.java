@@ -82,17 +82,20 @@ public class WorldBorderModule extends UHCModule {
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
             UHC.getUHCWorld().getWorldBorder().setSize(LOBBY_SIZE);
+            UHC.getUHCWorld().getWorldBorder().setWarningDistance(0);
         }
         if (event.getTo() == GameState.ALIVE) {
             UHC.getUHCWorld().getWorldBorder().setSize(startSize);
             UHC.getUHCWorld().getWorldBorder().setSize(endSize, duration);
             System.out.println("Moving " + (startSize - endSize) + " blocks in " + duration + " seconds");
+            UHC.getUHCWorld().getWorldBorder().setWarningDistance(50);
         }
     }
 
     @Override
     public void onLoad() {
         UHC.getUHCWorld().getWorldBorder().setSize(LOBBY_SIZE);
+        UHC.getUHCWorld().getWorldBorder().setWarningDistance(0);
     }
 
     @Override
