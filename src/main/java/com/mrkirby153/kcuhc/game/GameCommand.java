@@ -14,11 +14,16 @@ import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.HashMap;
+import java.util.UUID;
+
 @CommandAlias("game")
 public class GameCommand extends BaseCommand {
 
     private final UHCGame game;
     private final UHC uhc;
+
+    private HashMap<UUID, String> stalemateCode = new HashMap<>();
 
     public GameCommand(UHCGame game, UHC uhc) {
         this.game = game;
@@ -74,6 +79,34 @@ public class GameCommand extends BaseCommand {
         if (sender instanceof Player) {
             Player p = (Player) sender;
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
+        }
+    }
+
+    @Subcommand("stalemate")
+    public void resolveStalemate(Player sender, @Optional String code){
+        java.util.Optional<WorldBorderModule> mod = ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class);
+        if(!mod.isPresent()){
+            sender.sendMessage(C.e("Worldborder module not loaded!").toLegacyText());
+            return;
+        }
+        if(uhc.getGame().getCurrentState() != GameState.ALIVE){
+            sender.sendMessage(C.e("This can only be run when the game is active!").toLegacyText());
+            return;
+        }
+        if(code != null){
+            String requiredCode = this.stalemateCode.get(sender.getUniqueId());
+            if(requiredCode != null && requiredCode.equalsIgnoreCase(code)){
+                sender.sendMessage(C.m("Stalemate", "Stalemate resolution system activated!").toLegacyText());
+                this.stalemateCode.remove(sender.getUniqueId());
+                mod.get().resolveStalemate();
+            } else {
+                sender.sendMessage(C.m("Stalemate", "Code incorrect.").toLegacyText());
+            }
+        } else {
+            int c = (int) (Math.random() * 10000);
+            this.stalemateCode.put(sender.getUniqueId(), Integer.toString(c));
+            sender.sendMessage(C.m("Stalemate", "Are you sure you want to activate the stalemate resolution system? " +
+                    "Type {command} to confirm", "{command}", "/game stalemate "+ c).toLegacyText());
         }
     }
 

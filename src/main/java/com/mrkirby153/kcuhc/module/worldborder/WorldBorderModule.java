@@ -1,11 +1,13 @@
 package com.mrkirby153.kcuhc.module.worldborder;
 
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.Time;
+import me.mrkirby153.kcutils.protocollib.TitleTimings;
 import org.bukkit.*;
 import org.bukkit.event.EventHandler;
 
@@ -19,9 +21,13 @@ public class WorldBorderModule extends UHCModule {
 
     private int duration = 300; // Default to 5 minutes
 
-    public WorldBorderModule() {
+    private UHC uhc;
+
+    @Inject
+    public WorldBorderModule(UHC uhc) {
         super("World Border", "Controls an automatic worldborder", Material.BARRIER);
         autoLoad = true;
+        this.uhc = uhc;
     }
 
     /**
@@ -31,6 +37,18 @@ public class WorldBorderModule extends UHCModule {
      */
     public int getDuration() {
         return duration;
+    }
+
+    /**
+     * Resolves a stalemate
+     */
+    public void resolveStalemate() {
+        UHC.getUHCWorld().getWorldBorder().setSize(1, 60 /* * 10*/);
+        Bukkit.getOnlinePlayers().forEach(p -> {
+            p.sendMessage(C.m("Stalemate", "Stalemate detected! Worldborder shrinking to one block over 10 minutes").toLegacyText());
+            p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1F, 1F);
+            uhc.protocolLibManager.title(p, ChatColor.GOLD+"Stalemate Detected", "Shrinking world border", new TitleTimings(10, 60, 10));
+        });
     }
 
     /**
