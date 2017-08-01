@@ -4,6 +4,7 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
+import com.mrkirby153.kcuhc.module.msc.HeightBuildingModule;
 import com.mrkirby153.kcuhc.module.msc.cornucopia.CornucopiaModule;
 import com.mrkirby153.kcuhc.module.player.PvPGraceModule;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
@@ -107,6 +108,22 @@ public class GameCommand extends BaseCommand {
             this.stalemateCode.put(sender.getUniqueId(), Integer.toString(c));
             sender.sendMessage(C.m("Stalemate", "Are you sure you want to activate the stalemate resolution system? " +
                     "Type {command} to confirm", "{command}", "/game stalemate "+ c).toLegacyText());
+        }
+    }
+
+    @Subcommand("build-height")
+    public void buildHeight(CommandSender sender, @Optional Integer height){
+        java.util.Optional<HeightBuildingModule> wbm = ModuleRegistry.INSTANCE.getLoadedModule(HeightBuildingModule.class);
+        if(!wbm.isPresent()){
+            sender.sendMessage(C.e("The height module is not loaded").toLegacyText());
+            return;
+        }
+        if(height == null){
+            sender.sendMessage(C.m("Build Height", "The build height is set to {height} blocks",
+                    "{height}", wbm.get().getMaxBuildHeight()).toLegacyText());
+        } else {
+            wbm.get().setMaxBuildHeight(height);
+            sender.sendMessage(C.m("Build Height", "Set build height to {height} blocks", "{height}", height).toLegacyText());
         }
     }
 

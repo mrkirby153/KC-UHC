@@ -43,7 +43,7 @@ public class WorldBorderModule extends UHCModule {
      * Resolves a stalemate
      */
     public void resolveStalemate() {
-        UHC.getUHCWorld().getWorldBorder().setSize(1, 60 /* * 10*/);
+        UHC.getUHCWorld().getWorldBorder().setSize(1, 60  * 10);
         Bukkit.getOnlinePlayers().forEach(p -> {
             p.sendMessage(C.m("Stalemate", "Stalemate detected! Worldborder shrinking to one block over 10 minutes").toLegacyText());
             p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1F, 1F);
