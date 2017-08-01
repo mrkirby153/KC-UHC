@@ -239,11 +239,14 @@ public class UHCGame implements Listener {
             toTeleport = toTeleport.getWorld().getHighestBlockAt(toTeleport).getLocation().add(0, 0.5, 0);
             Location finalToTeleport = toTeleport;
             Bukkit.getOnlinePlayers().forEach(player -> {
+                if(!player.isValid())
+                    return;
                 player.teleport(finalToTeleport);
                 ScoreboardTeam team = getTeam(player);
                 if (team != null)
                     team.removePlayer(player);
-
+                player.getInventory().clear();
+                player.getActivePotionEffects().forEach(e -> player.removePotionEffect(e.getType()));
                 plugin.protocolLibManager.title(player, ChatColor.GOLD + winner, "won the game", new TitleTimings(20, 60, 20));
             });
         }
