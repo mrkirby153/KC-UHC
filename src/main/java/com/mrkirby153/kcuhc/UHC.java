@@ -27,6 +27,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -68,6 +69,8 @@ public class UHC extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+
+        ModuleRegistry.setPresetDirectory(new File(getDataFolder(), "presets"));
 
         // Initialize the command manager
         CommandManager.initialize(this);
@@ -129,6 +132,7 @@ public class UHC extends JavaPlugin {
         });
         manager.getCommandCompletions().registerCompletion("loadedModules",
                 c -> ModuleRegistry.INSTANCE.getLoadedModules().stream().map(UHCModule::getInternalName).collect(Collectors.toList()));
+        manager.getCommandCompletions().registerCompletion("presets", c -> ModuleRegistry.INSTANCE.getAvailablePresets());
 
         // Register resolvers
         manager.getCommandContexts().registerContext(GameState.class, c -> GameState.valueOf(c.popFirstArg()));

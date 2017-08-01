@@ -2,6 +2,7 @@ package com.mrkirby153.kcuhc.game;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
+import com.google.common.base.Throwables;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.msc.HeightBuildingModule;
@@ -15,6 +16,8 @@ import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -29,6 +32,22 @@ public class GameCommand extends BaseCommand {
     public GameCommand(UHCGame game, UHC uhc) {
         this.game = game;
         this.uhc = uhc;
+    }
+
+    @Subcommand("build-height")
+    public void buildHeight(CommandSender sender, @Optional Integer height) {
+        java.util.Optional<HeightBuildingModule> wbm = ModuleRegistry.INSTANCE.getLoadedModule(HeightBuildingModule.class);
+        if (!wbm.isPresent()) {
+            sender.sendMessage(C.e("The height module is not loaded").toLegacyText());
+            return;
+        }
+        if (height == null) {
+            sender.sendMessage(C.m("Build Height", "The build height is set to {height} blocks",
+                    "{height}", wbm.get().getMaxBuildHeight()).toLegacyText());
+        } else {
+            wbm.get().setMaxBuildHeight(height);
+            sender.sendMessage(C.m("Build Height", "Set build height to {height} blocks", "{height}", height).toLegacyText());
+        }
     }
 
     @Subcommand("grace")
@@ -47,6 +66,34 @@ public class GameCommand extends BaseCommand {
     public void pregenerateWorld(CommandSender sender) {
         this.game.generate();
         sender.sendMessage(C.m("Game", "Pregeneration started!").toLegacyText());
+    }
+
+    @Subcommand("stalemate")
+    public void resolveStalemate(Player sender, @Optional String code) {
+        java.util.Optional<WorldBorderModule> mod = ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class);
+        if (!mod.isPresent()) {
+            sender.sendMessage(C.e("Worldborder module not loaded!").toLegacyText());
+            return;
+        }
+        if (uhc.getGame().getCurrentState() != GameState.ALIVE) {
+            sender.sendMessage(C.e("This can only be run when the game is active!").toLegacyText());
+            return;
+        }
+        if (code != null) {
+            String requiredCode = this.stalemateCode.get(sender.getUniqueId());
+            if (requiredCode != null && requiredCode.equalsIgnoreCase(code)) {
+                sender.sendMessage(C.m("Stalemate", "Stalemate resolution system activated!").toLegacyText());
+                this.stalemateCode.remove(sender.getUniqueId());
+                mod.get().resolveStalemate();
+            } else {
+                sender.sendMessage(C.m("Stalemate", "Code incorrect.").toLegacyText());
+            }
+        } else {
+            int c = (int) (Math.random() * 10000);
+            this.stalemateCode.put(sender.getUniqueId(), Integer.toString(c));
+            sender.sendMessage(C.m("Stalemate", "Are you sure you want to activate the stalemate resolution system? " +
+                    "Type {command} to confirm", "{command}", "/game stalemate " + c).toLegacyText());
+        }
     }
 
     @Subcommand("state")
@@ -80,50 +127,6 @@ public class GameCommand extends BaseCommand {
         if (sender instanceof Player) {
             Player p = (Player) sender;
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
-        }
-    }
-
-    @Subcommand("stalemate")
-    public void resolveStalemate(Player sender, @Optional String code){
-        java.util.Optional<WorldBorderModule> mod = ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class);
-        if(!mod.isPresent()){
-            sender.sendMessage(C.e("Worldborder module not loaded!").toLegacyText());
-            return;
-        }
-        if(uhc.getGame().getCurrentState() != GameState.ALIVE){
-            sender.sendMessage(C.e("This can only be run when the game is active!").toLegacyText());
-            return;
-        }
-        if(code != null){
-            String requiredCode = this.stalemateCode.get(sender.getUniqueId());
-            if(requiredCode != null && requiredCode.equalsIgnoreCase(code)){
-                sender.sendMessage(C.m("Stalemate", "Stalemate resolution system activated!").toLegacyText());
-                this.stalemateCode.remove(sender.getUniqueId());
-                mod.get().resolveStalemate();
-            } else {
-                sender.sendMessage(C.m("Stalemate", "Code incorrect.").toLegacyText());
-            }
-        } else {
-            int c = (int) (Math.random() * 10000);
-            this.stalemateCode.put(sender.getUniqueId(), Integer.toString(c));
-            sender.sendMessage(C.m("Stalemate", "Are you sure you want to activate the stalemate resolution system? " +
-                    "Type {command} to confirm", "{command}", "/game stalemate "+ c).toLegacyText());
-        }
-    }
-
-    @Subcommand("build-height")
-    public void buildHeight(CommandSender sender, @Optional Integer height){
-        java.util.Optional<HeightBuildingModule> wbm = ModuleRegistry.INSTANCE.getLoadedModule(HeightBuildingModule.class);
-        if(!wbm.isPresent()){
-            sender.sendMessage(C.e("The height module is not loaded").toLegacyText());
-            return;
-        }
-        if(height == null){
-            sender.sendMessage(C.m("Build Height", "The build height is set to {height} blocks",
-                    "{height}", wbm.get().getMaxBuildHeight()).toLegacyText());
-        } else {
-            wbm.get().setMaxBuildHeight(height);
-            sender.sendMessage(C.m("Build Height", "Set build height to {height} blocks", "{height}", height).toLegacyText());
         }
     }
 
@@ -174,6 +177,48 @@ public class GameCommand extends BaseCommand {
                     "{start}", module.getStartSize(),
                     "{end}", module.getEndSize(),
                     "{time}", Time.format(2, module.getDuration() * 1000, Time.TimeUnit.FIT)).toLegacyText());
+        }
+    }
+
+
+    @Subcommand("preset")
+    public class PresetCommands extends BaseCommand {
+
+        @Default
+        public void listPresets(CommandSender sender) {
+            StringBuilder builder = new StringBuilder();
+            ModuleRegistry.INSTANCE.getAvailablePresets().forEach(p -> {
+                builder.append(p).append(", ");
+            });
+            String presets = builder.toString().trim();
+            sender.sendMessage(C.m("Presets", "Available presets ({count}): {presets}",
+                    "{count}", ModuleRegistry.INSTANCE.getAvailablePresets().size(),
+                    "{presets}", presets).toLegacyText());
+        }
+
+        @Subcommand("load")
+        @CommandCompletion("@presets")
+        public void setPreset(CommandSender sender, String preset) {
+            try {
+                ModuleRegistry.INSTANCE.loadFromPreset(preset);
+                sender.sendMessage(C.m("Preset", "Loaded preset {preset}",
+                        "{preset}", preset).toLegacyText());
+            } catch (FileNotFoundException e) {
+                sender.sendMessage(C.e("That preset doesn't exist").toLegacyText());
+            } catch (IOException e) {
+                Throwables.propagate(e);
+            }
+        }
+
+        @Subcommand("save")
+        public void savePreset(CommandSender sender, String name){
+            try{
+                ModuleRegistry.INSTANCE.saveToPreset(name);
+                sender.sendMessage(C.m("Preset", "Saved preset {preset}",
+                        "{preset}", name).toLegacyText());
+            } catch (IOException e) {
+                Throwables.propagate(e);
+            }
         }
     }
 }

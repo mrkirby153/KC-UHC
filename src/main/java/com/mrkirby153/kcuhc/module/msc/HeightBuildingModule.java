@@ -10,6 +10,7 @@ import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockPlaceEvent;
 
+import java.util.HashMap;
 import java.util.Optional;
 
 public class HeightBuildingModule extends UHCModule {
@@ -53,5 +54,15 @@ public class HeightBuildingModule extends UHCModule {
 
     public int getMaxBuildHeight(){
         return this.MAX_BUILD_HEIGHT;
+    }
+
+    @Override
+    public void loadData(HashMap<String, String> data) {
+        MAX_BUILD_HEIGHT = Integer.valueOf(data.get("max-build-height"));
+    }
+
+    @Override
+    public void saveData(HashMap<String, String> data) {
+        data.put("max-build-height", Integer.toString(MAX_BUILD_HEIGHT));
     }
 }

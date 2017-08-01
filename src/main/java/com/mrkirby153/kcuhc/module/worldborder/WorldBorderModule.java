@@ -11,6 +11,8 @@ import me.mrkirby153.kcutils.protocollib.TitleTimings;
 import org.bukkit.*;
 import org.bukkit.event.EventHandler;
 
+import java.util.HashMap;
+
 public class WorldBorderModule extends UHCModule {
 
     private static final int LOBBY_SIZE = 60;
@@ -49,6 +51,20 @@ public class WorldBorderModule extends UHCModule {
             p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1F, 1F);
             uhc.protocolLibManager.title(p, ChatColor.GOLD+"Stalemate Detected", "Shrinking world border", new TitleTimings(10, 60, 10));
         });
+    }
+
+    @Override
+    public void saveData(HashMap<String, String> data) {
+        data.put("wb-start-size", Integer.toString(startSize));
+        data.put("wb-end-size", Integer.toString(endSize));
+        data.put("wb-duration", Integer.toString(duration));
+    }
+
+    @Override
+    public void loadData(HashMap<String, String> data) {
+        startSize = Integer.parseInt(data.get("wb-start-size"));
+        endSize = Integer.parseInt(data.get("wb-end-size"));
+        duration = Integer.parseInt(data.get("wb-duration"));
     }
 
     /**

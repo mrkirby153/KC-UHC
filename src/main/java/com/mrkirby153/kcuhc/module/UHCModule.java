@@ -6,6 +6,8 @@ import org.bukkit.Material;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
+import java.util.HashMap;
+
 /**
  * Abstract module for various game elements
  */
@@ -131,6 +133,14 @@ public abstract class UHCModule implements Listener {
      * Called when the module is unloaded
      */
     public void onUnload() {
+
+    }
+
+    public void saveData(HashMap<String, String> data){
+
+    }
+
+    public void loadData(HashMap<String, String> data){
 
     }
 

@@ -4,12 +4,16 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mrkirby153.kcuhc.UHC;
 import org.bukkit.Bukkit;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.reflections.Reflections;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 
 /**
  * Registry for all {@link UHCModule}
@@ -18,13 +22,25 @@ public class ModuleRegistry {
 
     public static ModuleRegistry INSTANCE;
 
+    private static File presetDirectory;
+
     static {
         INSTANCE = new ModuleRegistry();
     }
 
     private HashSet<UHCModule> loadedModules = new HashSet<>();
-
     private HashSet<UHCModule> availableModules = new HashSet<>();
+
+    /**
+     * Sets the folder where presets are saved
+     *
+     * @param directory The directory
+     */
+    public static void setPresetDirectory(File directory) {
+        if (!directory.exists())
+            directory.mkdirs();
+        presetDirectory = directory;
+    }
 
     /**
      * Gets all the modules available
@@ -33,6 +49,20 @@ public class ModuleRegistry {
      */
     public HashSet<UHCModule> availableModules() {
         return new HashSet<>(this.availableModules);
+    }
+
+    /**
+     * Gets a list of the available presets
+     *
+     * @return A list of available presets
+     */
+    public List<String> getAvailablePresets() {
+        ArrayList<String> list = new ArrayList<>();
+        if (presetDirectory != null && presetDirectory.listFiles() != null)
+            Arrays.stream(presetDirectory.listFiles()).map(File::getName).forEach(f -> {
+                list.add(f.replace(".json", ""));
+            });
+        return list;
     }
 
     /**
@@ -141,6 +171,34 @@ public class ModuleRegistry {
     }
 
     /**
+     * Loads modules from a preset
+     *
+     * @param presetName The preset to load
+     * @throws java.io.FileNotFoundException If the preset doesn't exist
+     * @throws IOException                   If there was an error loading the preset
+     */
+    public void loadFromPreset(String presetName) throws IOException {
+        FileInputStream inputStream = new FileInputStream(new File(presetDirectory, presetName + ".json"));
+        JSONObject object = new JSONObject(new JSONTokener(inputStream));
+        inputStream.close();
+
+        JSONArray array = object.getJSONArray("loaded-modules");
+        // Unload all modules
+        new HashSet<>(this.loadedModules).forEach(this::forceUnload);
+        array.forEach(o -> {
+            UHCModule module = getModuleByName(o.toString());
+            if (module != null && !module.isLoaded()) {
+                forceLoad(module);
+            }
+        });
+
+        JSONObject data = object.getJSONObject("settings");
+        HashMap<String, String> dataMap = new HashMap<>();
+        data.keySet().forEach(key -> dataMap.put(key, data.getString(key)));
+        loadedModules.forEach(m -> m.loadData(dataMap));
+    }
+
+    /**
      * Checks if a module is loaded
      *
      * @param clazz The module to check if loaded
@@ -152,6 +210,28 @@ public class ModuleRegistry {
                 return true;
         }
         return false;
+    }
+
+    /**
+     * Saves the module to a preset
+     *
+     * @param presetName The name to save
+     * @throws IOException If any error occurrs
+     */
+    public void saveToPreset(String presetName) throws IOException {
+        JSONObject object = new JSONObject();
+        loadedModules.forEach(m -> object.append("loaded-modules", m.getInternalName()));
+        // Save module data
+        HashMap<String, String> data = new HashMap<>();
+        loadedModules.forEach(m -> m.saveData(data));
+
+        JSONObject dataObj = new JSONObject();
+        data.forEach(dataObj::put);
+        object.put("settings", dataObj);
+
+        FileWriter writer = new FileWriter(new File(presetDirectory, presetName + ".json"));
+        writer.write(object.toString(3));
+        writer.close();
     }
 
     /**
@@ -169,4 +249,27 @@ public class ModuleRegistry {
         }
     }
 
+    /**
+     * Force loads a module, bypassing the event
+     *
+     * @param mod The module to load
+     */
+    private void forceLoad(UHCModule mod) {
+        if (mod != null) {
+            if (mod.isLoaded())
+                return;
+            if (mod.load())
+                loadedModules.add(mod);
+        }
+    }
+
+    /**
+     * Force unload a module, bypassing the event
+     *
+     * @param module The module to unload
+     */
+    private void forceUnload(UHCModule module) {
+        if (module.unload())
+            loadedModules.remove(module);
+    }
 }

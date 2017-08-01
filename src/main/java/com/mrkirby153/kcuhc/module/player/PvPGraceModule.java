@@ -18,6 +18,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
+import java.util.HashMap;
+
 public class PvPGraceModule extends UHCModule {
 
     private long graceUntil = 0;
@@ -104,5 +106,15 @@ public class PvPGraceModule extends UHCModule {
 
     private boolean pvpDisabled() {
         return System.currentTimeMillis() <= graceUntil;
+    }
+
+    @Override
+    public void saveData(HashMap<String, String> data) {
+        data.put("pvp-grace-time", Integer.toString(GRACE_MINUTES));
+    }
+
+    @Override
+    public void loadData(HashMap<String, String> data) {
+        GRACE_MINUTES = Integer.parseInt(data.get("pvp-grace-time"));
     }
 }
