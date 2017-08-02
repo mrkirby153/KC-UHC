@@ -3,6 +3,7 @@ package com.mrkirby153.kcuhc;
 import co.aikar.commands.BukkitCommandManager;
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.MinecraftMessageKeys;
+import com.mrkirby153.kcuhc.discord.CommandDiscord;
 import com.mrkirby153.kcuhc.game.GameCommand;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
@@ -171,5 +172,6 @@ public class UHC extends JavaPlugin {
         manager.registerCommand(new CommandModule(this));
         manager.registerCommand(new TeamInventoryModule.TeamInventoryCommand(this));
         manager.registerCommand(new CommandSpectate(this));
+        manager.registerCommand(new CommandDiscord(game));
     }
 }

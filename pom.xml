@@ -15,11 +15,7 @@
         </repository>
         <repository>
             <id>mrkirby153</id>
-            <url>https://repo.mrkirby153.com/repository/maven-public/</url>
-        </repository>
-        <repository>
-            <id>mrkirby153-spigot</id>
-            <url>https://repo.mrkirby153.tk/repository/spigot/</url>
+            <url>https://repo.mrkirby153.com/nexus/content/groups/public/</url>
         </repository>
         <repository>
             <id>sonatype</id>
@@ -36,6 +32,10 @@
         <repository>
             <id>aikar</id>
             <url>https://repo.aikar.co/nexus/content/groups/aikar/</url>
+        </repository>
+        <repository>
+            <id>jcenter</id>
+            <url>http://jcenter.bintray.com</url>
         </repository>
     </repositories>
 
@@ -166,6 +166,11 @@
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>4.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>net.dv8tion</groupId>
+            <artifactId>JDA</artifactId>
+            <version>3.2.0_226</version>
         </dependency>
 
     </dependencies>
