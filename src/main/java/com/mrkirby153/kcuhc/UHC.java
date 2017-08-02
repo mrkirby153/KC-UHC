@@ -114,6 +114,11 @@ public class UHC extends JavaPlugin {
         registerCommands();
     }
 
+    @Override
+    public void onDisable() {
+        ModuleRegistry.INSTANCE.shutdown();
+    }
+
     private void registerCommands() {
         // Register completions
         manager.getCommandCompletions().registerCompletion("state", c -> {

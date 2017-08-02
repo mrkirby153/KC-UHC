@@ -235,6 +235,13 @@ public class ModuleRegistry {
     }
 
     /**
+     * Shuts down the module system, force unloading all the loaded modules
+     */
+    public void shutdown() {
+        this.loadedModules.forEach(this::forceLoad);
+    }
+
+    /**
      * Unloads a {@link UHCModule}
      *
      * @param module The module to unload
