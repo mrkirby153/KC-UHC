@@ -2,7 +2,9 @@ package com.mrkirby153.kcuhc.discord;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.contexts.OnlinePlayer;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.msc.DiscordModule;
@@ -33,6 +35,15 @@ public class CommandDiscord extends BaseCommand {
         ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> {
             sender.sendMessage(C.m("Discord", "Teams being destroyed").toLegacyText());
             m.getRobot().destroyAllTeams();
+        });
+    }
+
+    @Subcommand("update")
+    @CommandCompletion("@players")
+    public void update(CommandSender sender, OnlinePlayer player){
+        ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> {
+            m.getRobot().updateUserTeams(player.getPlayer());
+            sender.sendMessage(C.m("Discord", "Updating teams for {player}", "{player}", player.getPlayer().getName()).toLegacyText());
         });
     }
 

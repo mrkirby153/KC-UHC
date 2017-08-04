@@ -1,23 +1,21 @@
 package com.mrkirby153.kcuhc.discord;
 
 import com.google.common.base.Throwables;
+import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.objects.DiscordUHCTeam;
+import com.mrkirby153.kcuhc.discord.objects.TeamRoleObject;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.OnlineStatus;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.entities.VoiceChannel;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
+import org.bukkit.entity.Player;
 
 import javax.security.auth.login.LoginException;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class DiscordRobot {
 
@@ -136,6 +134,18 @@ public class DiscordRobot {
         return this.jda.getGuildById(this.guildId);
     }
 
+    public List<DiscordUHCTeam> getTeams(Member member) {
+        ArrayList<DiscordUHCTeam> teams = new ArrayList<>();
+        member.getRoles().forEach(role -> {
+            this.teams.forEach((sb, discord) -> {
+                if (discord.getTeamRole().getObject().equals(role)) {
+                    teams.add(discord);
+                }
+            });
+        });
+        return teams;
+    }
+
     public UUID getUUID(String code) {
         return this.linkCodes.get(code);
     }
@@ -173,6 +183,39 @@ public class DiscordRobot {
             this.linkedUsers.values().stream().map(id -> this.jda.getUserById(id)).filter(Objects::nonNull).map(user -> getGuild().getMember(user)).forEach(member -> {
                 getGuild().getController().moveVoiceMember(member, this.lobbyChannel).queue();
             });
+    }
+
+    /**
+     * Updates a user's teams
+     * @param player The player to update
+     */
+    public void updateUserTeams(Player player) {
+        if (getUser(player.getUniqueId()) == null)
+            return;
+        Member member = getGuild().getMember(getUser(player.getUniqueId()));
+        List<DiscordUHCTeam> currentTeams = getTeams(member);
+        List<DiscordUHCTeam> toAdd = new ArrayList<>();
+        List<DiscordUHCTeam> toRemove = new ArrayList<>(currentTeams);
+
+        UHC uhc = UHC.getPlugin(UHC.class);
+        List<ScoreboardTeam> currentSBTeams = uhc.getGame().getTeams().values().stream()
+                .filter(team -> team.getPlayers().contains(player.getUniqueId())).collect(Collectors.toList());
+
+        currentSBTeams.forEach(sbTeam -> {
+            if (!currentTeams.contains(this.teams.get(sbTeam))) {
+                toAdd.add(this.teams.get(sbTeam));
+            }
+        });
+
+        toRemove.removeAll(toAdd);
+
+        getGuild().getController().modifyMemberRoles(member, toAdd.stream()
+                .map(DiscordUHCTeam::getTeamRole)
+                .map(TeamRoleObject::getObject)
+                .collect(Collectors.toList()), toRemove.stream()
+                .map(DiscordUHCTeam::getTeamRole)
+                .map(TeamRoleObject::getObject)
+                .collect(Collectors.toList())).queue();
     }
 
     /**
