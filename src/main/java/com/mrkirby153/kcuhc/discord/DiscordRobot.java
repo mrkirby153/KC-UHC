@@ -34,6 +34,8 @@ public class DiscordRobot {
 
     private HashMap<String, UUID> linkCodes = new HashMap<>();
 
+    private VoiceChannel lobbyChannel = null;
+
     public DiscordRobot(String apiToken, String guildId) {
         this.apiToken = apiToken;
         this.guildId = guildId;
@@ -121,6 +123,7 @@ public class DiscordRobot {
     public void disconnect() {
         this.ready = false;
         this.destroyAllTeams();
+        this.lobbyChannel.delete().queue();
         this.jda.shutdown();
     }
 
@@ -152,6 +155,24 @@ public class DiscordRobot {
 
     public void link(User user, String code) {
         this.linkedUsers.put(this.linkCodes.remove(code), user.getId());
+    }
+
+    /**
+     * Moves all the linked users to the lobby channel (which is created)
+     */
+    public void moveAllUsersToLobby() {
+        if (this.lobbyChannel == null)
+            getGuild().getController().createVoiceChannel("Lobby").queue(chan -> {
+                this.lobbyChannel = (VoiceChannel) chan;
+                this.linkedUsers.values().stream().map(id -> this.jda.getUserById(id))
+                        .filter(Objects::nonNull).map(user -> getGuild().getMember(user)).forEach(user -> {
+                    getGuild().getController().moveVoiceMember(user, (VoiceChannel) chan).queue();
+                });
+            });
+        else
+            this.linkedUsers.values().stream().map(id -> this.jda.getUserById(id)).filter(Objects::nonNull).map(user -> getGuild().getMember(user)).forEach(member -> {
+                getGuild().getController().moveVoiceMember(member, this.lobbyChannel).queue();
+            });
     }
 
     /**
