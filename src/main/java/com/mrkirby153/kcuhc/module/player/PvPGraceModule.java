@@ -46,11 +46,13 @@ public class PvPGraceModule extends UHCModule {
             broadcast(C.m("PvP", "PVP is disabled for {time}",
                     "{time}", Time.format(1, graceUntil - System.currentTimeMillis(), Time.TimeUnit.FIT)).toLegacyText());
         }
+        if(event.getTo() == GameState.ENDING)
+            graceUntil = 0;
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onUpdate(UpdateEvent event) {
-        if (event.getType() == UpdateType.SECOND) {
+        if (event.getType() == UpdateType.SECOND && game.getCurrentState() == GameState.ALIVE) {
             if (pvpDisabled())
                 announcePvPGrace();
         }
