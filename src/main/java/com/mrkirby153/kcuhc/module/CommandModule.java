@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Subcommand;
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.gui.ModuleGui;
 import me.mrkirby153.kcutils.C;
@@ -16,6 +17,7 @@ public class CommandModule extends BaseCommand {
 
     private UHC uhc;
 
+    @Inject
     public CommandModule(UHC uhc) {
         this.uhc = uhc;
     }

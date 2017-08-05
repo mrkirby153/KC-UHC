@@ -5,6 +5,7 @@ import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.contexts.OnlinePlayer;
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.msc.DiscordModule;
@@ -17,6 +18,7 @@ public class CommandDiscord extends BaseCommand {
 
     private UHCGame game;
 
+    @Inject
     public CommandDiscord(UHCGame game) {
         this.game = game;
     }

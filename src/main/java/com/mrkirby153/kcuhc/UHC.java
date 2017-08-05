@@ -3,6 +3,8 @@ package com.mrkirby153.kcuhc;
 import co.aikar.commands.BukkitCommandManager;
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.MinecraftMessageKeys;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.mrkirby153.kcuhc.discord.CommandDiscord;
 import com.mrkirby153.kcuhc.game.GameCommand;
 import com.mrkirby153.kcuhc.game.GameState;
@@ -44,6 +46,8 @@ public class UHC extends JavaPlugin {
     private UpdateEventHandler tickEventHandler;
     private ScoreboardUpdater scoreboardUpdater;
     private UHCGame game;
+
+    public static Injector injector;
 
     /**
      * Gets the ACF command manager
@@ -106,13 +110,15 @@ public class UHC extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
-
         // Initialize the game
         game = new UHCGame(this);
 
-        scoreboardUpdater = new ScoreboardUpdater(this);
+        // Initialize Guice injector
+        injector = Guice.createInjector(new GuiceModule(this));
 
-        spectatorHandler = new SpectatorHandler(this);
+        scoreboardUpdater = injector.getInstance(ScoreboardUpdater.class);
+
+        spectatorHandler = injector.getInstance(SpectatorHandler.class);
 
         ModuleRegistry.INSTANCE.loadAll();
 
@@ -172,11 +178,11 @@ public class UHC extends JavaPlugin {
             return mod;
         });
 
-        manager.registerCommand(new GameCommand(game, this));
-        manager.registerCommand(new CommandTeam(this));
-        manager.registerCommand(new CommandModule(this));
-        manager.registerCommand(new TeamInventoryModule.TeamInventoryCommand(this));
-        manager.registerCommand(new CommandSpectate(this));
-        manager.registerCommand(new CommandDiscord(game));
+        manager.registerCommand(injector.getInstance(GameCommand.class));
+        manager.registerCommand(injector.getInstance(CommandTeam.class));
+        manager.registerCommand(injector.getInstance(CommandModule.class));
+        manager.registerCommand(injector.getInstance(TeamInventoryModule.TeamInventoryCommand.class));
+        manager.registerCommand(injector.getInstance(CommandSpectate.class));
+        manager.registerCommand(injector.getInstance(CommandDiscord.class));
     }
 }

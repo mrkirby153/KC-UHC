@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.scoreboard;
 
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
@@ -28,14 +29,13 @@ import java.util.List;
 public class ScoreboardUpdater implements Listener {
 
     private final KirbyScoreboard scoreboard;
-    private final UHC plugin;
     private final UHCGame game;
 
-    public ScoreboardUpdater(UHC plugin) {
-        this.plugin = plugin;
+    @Inject
+    public ScoreboardUpdater(UHC plugin, UHCGame game) {
         this.scoreboard = new UHCScoreboard(plugin);
-        this.game = plugin.getGame();
-        this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        this.game = game;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
 

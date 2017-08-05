@@ -111,6 +111,7 @@ public class TeamInventoryModule extends UHCModule {
 
         private UHC uhc;
 
+        @Inject
         public TeamInventoryCommand(UHC uhc) {
             this.uhc = uhc;
         }

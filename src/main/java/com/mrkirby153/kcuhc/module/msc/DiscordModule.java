@@ -50,6 +50,7 @@ public class DiscordModule extends UHCModule {
 
         Bukkit.getServer().getScheduler().runTaskAsynchronously(uhc, () -> {
             robot = new DiscordRobot(token, guild);
+            UHC.injector.injectMembers(robot);
             robot.connect();
         });
 

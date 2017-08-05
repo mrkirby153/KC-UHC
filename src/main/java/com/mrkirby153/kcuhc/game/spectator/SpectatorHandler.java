@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.game.spectator;
 
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
@@ -31,6 +32,7 @@ public class SpectatorHandler implements Listener {
 
     public HashSet<UUID> pendingSpectators = new HashSet<>();
 
+    @Inject
     public SpectatorHandler(UHC uhc) {
         this.uhc = uhc;
 

@@ -7,6 +7,7 @@ import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.contexts.OnlinePlayer;
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import me.mrkirby153.kcutils.C;
@@ -20,6 +21,7 @@ public class CommandTeam extends BaseCommand {
 
     private final UHC uhc;
 
+    @Inject
     public CommandTeam(UHC uhc) {
         this.uhc = uhc;
     }

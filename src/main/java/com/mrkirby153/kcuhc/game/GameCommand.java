@@ -7,6 +7,7 @@ import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
 import com.google.common.base.Throwables;
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.msc.HeightBuildingModule;
@@ -33,6 +34,7 @@ public class GameCommand extends BaseCommand {
 
     private HashMap<UUID, String> stalemateCode = new HashMap<>();
 
+    @Inject
     public GameCommand(UHCGame game, UHC uhc) {
         this.game = game;
         this.uhc = uhc;

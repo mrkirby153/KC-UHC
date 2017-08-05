@@ -4,6 +4,7 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Subcommand;
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import me.mrkirby153.kcutils.C;
@@ -17,6 +18,7 @@ public class CommandSpectate extends BaseCommand {
 
     private UHC uhc;
 
+    @Inject
     public CommandSpectate(UHC game) {
         this.uhc = game;
     }

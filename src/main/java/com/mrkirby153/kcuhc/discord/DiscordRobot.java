@@ -1,6 +1,7 @@
 package com.mrkirby153.kcuhc.discord;
 
 import com.google.common.base.Throwables;
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.objects.DiscordUHCTeam;
 import com.mrkirby153.kcuhc.discord.objects.TeamRoleObject;
@@ -41,6 +42,9 @@ public class DiscordRobot {
     private HashMap<String, UUID> linkCodes = new HashMap<>();
 
     private VoiceChannel lobbyChannel = null;
+
+    @Inject
+    private UHC uhc;
 
     public DiscordRobot(String apiToken, String guildId) {
         this.apiToken = apiToken;
@@ -206,7 +210,6 @@ public class DiscordRobot {
         List<DiscordUHCTeam> toAdd = new ArrayList<>();
         List<DiscordUHCTeam> toRemove = new ArrayList<>(currentTeams);
 
-        UHC uhc = UHC.getPlugin(UHC.class);
         List<ScoreboardTeam> currentSBTeams = uhc.getGame().getTeams().values().stream()
                 .filter(team -> team.getPlayers().contains(player.getUniqueId())).collect(Collectors.toList());
 

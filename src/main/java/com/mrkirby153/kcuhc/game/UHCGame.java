@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.game;
 
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
@@ -76,6 +77,7 @@ public class UHCGame implements Listener {
 
     private boolean generating = false;
 
+    @Inject
     public UHCGame(UHC plugin) {
         this.plugin = plugin;
         this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
