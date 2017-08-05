@@ -122,6 +122,10 @@ public abstract class UHCModule implements Listener {
         return true;
     }
 
+    public void loadData(HashMap<String, String> data) {
+
+    }
+
     /**
      * Called when the module is loaded
      */
@@ -136,11 +140,7 @@ public abstract class UHCModule implements Listener {
 
     }
 
-    public void saveData(HashMap<String, String> data){
-
-    }
-
-    public void loadData(HashMap<String, String> data){
+    public void saveData(HashMap<String, String> data) {
 
     }
 

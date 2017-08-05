@@ -16,7 +16,11 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class SpreadPlayersModule extends UHCModule {
 
@@ -113,7 +117,7 @@ public class SpreadPlayersModule extends UHCModule {
         if (!ModuleRegistry.INSTANCE.loaded(WorldBorderModule.class)) {
             ModuleRegistry.INSTANCE.load(module = ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class));
         } else {
-           module =  ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class);
+            module = ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class);
         }
     }
 }

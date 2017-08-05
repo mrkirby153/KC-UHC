@@ -1,7 +1,11 @@
 package com.mrkirby153.kcuhc.game;
 
 import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.*;
+import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
+import co.aikar.commands.annotation.Default;
+import co.aikar.commands.annotation.Optional;
+import co.aikar.commands.annotation.Subcommand;
 import com.google.common.base.Throwables;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
@@ -196,6 +200,17 @@ public class GameCommand extends BaseCommand {
                     "{presets}", presets).toLegacyText());
         }
 
+        @Subcommand("save")
+        public void savePreset(CommandSender sender, String name) {
+            try {
+                ModuleRegistry.INSTANCE.saveToPreset(name);
+                sender.sendMessage(C.m("Preset", "Saved preset {preset}",
+                        "{preset}", name).toLegacyText());
+            } catch (IOException e) {
+                Throwables.propagate(e);
+            }
+        }
+
         @Subcommand("load")
         @CommandCompletion("@presets")
         public void setPreset(CommandSender sender, String preset) {
@@ -205,17 +220,6 @@ public class GameCommand extends BaseCommand {
                         "{preset}", preset).toLegacyText());
             } catch (FileNotFoundException e) {
                 sender.sendMessage(C.e("That preset doesn't exist").toLegacyText());
-            } catch (IOException e) {
-                Throwables.propagate(e);
-            }
-        }
-
-        @Subcommand("save")
-        public void savePreset(CommandSender sender, String name){
-            try{
-                ModuleRegistry.INSTANCE.saveToPreset(name);
-                sender.sendMessage(C.m("Preset", "Saved preset {preset}",
-                        "{preset}", name).toLegacyText());
             } catch (IOException e) {
                 Throwables.propagate(e);
             }

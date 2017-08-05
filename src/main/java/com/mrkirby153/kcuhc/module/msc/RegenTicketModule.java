@@ -8,7 +8,11 @@ import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -101,7 +105,7 @@ public class RegenTicketModule extends UHCModule {
                 }
                 double target = clicker.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() - 4;
                 if (clicker.getHealth() >= target) {
-                    if(!clicker.isSneaking()) {
+                    if (!clicker.isSneaking()) {
                         event.getPlayer().spigot().sendMessage(C.m("Error",
                                 "It is advised to wait until you have less than {hearts} hearts before using this." +
                                         " If you wish to do so anyways, sneak and try again",

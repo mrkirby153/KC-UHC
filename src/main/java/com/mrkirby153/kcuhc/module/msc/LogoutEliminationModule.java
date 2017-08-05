@@ -77,7 +77,7 @@ public class LogoutEliminationModule extends UHCModule {
                     Bukkit.getOnlinePlayers().forEach(p -> {
                         p.sendMessage(C.m("Game", "{player} has been offline for too long and has been eliminated!",
                                 "{player}", player.name).toLegacyText());
-                        p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_THUNDER,1F, 1F);
+                        p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_THUNDER, 1F, 1F);
                     });
                 }
                 toRemove.add(uuid);

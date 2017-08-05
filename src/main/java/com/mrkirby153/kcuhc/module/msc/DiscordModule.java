@@ -38,7 +38,7 @@ public class DiscordModule extends UHCModule {
         if (event.getTo() == GameState.ENDING) {
             this.robot.moveAllUsersToLobby();
         }
-        if(event.getTo() == GameState.ENDED){
+        if (event.getTo() == GameState.ENDED) {
             this.robot.destroyAllTeams();
         }
     }

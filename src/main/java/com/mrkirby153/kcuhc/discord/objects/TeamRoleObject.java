@@ -23,7 +23,7 @@ public class TeamRoleObject extends DiscordObject<Role> {
             object = role;
             RoleManager manager = role.getManager();
             manager.setName(WordUtils.capitalizeFully("Team " + team.getTeamName())).queue(success -> {
-                if(callback != null)
+                if (callback != null)
                     callback.accept(role);
             });
         });
@@ -31,7 +31,7 @@ public class TeamRoleObject extends DiscordObject<Role> {
 
     @Override
     public void delete() {
-        if(object != null)
+        if (object != null)
             object.delete().queue();
     }
 }

@@ -1,7 +1,11 @@
 package com.mrkirby153.kcuhc.game.team;
 
 import co.aikar.commands.BaseCommand;
-import co.aikar.commands.annotation.*;
+import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
+import co.aikar.commands.annotation.Default;
+import co.aikar.commands.annotation.Optional;
+import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.contexts.OnlinePlayer;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
@@ -50,8 +54,8 @@ public class CommandTeam extends BaseCommand {
     @Subcommand("join")
     @CommandCompletion("@teams @players")
     public void joinTeam(Player sender, UHCTeam team, @Optional OnlinePlayer player) {
-        if(player != null){
-            if(uhc.getGame().getTeam(player.player) != null)
+        if (player != null) {
+            if (uhc.getGame().getTeam(player.player) != null)
                 uhc.getGame().getTeam(player.player).removePlayer(player.player);
             team.addPlayer(player.player);
             player.player.spigot().sendMessage(C.m("Team", "You have been assigned to {team} by {assignee}",
@@ -59,7 +63,7 @@ public class CommandTeam extends BaseCommand {
             sender.sendMessage(C.m("Team", "Assigned {player} to {team}",
                     "{player}", player.player.getName(), "{team}", team.getTeamName()).toLegacyText());
         } else {
-            if(uhc.getGame().getTeam(sender) != null)
+            if (uhc.getGame().getTeam(sender) != null)
                 uhc.getGame().getTeam(sender).removePlayer(sender);
             team.addPlayer(sender);
             sender.spigot().sendMessage(C.m("Team", "You have joined team {team}", "{team}", team.getTeamName()));

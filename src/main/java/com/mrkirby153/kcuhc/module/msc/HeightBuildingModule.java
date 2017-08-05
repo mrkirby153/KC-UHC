@@ -15,13 +15,25 @@ import java.util.Optional;
 
 public class HeightBuildingModule extends UHCModule {
 
+    private static final int BUILD_RADIUS = 50;
     private int MAX_BUILD_HEIGHT = 100;
 
-    private static final int BUILD_RADIUS = 50;
-
-    public HeightBuildingModule(){
+    public HeightBuildingModule() {
         super("Height Restriction", "Prevents building above a certain height near spawn", Material.IRON_DOOR);
         autoLoad = true;
+    }
+
+    public int getMaxBuildHeight() {
+        return this.MAX_BUILD_HEIGHT;
+    }
+
+    public void setMaxBuildHeight(int height) {
+        this.MAX_BUILD_HEIGHT = height;
+    }
+
+    @Override
+    public void loadData(HashMap<String, String> data) {
+        MAX_BUILD_HEIGHT = Integer.valueOf(data.get("max-build-height"));
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -30,7 +42,7 @@ public class HeightBuildingModule extends UHCModule {
 
         Location center;
         Optional<WorldBorderModule> mod = ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class);
-        if(mod.isPresent()){
+        if (mod.isPresent()) {
             center = UHC.getUHCWorld().getWorldBorder().getCenter().clone();
             buildRadius = mod.get().getEndSize() / 2;
         } else {
@@ -40,25 +52,12 @@ public class HeightBuildingModule extends UHCModule {
         Location builtBlock = event.getBlockPlaced().getLocation().clone();
         center.setY(builtBlock.getBlockY());
 
-        if(center.distanceSquared(builtBlock) <= Math.pow(buildRadius, 2)){
-            if(builtBlock.getBlockY() >= MAX_BUILD_HEIGHT) {
+        if (center.distanceSquared(builtBlock) <= Math.pow(buildRadius, 2)) {
+            if (builtBlock.getBlockY() >= MAX_BUILD_HEIGHT) {
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(C.e("You cannot build this high near spawn").toLegacyText());
             }
         }
-    }
-
-    public void setMaxBuildHeight(int height){
-        this.MAX_BUILD_HEIGHT = height;
-    }
-
-    public int getMaxBuildHeight(){
-        return this.MAX_BUILD_HEIGHT;
-    }
-
-    @Override
-    public void loadData(HashMap<String, String> data) {
-        MAX_BUILD_HEIGHT = Integer.valueOf(data.get("max-build-height"));
     }
 
     @Override

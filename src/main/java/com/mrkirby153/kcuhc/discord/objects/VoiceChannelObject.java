@@ -15,17 +15,17 @@ public class VoiceChannelObject extends DiscordObject<VoiceChannel> {
     }
 
     @Override
-    public void delete() {
-        if(this.object != null)
-            this.object.delete().queue();
+    public void create(Consumer<VoiceChannel> callback) {
+        robot.getGuild().getController().createVoiceChannel(name).queue(channel -> {
+            this.object = (VoiceChannel) channel;
+            if (callback != null)
+                callback.accept((VoiceChannel) channel);
+        });
     }
 
     @Override
-    public void create(Consumer<VoiceChannel> callback) {
-        robot.getGuild().getController().createVoiceChannel(name).queue(channel ->{
-            this.object = (VoiceChannel) channel;
-            if(callback != null)
-                callback.accept((VoiceChannel) channel);
-        });
+    public void delete() {
+        if (this.object != null)
+            this.object.delete().queue();
     }
 }

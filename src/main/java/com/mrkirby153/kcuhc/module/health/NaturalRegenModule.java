@@ -14,16 +14,16 @@ public class NaturalRegenModule extends UHCModule {
     private UHC uhc;
 
     @Inject
-    public NaturalRegenModule(UHC uhc){
+    public NaturalRegenModule(UHC uhc) {
         super("Disable Natural Regeneration", "Disables natural regeneration", Material.POTION);
         this.uhc = uhc;
         this.autoLoad = true;
     }
 
     @EventHandler
-    public void updateEvent(UpdateEvent event){
-        if(event.getType() == UpdateType.TWO_SECOND){
-            if(uhc.flagModule.get(UHC.getUHCWorld(), WorldFlags.HEALTH_REGEN)){
+    public void updateEvent(UpdateEvent event) {
+        if (event.getType() == UpdateType.TWO_SECOND) {
+            if (uhc.flagModule.get(UHC.getUHCWorld(), WorldFlags.HEALTH_REGEN)) {
                 uhc.flagModule.set(UHC.getUHCWorld(), WorldFlags.HEALTH_REGEN, false, false);
             }
         }

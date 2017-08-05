@@ -10,20 +10,20 @@ import org.bukkit.event.player.PlayerPortalEvent;
 
 public class NetherModule extends UHCModule {
 
-    public NetherModule(){
+    public NetherModule() {
         super("Disable Nether", "Disables the nether", Material.NETHER_BRICK);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPortal(EntityPortalEvent event){
-        if(event.getTo().getWorld().getEnvironment() == World.Environment.NETHER){
+    public void onPlayerPortal(PlayerPortalEvent event) {
+        if (event.getTo().getWorld().getEnvironment() == World.Environment.NETHER) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerPortal(PlayerPortalEvent event){
-        if(event.getTo().getWorld().getEnvironment() == World.Environment.NETHER){
+    public void onPortal(EntityPortalEvent event) {
+        if (event.getTo().getWorld().getEnvironment() == World.Environment.NETHER) {
             event.setCancelled(true);
         }
     }

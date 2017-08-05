@@ -8,7 +8,12 @@ import com.mrkirby153.kcuhc.module.UHCModule;
 import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.protocollib.TitleTimings;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.WorldBorder;
 import org.bukkit.event.EventHandler;
 
 import java.util.HashMap;
@@ -39,32 +44,6 @@ public class WorldBorderModule extends UHCModule {
      */
     public int getDuration() {
         return duration;
-    }
-
-    /**
-     * Resolves a stalemate
-     */
-    public void resolveStalemate() {
-        UHC.getUHCWorld().getWorldBorder().setSize(1, 60  * 10);
-        Bukkit.getOnlinePlayers().forEach(p -> {
-            p.sendMessage(C.m("Stalemate", "Stalemate detected! Worldborder shrinking to one block over 10 minutes").toLegacyText());
-            p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1F, 1F);
-            uhc.protocolLibManager.title(p, ChatColor.GOLD+"Stalemate Detected", "Shrinking world border", new TitleTimings(10, 60, 10));
-        });
-    }
-
-    @Override
-    public void saveData(HashMap<String, String> data) {
-        data.put("wb-start-size", Integer.toString(startSize));
-        data.put("wb-end-size", Integer.toString(endSize));
-        data.put("wb-duration", Integer.toString(duration));
-    }
-
-    @Override
-    public void loadData(HashMap<String, String> data) {
-        startSize = Integer.parseInt(data.get("wb-start-size"));
-        endSize = Integer.parseInt(data.get("wb-end-size"));
-        duration = Integer.parseInt(data.get("wb-duration"));
     }
 
     /**
@@ -112,6 +91,13 @@ public class WorldBorderModule extends UHCModule {
         this.startSize = startSize;
     }
 
+    @Override
+    public void loadData(HashMap<String, String> data) {
+        startSize = Integer.parseInt(data.get("wb-start-size"));
+        endSize = Integer.parseInt(data.get("wb-end-size"));
+        duration = Integer.parseInt(data.get("wb-duration"));
+    }
+
     @EventHandler
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
@@ -135,6 +121,25 @@ public class WorldBorderModule extends UHCModule {
     @Override
     public void onUnload() {
         UHC.getUHCWorld().getWorldBorder().setSize(DEFAULT_SIZE);
+    }
+
+    /**
+     * Resolves a stalemate
+     */
+    public void resolveStalemate() {
+        UHC.getUHCWorld().getWorldBorder().setSize(1, 60 * 10);
+        Bukkit.getOnlinePlayers().forEach(p -> {
+            p.sendMessage(C.m("Stalemate", "Stalemate detected! Worldborder shrinking to one block over 10 minutes").toLegacyText());
+            p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1F, 1F);
+            uhc.protocolLibManager.title(p, ChatColor.GOLD + "Stalemate Detected", "Shrinking world border", new TitleTimings(10, 60, 10));
+        });
+    }
+
+    @Override
+    public void saveData(HashMap<String, String> data) {
+        data.put("wb-start-size", Integer.toString(startSize));
+        data.put("wb-end-size", Integer.toString(endSize));
+        data.put("wb-duration", Integer.toString(duration));
     }
 
     public void updateSpeed(int newDuration) {

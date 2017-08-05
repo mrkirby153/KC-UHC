@@ -40,10 +40,10 @@ public class UHC extends JavaPlugin {
     private static BukkitCommandManager manager;
     public FlagModule flagModule;
     public ProtocolLib protocolLibManager;
+    public SpectatorHandler spectatorHandler;
     private UpdateEventHandler tickEventHandler;
     private ScoreboardUpdater scoreboardUpdater;
     private UHCGame game;
-    public SpectatorHandler spectatorHandler;
 
     /**
      * Gets the ACF command manager
@@ -65,6 +65,11 @@ public class UHC extends JavaPlugin {
      */
     public UHCGame getGame() {
         return game;
+    }
+
+    @Override
+    public void onDisable() {
+        ModuleRegistry.INSTANCE.shutdown();
     }
 
     @Override
@@ -112,11 +117,6 @@ public class UHC extends JavaPlugin {
         ModuleRegistry.INSTANCE.loadAll();
 
         registerCommands();
-    }
-
-    @Override
-    public void onDisable() {
-        ModuleRegistry.INSTANCE.shutdown();
     }
 
     private void registerCommands() {

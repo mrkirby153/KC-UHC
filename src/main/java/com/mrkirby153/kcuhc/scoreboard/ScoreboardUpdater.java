@@ -70,27 +70,27 @@ public class ScoreboardUpdater implements Listener {
                 });
                 List<Player> alivePlayers = new ArrayList<>();
                 // Players not on the spectators team
-                Bukkit.getServer().getOnlinePlayers().stream().filter(Player::isValid).filter(p->{
+                Bukkit.getServer().getOnlinePlayers().stream().filter(Player::isValid).filter(p -> {
                     ScoreboardTeam team = game.getTeam(p);
                     return team == null || !(team instanceof SpectatorTeam);
                 }).forEach(alivePlayers::add);
-                if(alivePlayers.size() < 9){
+                if (alivePlayers.size() < 9) {
                     // Display players sorted by health
-                    alivePlayers.sort((o1, o2)-> (int) (o2.getHealth() - o1.getHealth()));
+                    alivePlayers.sort((o1, o2) -> (int) (o2.getHealth() - o1.getHealth()));
                     alivePlayers.forEach(p -> {
                         UHCTeam team = (UHCTeam) game.getTeam(p);
-                        ChatColor color = team != null? team.getColor() : ChatColor.WHITE;
-                        scoreboard.add(color + p.getName() +" "+ ChatColor.RED+(int)p.getHealth() + " " + Character.toString('\u2764'));
+                        ChatColor color = team != null ? team.getColor() : ChatColor.WHITE;
+                        scoreboard.add(color + p.getName() + " " + ChatColor.RED + (int) p.getHealth() + " " + Character.toString('\u2764'));
                     });
 
-                } else if(aliveTeams.size() < 9){
+                } else if (aliveTeams.size() < 9) {
                     // Display alive teams sorted by players
-                    aliveTeams.sort((o1, o2)-> o2.getPlayers().size() - o1.getPlayers().size());
-                    aliveTeams.forEach(t -> scoreboard.add(t.getColor() + t.getTeamName()+ ChatColor.RED +" - "+ t.getPlayers().size()+((t.getPlayers().size() == 1)? " player" : " players")));
+                    aliveTeams.sort((o1, o2) -> o2.getPlayers().size() - o1.getPlayers().size());
+                    aliveTeams.forEach(t -> scoreboard.add(t.getColor() + t.getTeamName() + ChatColor.RED + " - " + t.getPlayers().size() + ((t.getPlayers().size() == 1) ? " player" : " players")));
                 } else {
                     // Display alive team count
-                    scoreboard.add(new ElementHeadedText(ChatColor.AQUA+""+ChatColor.BOLD+"Teams",
-                            String.format(ChatColor.GOLD+"%s"+ChatColor.WHITE+" alive", aliveTeams.size())));
+                    scoreboard.add(new ElementHeadedText(ChatColor.AQUA + "" + ChatColor.BOLD + "Teams",
+                            String.format(ChatColor.GOLD + "%s" + ChatColor.WHITE + " alive", aliveTeams.size())));
                 }
                 scoreboard.add(" ");
                 ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class).ifPresent(worldBorderModule -> {

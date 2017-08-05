@@ -26,7 +26,7 @@ public class ModuleGui extends Gui<UHC> {
         int slot = 0;
         List<UHCModule> uhcModules = new ArrayList<>(ModuleRegistry.INSTANCE.availableModules());
         uhcModules.sort(Comparator.comparing(UHCModule::getName));
-        for(UHCModule module : uhcModules){
+        for (UHCModule module : uhcModules) {
             ItemFactory factory = new ItemFactory(module.getGuiItem()).data(module.getDamage());
             if (module.isLoaded())
                 factory.glowing();
@@ -47,8 +47,8 @@ public class ModuleGui extends Gui<UHC> {
                         build();
                     }
                 }
-                if(clickType == ClickType.RIGHT || clickType == ClickType.SHIFT_RIGHT){
-                    if(ModuleRegistry.INSTANCE.loaded(module.getClass())){
+                if (clickType == ClickType.RIGHT || clickType == ClickType.SHIFT_RIGHT) {
+                    if (ModuleRegistry.INSTANCE.loaded(module.getClass())) {
                         ModuleRegistry.INSTANCE.unload(module);
                         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 2F);
                         build();

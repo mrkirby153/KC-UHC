@@ -8,13 +8,13 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 
 public class DeathLigtningModule extends UHCModule {
 
-    public DeathLigtningModule(){
+    public DeathLigtningModule() {
         super("Death Lightning", "Spawns a fake lightning bolt on death", Material.GOLD_SWORD);
         autoLoad = true;
     }
 
     @EventHandler
-    public void playerDeath(PlayerDeathEvent event){
+    public void playerDeath(PlayerDeathEvent event) {
         Player dead = event.getEntity();
         dead.getWorld().strikeLightningEffect(dead.getLocation());
     }

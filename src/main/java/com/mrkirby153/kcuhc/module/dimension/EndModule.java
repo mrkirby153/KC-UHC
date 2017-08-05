@@ -10,20 +10,20 @@ import org.bukkit.event.player.PlayerPortalEvent;
 
 public class EndModule extends UHCModule {
 
-    public EndModule(){
+    public EndModule() {
         super("Disable End", "Disables the end", Material.EYE_OF_ENDER);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPortal(EntityPortalEvent event){
-        if(event.getTo().getWorld().getEnvironment() == World.Environment.THE_END){
+    public void onPlayerPortal(PlayerPortalEvent event) {
+        if (event.getTo().getWorld().getEnvironment() == World.Environment.THE_END) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onPlayerPortal(PlayerPortalEvent event){
-        if(event.getTo().getWorld().getEnvironment() == World.Environment.THE_END){
+    public void onPortal(EntityPortalEvent event) {
+        if (event.getTo().getWorld().getEnvironment() == World.Environment.THE_END) {
             event.setCancelled(true);
         }
     }

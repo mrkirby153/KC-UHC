@@ -12,7 +12,11 @@ import me.mrkirby153.kcutils.C;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
 import me.mrkirby153.kcutils.structure.Structure;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.event.EventHandler;
@@ -22,13 +26,11 @@ import java.util.Random;
 
 public class CornucopiaModule extends UHCModule {
 
-    private UHC uhc;
-
-    private boolean spawned = false;
-
     private static final int CORN_SIZE_X = 6;
     private static final int CORN_SIZE_Y = 6;
     private static final int CORN_SIZE_Z = 6;
+    private UHC uhc;
+    private boolean spawned = false;
 
     @Inject
     public CornucopiaModule(UHC uhc) {
@@ -84,20 +86,20 @@ public class CornucopiaModule extends UHCModule {
         fillChests(randomSpawn);
     }
 
-    private void fillChests(Location location){
+    private void fillChests(Location location) {
         CornucopiaLootTable table = new CornucopiaLootTable();
         Random random = new Random();
-        for(int x = location.getBlockX(); x >= location.getBlockX() - CORN_SIZE_X; x--){
-            for(int z = location.getBlockZ(); z < location.getBlockZ() + CORN_SIZE_Z; z++){
-                for(int y = location.getBlockY(); y < location.getBlockY() + CORN_SIZE_Y; y++) {
+        for (int x = location.getBlockX(); x >= location.getBlockX() - CORN_SIZE_X; x--) {
+            for (int z = location.getBlockZ(); z < location.getBlockZ() + CORN_SIZE_Z; z++) {
+                for (int y = location.getBlockY(); y < location.getBlockY() + CORN_SIZE_Y; y++) {
                     Block b = location.getWorld().getBlockAt(x, y, z);
-                    if(b.getType() == Material.CHEST){
+                    if (b.getType() == Material.CHEST) {
                         Chest chest = (Chest) b.getState();
                         table.get(5).forEach(item -> {
                             int slot = 0;
                             do {
                                 slot = random.nextInt(chest.getBlockInventory().getSize());
-                            } while(chest.getBlockInventory().getItem(slot) != null);
+                            } while (chest.getBlockInventory().getItem(slot) != null);
                             chest.getBlockInventory().setItem(slot, item);
                         });
                     }

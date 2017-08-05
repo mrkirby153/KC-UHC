@@ -14,7 +14,7 @@ public class CountdownTimer implements Runnable {
 
     private JavaPlugin plugin;
 
-    public CountdownTimer(JavaPlugin plugin, int time, int interval, Consumer<Integer> function){
+    public CountdownTimer(JavaPlugin plugin, int time, int interval, Consumer<Integer> function) {
         this.timer = time;
         this.plugin = plugin;
         taskId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, interval);
@@ -24,7 +24,7 @@ public class CountdownTimer implements Runnable {
     @Override
     public void run() {
         function.accept(timer--);
-        if(timer < 0){
+        if (timer < 0) {
             plugin.getServer().getScheduler().cancelTask(this.taskId);
         }
     }

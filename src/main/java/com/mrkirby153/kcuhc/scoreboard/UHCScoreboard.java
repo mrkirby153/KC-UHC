@@ -11,7 +11,7 @@ import org.bukkit.scoreboard.Objective;
 import java.util.HashSet;
 import java.util.Set;
 
-public class UHCScoreboard extends KirbyScoreboard{
+public class UHCScoreboard extends KirbyScoreboard {
 
     private UHC plugin;
     private UHCGame game;
@@ -19,12 +19,20 @@ public class UHCScoreboard extends KirbyScoreboard{
     private Objective belowNameHealth;
 
     public UHCScoreboard(UHC plugin) {
-        super(ChatColor.GOLD+""+ChatColor.BOLD+"KC UHC");
+        super(ChatColor.GOLD + "" + ChatColor.BOLD + "KC UHC");
         this.plugin = plugin;
         this.game = plugin.getGame();
 
         tablistHealth = addObjective("TablistHealth", DisplaySlot.PLAYER_LIST, "health");
-        belowNameHealth = addObjective(ChatColor.RED+Character.toString('\u2764'), DisplaySlot.BELOW_NAME, "health");
+        belowNameHealth = addObjective(ChatColor.RED + Character.toString('\u2764'), DisplaySlot.BELOW_NAME, "health");
+    }
+
+    public Objective getBelowNameHealth() {
+        return belowNameHealth;
+    }
+
+    public Objective getTablistHealth() {
+        return tablistHealth;
     }
 
     @Override
@@ -33,13 +41,5 @@ public class UHCScoreboard extends KirbyScoreboard{
         teams.addAll(game.getTeams().values());
         teams.add(game.getSpectators());
         return teams;
-    }
-
-    public Objective getTablistHealth() {
-        return tablistHealth;
-    }
-
-    public Objective getBelowNameHealth() {
-        return belowNameHealth;
     }
 }

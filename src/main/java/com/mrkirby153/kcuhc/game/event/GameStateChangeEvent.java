@@ -17,6 +17,10 @@ public class GameStateChangeEvent extends Event {
         this.to = to;
     }
 
+    public static HandlerList getHandlerList() {
+        return handlerList;
+    }
+
     @Override
     public HandlerList getHandlers() {
         return handlerList;
@@ -29,9 +33,5 @@ public class GameStateChangeEvent extends Event {
      */
     public GameState getTo() {
         return to;
-    }
-
-    public static HandlerList getHandlerList(){
-        return handlerList;
     }
 }

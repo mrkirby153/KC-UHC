@@ -17,7 +17,7 @@ public class HardcoreHeartsModule extends UHCModule {
     private UHC uhc;
 
     @Inject
-    public HardcoreHeartsModule(UHC uhc){
+    public HardcoreHeartsModule(UHC uhc) {
         super("Hardcore Hearts", "Show hardcore hearts", Material.DOUBLE_PLANT, 4);
         this.uhc = uhc;
     }
@@ -29,18 +29,18 @@ public class HardcoreHeartsModule extends UHCModule {
 
     @Override
     public void onUnload() {
-        if(listener != null)
+        if (listener != null)
             ProtocolLibrary.getProtocolManager().removePacketListener(listener);
     }
 
     class HardcoreHeartsListener extends PacketAdapter {
-        HardcoreHeartsListener(JavaPlugin plugin){
+        HardcoreHeartsListener(JavaPlugin plugin) {
             super(plugin, ListenerPriority.NORMAL, PacketType.Play.Server.LOGIN);
         }
 
         @Override
         public void onPacketSending(PacketEvent event) {
-            if(event.getPacketType().equals(PacketType.Play.Server.LOGIN)){
+            if (event.getPacketType().equals(PacketType.Play.Server.LOGIN)) {
                 event.getPacket().getBooleans().write(0, true);
             }
         }

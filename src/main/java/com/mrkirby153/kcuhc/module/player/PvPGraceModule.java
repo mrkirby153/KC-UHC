@@ -39,6 +39,20 @@ public class PvPGraceModule extends UHCModule {
         return GRACE_MINUTES;
     }
 
+    @Override
+    public void loadData(HashMap<String, String> data) {
+        GRACE_MINUTES = Integer.parseInt(data.get("pvp-grace-time"));
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
+        if (event.getDamager().getType() == EntityType.PLAYER) {
+            if (event.getEntity().getType() == EntityType.PLAYER) {
+                event.setCancelled(pvpDisabled());
+            }
+        }
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.ALIVE) {
@@ -46,7 +60,7 @@ public class PvPGraceModule extends UHCModule {
             broadcast(C.m("PvP", "PVP is disabled for {time}",
                     "{time}", Time.format(1, graceUntil - System.currentTimeMillis(), Time.TimeUnit.FIT)).toLegacyText());
         }
-        if(event.getTo() == GameState.ENDING)
+        if (event.getTo() == GameState.ENDING)
             graceUntil = 0;
     }
 
@@ -58,13 +72,9 @@ public class PvPGraceModule extends UHCModule {
         }
     }
 
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
-    public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
-        if(event.getDamager().getType() == EntityType.PLAYER){
-            if(event.getEntity().getType() == EntityType.PLAYER){
-                event.setCancelled(pvpDisabled());
-            }
-        }
+    @Override
+    public void saveData(HashMap<String, String> data) {
+        data.put("pvp-grace-time", Integer.toString(GRACE_MINUTES));
     }
 
     public void setGraceMinutes(int grace) {
@@ -88,7 +98,7 @@ public class PvPGraceModule extends UHCModule {
             }
         } else {
             if (secondsRemaining < 10 || (secondsRemaining % 15) == 0) {
-                broadcast(C.m("PvP", "PvP enabled in {seconds} seconds", "{seconds}", (int)secondsRemaining).toLegacyText(),
+                broadcast(C.m("PvP", "PvP enabled in {seconds} seconds", "{seconds}", (int) secondsRemaining).toLegacyText(),
                         Sound.BLOCK_NOTE_HAT);
             }
         }
@@ -108,15 +118,5 @@ public class PvPGraceModule extends UHCModule {
 
     private boolean pvpDisabled() {
         return System.currentTimeMillis() <= graceUntil;
-    }
-
-    @Override
-    public void saveData(HashMap<String, String> data) {
-        data.put("pvp-grace-time", Integer.toString(GRACE_MINUTES));
-    }
-
-    @Override
-    public void loadData(HashMap<String, String> data) {
-        GRACE_MINUTES = Integer.parseInt(data.get("pvp-grace-time"));
     }
 }

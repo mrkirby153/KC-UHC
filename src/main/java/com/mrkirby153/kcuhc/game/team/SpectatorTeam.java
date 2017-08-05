@@ -46,11 +46,11 @@ public class SpectatorTeam extends ScoreboardTeam {
         players.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(player::hidePlayer);
         player.removePotionEffect(PotionEffectType.INVISIBILITY);
         player.removePotionEffect(PotionEffectType.NIGHT_VISION);
-        if(player.getGameMode() == GameMode.SURVIVAL) {
+        if (player.getGameMode() == GameMode.SURVIVAL) {
             player.setAllowFlight(false);
             player.setFlying(false);
         }
-        if(Inventory.getOpenInventory(player) != null && Inventory.getOpenInventory(player) instanceof SpectatorInventory){
+        if (Inventory.getOpenInventory(player) != null && Inventory.getOpenInventory(player) instanceof SpectatorInventory) {
             Inventory.getOpenInventory(player).close();
         }
     }

@@ -97,7 +97,7 @@ public class TeamInventoryModule extends UHCModule {
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         ScoreboardTeam team = this.game.getTeam(event.getEntity());
-        if(team == null)
+        if (team == null)
             return;
         if (team instanceof SpectatorTeam)
             return;
@@ -118,11 +118,11 @@ public class TeamInventoryModule extends UHCModule {
         @Default
         public void openTeamInventory(Player player) {
             // TODO: 7/27/2017 Add restriction to running game
-            if(!ModuleRegistry.INSTANCE.loaded(TeamInventoryModule.class)){
+            if (!ModuleRegistry.INSTANCE.loaded(TeamInventoryModule.class)) {
                 player.sendMessage(C.e("Team inventories are not enabled").toLegacyText());
                 return;
             }
-            if(uhc.getGame().getCurrentState() != GameState.ALIVE){
+            if (uhc.getGame().getCurrentState() != GameState.ALIVE) {
                 player.sendMessage(C.e("You cannot open the team inventory before the game starts").toLegacyText());
                 return;
             }

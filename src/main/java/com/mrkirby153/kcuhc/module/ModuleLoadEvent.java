@@ -7,14 +7,18 @@ import org.bukkit.event.HandlerList;
 /**
  * Event fired when a {@link UHCModule} is loaded
  */
-public class ModuleLoadEvent extends Event implements Cancellable{
+public class ModuleLoadEvent extends Event implements Cancellable {
     private static HandlerList handlers = new HandlerList();
 
     private boolean canceled = false;
     private UHCModule module;
 
-    public ModuleLoadEvent(UHCModule module){
+    public ModuleLoadEvent(UHCModule module) {
         this.module = module;
+    }
+
+    public static HandlerList getHandlerList() {
+        return handlers;
     }
 
     @Override
@@ -22,8 +26,13 @@ public class ModuleLoadEvent extends Event implements Cancellable{
         return handlers;
     }
 
-    public static HandlerList getHandlerList(){
-        return handlers;
+    /**
+     * Gets the module being loaded
+     *
+     * @return The module
+     */
+    public UHCModule getModule() {
+        return module;
     }
 
     @Override
@@ -34,13 +43,5 @@ public class ModuleLoadEvent extends Event implements Cancellable{
     @Override
     public void setCancelled(boolean cancel) {
         this.canceled = cancel;
-    }
-
-    /**
-     * Gets the module being loaded
-     * @return The module
-     */
-    public UHCModule getModule() {
-        return module;
     }
 }

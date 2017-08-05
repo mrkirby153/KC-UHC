@@ -31,19 +31,10 @@ public class CommandDiscord extends BaseCommand {
     }
 
     @Subcommand("destroy")
-    public void destroy(CommandSender sender){
+    public void destroy(CommandSender sender) {
         ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> {
             sender.sendMessage(C.m("Discord", "Teams being destroyed").toLegacyText());
             m.getRobot().destroyAllTeams();
-        });
-    }
-
-    @Subcommand("update")
-    @CommandCompletion("@players")
-    public void update(CommandSender sender, OnlinePlayer player){
-        ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> {
-            m.getRobot().updateUserTeams(player.getPlayer());
-            sender.sendMessage(C.m("Discord", "Updating teams for {player}", "{player}", player.getPlayer().getName()).toLegacyText());
         });
     }
 
@@ -54,6 +45,15 @@ public class CommandDiscord extends BaseCommand {
 
             player.sendMessage(C.m("Discord", "To link your minecraft account to discord, run this command on the discord server: {command}",
                     "{command}", "!uhcbot link " + code).toLegacyText());
+        });
+    }
+
+    @Subcommand("update")
+    @CommandCompletion("@players")
+    public void update(CommandSender sender, OnlinePlayer player) {
+        ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> {
+            m.getRobot().updateUserTeams(player.getPlayer());
+            sender.sendMessage(C.m("Discord", "Updating teams for {player}", "{player}", player.getPlayer().getName()).toLegacyText());
         });
     }
 }

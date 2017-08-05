@@ -72,7 +72,7 @@ public class SpectatorGui extends Gui<UHC> {
                 }
             else
                 for (int i = 1; i <= 8; i++) {
-                    getInventory().setItem((row * 9) + i, new ItemFactory(Material.BARRIER).name(ChatColor.RED +""+ ChatColor.BOLD + "ELIMINATED!").construct());
+                    getInventory().setItem((row * 9) + i, new ItemFactory(Material.BARRIER).name(ChatColor.RED + "" + ChatColor.BOLD + "ELIMINATED!").construct());
                 }
             row++;
         }
@@ -104,9 +104,9 @@ public class SpectatorGui extends Gui<UHC> {
         ItemStack itemStack = new ItemFactory(Material.SKULL_ITEM)
                 .data(3)
                 .name(player.getName())
-                .lore(ChatColor.GREEN + "Health: " + ChatColor.RESET + (int)player.getHealth() + "/" + (int)player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(),
+                .lore(ChatColor.GREEN + "Health: " + ChatColor.RESET + (int) player.getHealth() + "/" + (int) player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(),
                         ChatColor.GREEN + "Food: " + ChatColor.RESET + String.format("%s", (int) (100 * player.getFoodLevel() / 20D)) + "%",
-                        ChatColor.GREEN+"World: "+ChatColor.RESET+player.getLocation().getWorld().getName()).construct();
+                        ChatColor.GREEN + "World: " + ChatColor.RESET + player.getLocation().getWorld().getName()).construct();
 
         SkullMeta meta = (SkullMeta) itemStack.getItemMeta();
         meta.setOwner(player.getName());

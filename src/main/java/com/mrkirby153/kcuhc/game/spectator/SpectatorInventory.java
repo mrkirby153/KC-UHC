@@ -25,8 +25,8 @@ public class SpectatorInventory extends Inventory<UHC> {
             new SpectatorGui(plugin, player1).open();
         });
         if (player.getGameMode() != GameMode.SPECTATOR)
-            addItem(hotbarSlot(3), new ItemFactory(Material.BARRIER).name("Enter Vanilla Spectator"+ChatColor.GREEN+" (Right Click)").construct(), (player1, clickType) -> {
-                if(clickType == ClickType.RIGHT) {
+            addItem(hotbarSlot(3), new ItemFactory(Material.BARRIER).name("Enter Vanilla Spectator" + ChatColor.GREEN + " (Right Click)").construct(), (player1, clickType) -> {
+                if (clickType == ClickType.RIGHT) {
                     player1.setGameMode(GameMode.SPECTATOR);
                     player1.spigot().sendMessage(C.m("Spectator", "You have entered vanilla spectator mode. Type {spec} to return to survival",
                             "{spec}", "/spectate"));
@@ -34,14 +34,14 @@ public class SpectatorInventory extends Inventory<UHC> {
                 }
             });
         else
-            addItem(hotbarSlot(3), new ItemFactory(Material.WOOL).data(DyeColor.RED.getWoolData()).name("Return to Survival"+ChatColor.GREEN+"(Right Click)").construct(), (p, clickType) -> {
-               if(clickType == ClickType.RIGHT) {
-                   p.setGameMode(GameMode.SURVIVAL);
-                   p.setAllowFlight(true);
-                   p.setFlying(true);
-                   p.spigot().sendMessage(C.m("Spectator", "You have returned to survival mode."));
-                   build();
-               }
+            addItem(hotbarSlot(3), new ItemFactory(Material.WOOL).data(DyeColor.RED.getWoolData()).name("Return to Survival" + ChatColor.GREEN + "(Right Click)").construct(), (p, clickType) -> {
+                if (clickType == ClickType.RIGHT) {
+                    p.setGameMode(GameMode.SURVIVAL);
+                    p.setAllowFlight(true);
+                    p.setFlying(true);
+                    p.spigot().sendMessage(C.m("Spectator", "You have returned to survival mode."));
+                    build();
+                }
             });
     }
 }

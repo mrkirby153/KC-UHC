@@ -13,7 +13,13 @@ import me.mrkirby153.kcutils.flags.WorldFlags;
 import me.mrkirby153.kcutils.protocollib.TitleTimings;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.md_5.bungee.api.ChatColor;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.FireworkEffect;
+import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.World;
+import org.bukkit.WorldBorder;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
@@ -239,7 +245,7 @@ public class UHCGame implements Listener {
             toTeleport = toTeleport.getWorld().getHighestBlockAt(toTeleport).getLocation().add(0, 0.5, 0);
             Location finalToTeleport = toTeleport;
             Bukkit.getOnlinePlayers().forEach(player -> {
-                if(!player.isValid())
+                if (!player.isValid())
                     return;
                 player.teleport(finalToTeleport);
                 ScoreboardTeam team = getTeam(player);
@@ -254,7 +260,7 @@ public class UHCGame implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent event) {
-        if(getTeam(event.getEntity()) != null)
+        if (getTeam(event.getEntity()) != null)
             getTeam(event.getEntity()).removePlayer(event.getEntity());
     }
 

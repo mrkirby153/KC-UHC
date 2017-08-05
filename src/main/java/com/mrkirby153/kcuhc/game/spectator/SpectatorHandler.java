@@ -18,7 +18,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class SpectatorHandler implements Listener {
@@ -34,6 +38,19 @@ public class SpectatorHandler implements Listener {
         uhc.getServer().getPluginManager().registerEvents(this, uhc);
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onGameStateChange(GameStateChangeEvent event) {
+        if (event.getTo() == GameState.COUNTDOWN || event.getTo() == GameState.ALIVE) {
+            pendingSpectators.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(e -> {
+                uhc.getGame().getSpectators().addPlayer(e);
+            });
+        }
+        if (event.getTo() == GameState.ENDING || event.getTo() == GameState.ENDED) {
+            List<Player> players = new ArrayList<>(uhc.getGame().getSpectators().getPlayers().stream()
+                    .map(Bukkit::getPlayer).filter(Objects::nonNull).collect(Collectors.toList()));
+            players.forEach(p -> uhc.getGame().getSpectators().removePlayer(p));
+        }
+    }
 
     @EventHandler
     public void onJoin(PlayerLoginEvent event) {
@@ -41,7 +58,7 @@ public class SpectatorHandler implements Listener {
         // Hide all spectators from the player
 
         // TODO: 7/30/2017 Fix rejoining being placed on spectator team
-        Bukkit.getServer().getScheduler().runTask(uhc, ()->{
+        Bukkit.getServer().getScheduler().runTask(uhc, () -> {
             uhc.getGame().getSpectators().getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(e -> {
                 event.getPlayer().hidePlayer(e);
             });
@@ -50,7 +67,7 @@ public class SpectatorHandler implements Listener {
                 if (team == null) {
                     uhc.getGame().getSpectators().addPlayer(event.getPlayer());
                 } else {
-                    if(team instanceof SpectatorTeam){
+                    if (team instanceof SpectatorTeam) {
                         team.removePlayer(event.getPlayer());
                         team.addPlayer(event.getPlayer());
                     }
@@ -66,34 +83,20 @@ public class SpectatorHandler implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onUpdate(UpdateEvent event) {
-        if(event.getType() != UpdateType.FAST)
+        if (event.getType() != UpdateType.FAST)
             return;
         uhc.getGame().getSpectators().getPlayers().stream()
                 .map(Bukkit::getPlayer).filter(Objects::nonNull)
                 .filter(p -> p.getGameMode() == GameMode.SPECTATOR)
                 .forEach(p -> {
-            TextComponent component = C.formattedChat("Type ", ChatColor.GREEN);
-            component.addExtra(C.formattedChat("/spectate", ChatColor.GOLD, C.Style.BOLD));
-            component.addExtra(C.formattedChat(" to return to survival", ChatColor.GREEN));
-            uhc.protocolLibManager.sendActionBar(p, component);
-        });
+                    TextComponent component = C.formattedChat("Type ", ChatColor.GREEN);
+                    component.addExtra(C.formattedChat("/spectate", ChatColor.GOLD, C.Style.BOLD));
+                    component.addExtra(C.formattedChat(" to return to survival", ChatColor.GREEN));
+                    uhc.protocolLibManager.sendActionBar(p, component);
+                });
         uhc.getGame().getSpectators().getPlayers().stream()
                 .map(Bukkit::getPlayer)
                 .filter(Objects::nonNull)
                 .forEach(p -> p.setFireTicks(0));
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onGameStateChange(GameStateChangeEvent event) {
-        if(event.getTo() == GameState.COUNTDOWN || event.getTo() == GameState.ALIVE){
-            pendingSpectators.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(e -> {
-                uhc.getGame().getSpectators().addPlayer(e);
-            });
-        }
-        if(event.getTo() == GameState.ENDING || event.getTo() == GameState.ENDED){
-            List<Player> players = new ArrayList<>(uhc.getGame().getSpectators().getPlayers().stream()
-                    .map(Bukkit::getPlayer).filter(Objects::nonNull).collect(Collectors.toList()));
-            players.forEach(p -> uhc.getGame().getSpectators().removePlayer(p));
-        }
     }
 }

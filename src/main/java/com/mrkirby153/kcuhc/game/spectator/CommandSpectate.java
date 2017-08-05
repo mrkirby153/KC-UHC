@@ -28,8 +28,8 @@ public class CommandSpectate extends BaseCommand {
 
     @Default
     public void returnToSurvival(Player player) {
-        if(uhc.getGame().getCurrentState() != GameState.ALIVE){
-            if(uhc.spectatorHandler.pendingSpectators.contains(player.getUniqueId())){
+        if (uhc.getGame().getCurrentState() != GameState.ALIVE) {
+            if (uhc.spectatorHandler.pendingSpectators.contains(player.getUniqueId())) {
                 player.spigot().sendMessage(C.m("Spectate", "You are no longer spectating this round"));
             } else {
                 uhc.spectatorHandler.pendingSpectators.add(player.getUniqueId());
