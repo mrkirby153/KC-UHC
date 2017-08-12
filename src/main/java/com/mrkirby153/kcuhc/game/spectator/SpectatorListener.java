@@ -108,9 +108,10 @@ public class SpectatorListener implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onVehicleDamage(VehicleDamageEvent event) {
-        if (event.getAttacker().getType() == EntityType.PLAYER)
-            if (game.isSpectator((Player) event.getAttacker()))
-                event.setCancelled(true);
+        if (event.getAttacker() != null)
+            if (event.getAttacker().getType() == EntityType.PLAYER)
+                if (game.isSpectator((Player) event.getAttacker()))
+                    event.setCancelled(true);
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -119,4 +120,6 @@ public class SpectatorListener implements Listener {
             if (game.isSpectator((Player) event.getEntity()))
                 event.setCancelled(true);
     }
+
+
 }
