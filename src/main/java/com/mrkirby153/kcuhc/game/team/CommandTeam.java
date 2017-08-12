@@ -146,6 +146,26 @@ public class CommandTeam extends BaseCommand {
         sender.spigot().sendMessage(C.m("Team", "You are on team {team}", "{team}", team.getTeamName()));
     }
 
+    @Subcommand("swap")
+    @CommandCompletion("@players @players")
+    public void swapTeams(Player sender, OnlinePlayer player1, OnlinePlayer player2) {
+        ScoreboardTeam p1Team = uhc.getGame().getTeam(player1.player);
+
+        ScoreboardTeam p2Team = uhc.getGame().getTeam(player2.player);
+
+        if (p1Team != null) {
+            p1Team.removePlayer(player1.player);
+            p1Team.addPlayer(player2.player);
+        }
+
+        if (p2Team != null) {
+            p2Team.removePlayer(player2.player);
+            p2Team.addPlayer(player1.player);
+        }
+        sender.spigot().sendMessage(C.m("Team", "Swapping the teams of {p1} and {p2}", "{p1}", player1.player.getName(),
+                "{p2}", player2.player.getName()));
+    }
+
     @Subcommand("twoteams")
     public void twoTeams(Player player) {
         List<UHCTeam> currentTeams = new ArrayList<>(uhc.getGame().getTeams().values());
