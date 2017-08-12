@@ -126,7 +126,7 @@ public class CommandTeam extends BaseCommand {
 
             String name = nameBuilder.toString().trim();
 
-            name = name.substring(0, name.length()-1);
+            name = name.substring(0, name.length() - 1);
 
             UHCTeam t = uhc.getGame().createTeam(name, color);
             selectedPlayers.forEach(t::addPlayer);
@@ -144,5 +144,34 @@ public class CommandTeam extends BaseCommand {
             return;
         }
         sender.spigot().sendMessage(C.m("Team", "You are on team {team}", "{team}", team.getTeamName()));
+    }
+
+    @Subcommand("twoteams")
+    public void twoTeams(Player player) {
+        List<UHCTeam> currentTeams = new ArrayList<>(uhc.getGame().getTeams().values());
+        currentTeams.forEach(c -> uhc.getGame().deleteTeam(c));
+
+        UHCTeam redTeam = uhc.getGame().createTeam("Red", ChatColor.RED);
+        UHCTeam blueTeam = uhc.getGame().createTeam("Blue", ChatColor.BLUE);
+
+        Random random = new Random();
+
+        List<Player> availablePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
+
+        int playersPerTeam = (int) Math.floor(Bukkit.getOnlinePlayers().size() / 2);
+
+        for (int i = 0; i < playersPerTeam; i++) {
+            Player p = availablePlayers.get(random.nextInt(availablePlayers.size()));
+            availablePlayers.remove(p);
+            redTeam.addPlayer(p);
+        }
+
+        for (int i = 0; i < playersPerTeam; i++) {
+            Player p = availablePlayers.get(random.nextInt(availablePlayers.size()));
+            availablePlayers.remove(p);
+            blueTeam.addPlayer(p);
+        }
+
+        player.spigot().sendMessage(C.m("Team", "Created two teams with {players} on each team", "{players}", playersPerTeam));
     }
 }
