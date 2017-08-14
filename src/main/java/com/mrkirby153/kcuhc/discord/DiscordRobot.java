@@ -137,6 +137,15 @@ public class DiscordRobot {
         this.jda.shutdown();
     }
 
+    public User forceLink(UUID uniqueId, String id) {
+        this.linkedUsers.put(uniqueId, id);
+        return this.jda.getUserById(id);
+    }
+
+    public HashMap<UUID, String> getLinkedUsers() {
+        return linkedUsers;
+    }
+
     /**
      * Gets the guild to act in
      *
@@ -245,5 +254,9 @@ public class DiscordRobot {
     void setReady() {
         this.ready = true;
         this.jda.getPresence().setStatus(OnlineStatus.ONLINE);
+    }
+
+    public JDA getJda() {
+        return jda;
     }
 }
