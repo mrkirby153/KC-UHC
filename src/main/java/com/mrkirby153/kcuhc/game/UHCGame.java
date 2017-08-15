@@ -209,14 +209,16 @@ public class UHCGame implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.COUNTDOWN) {
-            new CountdownTimer(plugin, 10, 20, time -> Bukkit.getOnlinePlayers().forEach(p -> {
+            new CountdownTimer(plugin, 10, 20, time -> {
                 if (time == 0) {
                     setCurrentState(GameState.ALIVE);
                     return;
                 }
-                p.spigot().sendMessage(C.m("Game", "Starting in {time} seconds", "{time}", time));
-                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
-            }));
+                Bukkit.getOnlinePlayers().forEach(p -> {
+                    p.spigot().sendMessage(C.m("Game", "Starting in {time} seconds", "{time}", time));
+                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
+                });
+            });
         }
         if (event.getTo() == GameState.ALIVE) {
             Bukkit.getOnlinePlayers().stream().filter(p -> !this.spectators.getPlayers().contains(p.getUniqueId())).filter(Player::isValid).forEach(p -> {
