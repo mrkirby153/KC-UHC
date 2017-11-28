@@ -6,7 +6,12 @@ import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
-import me.mrkirby153.kcutils.C;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+import me.mrkirby153.kcutils.Chat;
+import me.mrkirby153.kcutils.Chat.Style;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -27,11 +32,6 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
 
 public class RegenTicketModule extends UHCModule {
 
@@ -71,8 +71,9 @@ public class RegenTicketModule extends UHCModule {
     public void give(Player player) {
         if (isSpectator(player))
             return;
-        player.spigot().sendMessage(C.formattedChat("You have been given a regen ticket. This ticket will restore " +
-                "you to full health. However, once PvP damage is given or delt, it is removed!", net.md_5.bungee.api.ChatColor.GREEN, C.Style.BOLD));
+        player.spigot().sendMessage(Chat.INSTANCE.formattedChat("You have been given a regen ticket."
+            + " This ticket will restore you to full health. However, once PvP damage is given or delt, it is removed",
+            net.md_5.bungee.api.ChatColor.GREEN, Style.BOLD));
         player.getInventory().addItem(createRegenTicket(player));
     }
 
@@ -83,7 +84,7 @@ public class RegenTicketModule extends UHCModule {
         if (isTicket(is) && canUse((Player) event.getWhoClicked(), is)) {
             InventoryType topInv = event.getView().getTopInventory().getType();
             if (topInv != InventoryType.PLAYER && topInv != InventoryType.CRAFTING) {
-                event.getWhoClicked().sendMessage(C.e("You cannot move your regen ticket out of your inventory").toLegacyText());
+                event.getWhoClicked().sendMessage(Chat.INSTANCE.error("You cannot move your regen ticket out of your inventory").toLegacyText());
                 event.setCancelled(true);
             }
         }
@@ -95,18 +96,18 @@ public class RegenTicketModule extends UHCModule {
             ItemStack stack = event.getItem();
             if (isTicket(stack)) {
                 if (!canUse(event.getPlayer(), stack)) {
-                    event.getPlayer().spigot().sendMessage(C.e("You cannot use someone else's regen ticket!"));
+                    event.getPlayer().spigot().sendMessage(Chat.INSTANCE.error("You cannot use someone else's regen ticket!"));
                     return;
                 }
                 Player clicker = event.getPlayer();
                 if (clicker.getHealth() >= clicker.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()) {
-                    event.getPlayer().spigot().sendMessage(C.e("You cannot use this while you have full health!"));
+                    event.getPlayer().spigot().sendMessage(Chat.INSTANCE.error("You cannot use this while you have full health!"));
                     return;
                 }
                 double target = clicker.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() - 4;
                 if (clicker.getHealth() >= target) {
                     if (!clicker.isSneaking()) {
-                        event.getPlayer().spigot().sendMessage(C.m("Error",
+                        event.getPlayer().spigot().sendMessage(Chat.INSTANCE.message("Error",
                                 "It is advised to wait until you have less than {hearts} hearts before using this." +
                                         " If you wish to do so anyways, sneak and try again",
                                 "{hearts}", target / 2));
@@ -143,7 +144,7 @@ public class RegenTicketModule extends UHCModule {
     public void onDrop(PlayerDropItemEvent event) {
         if (isTicket(event.getItemDrop().getItemStack())) {
             if (canUse(event.getPlayer(), event.getItemDrop().getItemStack())) {
-                event.getPlayer().sendMessage(C.e("You cannot drop your regen ticket").toLegacyText());
+                event.getPlayer().sendMessage(Chat.INSTANCE.error("You cannot drop your regen ticket").toLegacyText());
                 event.setCancelled(true);
             }
         }
@@ -188,7 +189,7 @@ public class RegenTicketModule extends UHCModule {
         inventory.remove(regenTicket);
         if (!heal) {
             player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1, 1);
-            player.spigot().sendMessage(C.formattedChat("Your regen ticket has been removed!", net.md_5.bungee.api.ChatColor.RED, C.Style.BOLD));
+            player.spigot().sendMessage(Chat.INSTANCE.formattedChat("Your regen ticket has been removed!", net.md_5.bungee.api.ChatColor.RED, Chat.Style.BOLD));
         } else {
             double currHealth = player.getHealth();
             double maxHealth = player.getMaxHealth();
@@ -198,7 +199,7 @@ public class RegenTicketModule extends UHCModule {
             player.setFoodLevel(20);
             player.setExhaustion(3.8F);
             player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1, 1);
-            player.sendMessage(C.m("", "You have restored {health} health and {hunger} hunger",
+            player.sendMessage(Chat.INSTANCE.message("", "You have restored {health} health and {hunger} hunger",
                     "{health}", (int) healAmount, "{hunger}", healed).toLegacyText());
             player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 300);
         }

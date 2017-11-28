@@ -7,7 +7,14 @@ import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
-import me.mrkirby153.kcutils.C;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.event.UpdateEvent;
@@ -25,14 +32,6 @@ import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class PlayerTrackerModule extends UHCModule {
 
@@ -78,13 +77,14 @@ public class PlayerTrackerModule extends UHCModule {
 
             Player closestPlayer = findClosestPlayer(player.getLocation(), toExclude);
             if (closestPlayer == null) {
-                player.spigot().sendMessage(C.e("Could not find a player"));
+                player.spigot().sendMessage(Chat.INSTANCE.error("Could not find a player"));
                 this.targets.remove(player);
                 this.resetCompass(player);
                 player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1F, 2F);
             } else {
-                double distance = Time.trim(1, player.getLocation().distance(closestPlayer.getLocation()));
-                player.spigot().sendMessage(C.m("", "Located {player} {distance} blocks away",
+                double distance = Time.INSTANCE.trim(1, player.getLocation().distance(closestPlayer.getLocation()));
+                player.spigot().sendMessage(
+                    Chat.INSTANCE.message("", "Located {player} {distance} blocks away",
                         "{player}", closestPlayer.getName(), "{distance}", distance));
                 targets.put(player, closestPlayer);
                 player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1F, 0.5F);

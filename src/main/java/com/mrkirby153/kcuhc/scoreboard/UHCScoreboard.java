@@ -10,6 +10,7 @@ import org.bukkit.scoreboard.Objective;
 
 import java.util.HashSet;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 
 public class UHCScoreboard extends KirbyScoreboard {
 
@@ -36,6 +37,7 @@ public class UHCScoreboard extends KirbyScoreboard {
     }
 
     @Override
+    @NotNull
     public Set<ScoreboardTeam> getTeams() {
         HashSet<ScoreboardTeam> teams = new HashSet<>();
         teams.addAll(game.getTeams().values());

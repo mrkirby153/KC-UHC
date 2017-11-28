@@ -1,16 +1,15 @@
 package com.mrkirby153.kcuhc.game;
 
-import me.mrkirby153.kcutils.C;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 
 public class GenerationTask implements Runnable {
 
@@ -41,7 +40,8 @@ public class GenerationTask implements Runnable {
 
     private Consumer<Void> onComplete;
 
-    public GenerationTask(JavaPlugin plugin, World world, int minX, int maxX, int minZ, int maxZ, Consumer<Void> complete) {
+    public GenerationTask(JavaPlugin plugin, World world, int minX, int maxX, int minZ, int maxZ,
+        Consumer<Void> complete) {
         this.world = world;
         this.plugin = plugin;
         this.minX = minX >> 4;
@@ -50,15 +50,18 @@ public class GenerationTask implements Runnable {
         this.maxX = maxX >> 4;
         this.maxZ = maxZ >> 4;
 
-        this.totalChunks = (Math.abs(this.minX) + Math.abs(this.maxX)) * (Math.abs(this.maxZ) + Math.abs(this.minZ));
+        this.totalChunks = (Math.abs(this.minX) + Math.abs(this.maxX)) * (Math.abs(this.maxZ) + Math
+            .abs(this.minZ));
 
         x = (this.maxX + this.minX) / 2;
         z = (this.maxZ + this.minZ) / 2;
 
-
-        log(String.format("Generating chunks from [%s, %s] to [%s, %s] (%s total chunks)", this.minX, this.minZ,
+        log(String
+            .format("Generating chunks from [%s, %s] to [%s, %s] (%s total chunks)", this.minX,
+                this.minZ,
                 this.maxX, this.maxZ, (int) this.totalChunks));
-        log(String.format("Estimated time: %.2f minutes", (this.totalChunks / (20D / FREQUENCY)) / 60));
+        log(String
+            .format("Estimated time: %.2f minutes", (this.totalChunks / (20D / FREQUENCY)) / 60));
 
         nextNotifyTime = System.currentTimeMillis();
         startTime = System.currentTimeMillis();
@@ -112,11 +115,14 @@ public class GenerationTask implements Runnable {
 
     private void broadcastProgress() {
         if (percentDone() < 100) {
-            Bukkit.getServer().broadcastMessage(C.m("Pregeneration", "{percent} complete ({generated}/{total} chunks)",
-                    "{percent}", String.format("%.2f", percentDone()) + "%",
-                    "{generated}", generatedChunks,
-                    "{total}", (int) totalChunks).toLegacyText());
-            Bukkit.getOnlinePlayers().forEach(p -> p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F));
+            Bukkit.getServer().broadcastMessage(
+                Chat.INSTANCE
+                    .message("Pregeneration", "{percent} complete ({generated}/{total} chunks)",
+                        "{percent}", String.format("%.2f", percentDone()) + "%",
+                        "{generated}", generatedChunks,
+                        "{total}", (int) totalChunks).toLegacyText());
+            Bukkit.getOnlinePlayers()
+                .forEach(p -> p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F));
         }
     }
 
@@ -152,10 +158,12 @@ public class GenerationTask implements Runnable {
 
         if (isZLeg && isNeg && current == 0) {
             if (x >= maxX && z >= maxZ) {
-                log("Generation completed in " + Time.format(1, System.currentTimeMillis() - this.startTime, Time.TimeUnit.FIT));
+                log("Generation completed in " + Time.INSTANCE
+                    .format(1, System.currentTimeMillis() - this.startTime, Time.TimeUnit.FIT));
                 Bukkit.getScheduler().cancelTask(taskId);
-                if (this.onComplete != null)
+                if (this.onComplete != null) {
                     this.onComplete.accept(null);
+                }
                 return false;
             }
         }
@@ -169,13 +177,15 @@ public class GenerationTask implements Runnable {
      */
     private void unloadChunk(ChunkXZ chunk) {
         // Prevent previously loaded chunks from being unloaded
-        if (originalChunks.contains(chunk))
+        if (originalChunks.contains(chunk)) {
             return;
+        }
 
         world.unloadChunkRequest(chunk.x, chunk.z);
     }
 
     private static class ChunkXZ {
+
         public int x;
         public int z;
 

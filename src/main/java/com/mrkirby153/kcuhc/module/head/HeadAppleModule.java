@@ -5,7 +5,10 @@ import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
-import me.mrkirby153.kcutils.C;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.function.Predicate;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.Bukkit;
@@ -25,10 +28,6 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-
-import java.util.Collections;
-import java.util.Objects;
-import java.util.function.Predicate;
 
 public class HeadAppleModule extends UHCModule {
 
@@ -63,7 +62,7 @@ public class HeadAppleModule extends UHCModule {
             return;
         }
 
-        event.getPlayer().spigot().sendMessage(C.m("You ate a head apple"));
+        event.getPlayer().spigot().sendMessage(Chat.INSTANCE.message("You ate a head apple"));
         ScoreboardTeam team = this.uhc.getGame().getTeam(event.getPlayer());
         if (team != null) {
             if (team instanceof UHCTeam) {
@@ -72,9 +71,9 @@ public class HeadAppleModule extends UHCModule {
                     p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
 
                     if (p.getUniqueId().equals(event.getPlayer().getUniqueId())) {
-                        p.spigot().sendMessage(C.m("You have given your team Regeneration II and Absorption"));
+                        p.spigot().sendMessage(Chat.INSTANCE.message("You have given your team Regeneration II and Absorption"));
                     } else {
-                        p.spigot().sendMessage(C.m("", "{player} has given you Regeneration II and Absorption",
+                        p.spigot().sendMessage(Chat.INSTANCE.message("", "{player} has given you Regeneration II and Absorption",
                                 "{player}", event.getPlayer().getName()));
                     }
                 });

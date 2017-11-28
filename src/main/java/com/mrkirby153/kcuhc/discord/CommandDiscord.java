@@ -9,18 +9,17 @@ import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.msc.DiscordModule;
-import me.mrkirby153.kcutils.C;
-import net.dv8tion.jda.core.entities.User;
-import org.bukkit.Bukkit;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import me.mrkirby153.kcutils.Chat;
+import net.dv8tion.jda.core.entities.User;
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 
 @CommandAlias("discord")
 public class CommandDiscord extends BaseCommand {
@@ -35,7 +34,8 @@ public class CommandDiscord extends BaseCommand {
     @Subcommand("createTeamChannels")
     public void createTeamChannels(CommandSender sender) {
         ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> {
-            sender.sendMessage(C.m("Discord", "Team channels creating...").toLegacyText());
+            sender.sendMessage(
+                Chat.INSTANCE.message("Discord", "Team channels creating...").toLegacyText());
             game.getTeams().values().forEach(t -> m.getRobot().createTeam(t));
         });
 
@@ -44,7 +44,7 @@ public class CommandDiscord extends BaseCommand {
     @Subcommand("destroy")
     public void destroy(CommandSender sender) {
         ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> {
-            sender.sendMessage(C.m("Discord", "Teams being destroyed").toLegacyText());
+            sender.sendMessage(Chat.INSTANCE.message("Discord", "Teams being destroyed").toLegacyText());
             m.getRobot().destroyAllTeams();
         });
     }
@@ -56,12 +56,12 @@ public class CommandDiscord extends BaseCommand {
             User u = m.getRobot().forceLink(player.player.getUniqueId(), id);
             if (u != null) {
                 String account = u.getName() + "#" + u.getDiscriminator();
-                sender.spigot().sendMessage(C.m("Discord", "You have linked {player} to the account {acc}",
+                sender.spigot().sendMessage(Chat.INSTANCE.message("Discord", "You have linked {player} to the account {acc}",
                         "{player}", player.player.getName(), "{acc}", account));
-                player.player.spigot().sendMessage(C.m("Discord", "Your account has been linked to {acc} by {player}",
+                player.player.spigot().sendMessage(Chat.INSTANCE.message("Discord", "Your account has been linked to {acc} by {player}",
                         "{acc}", account, "{player}", sender.getName()));
             } else {
-                sender.spigot().sendMessage(C.m("Discord", "Could not find a user with the ID {id}", "{id}", id));
+                sender.spigot().sendMessage(Chat.INSTANCE.message("Discord", "Could not find a user with the ID {id}", "{id}", id));
             }
         });
     }
@@ -71,7 +71,7 @@ public class CommandDiscord extends BaseCommand {
         ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> {
             String code = m.getRobot().createLinkCode(player.getUniqueId());
 
-            player.sendMessage(C.m("Discord", "To link your minecraft account to discord, run this command on the discord server: {command}",
+            player.sendMessage(Chat.INSTANCE.message("Discord", "To link your minecraft account to discord, run this command on the discord server: {command}",
                     "{command}", "!uhcbot link " + code).toLegacyText());
         });
     }
@@ -84,7 +84,7 @@ public class CommandDiscord extends BaseCommand {
                 Player player = Bukkit.getPlayer(uuid);
                 User u = m.getRobot().getJda().getUserById(user);
                 if (u != null && player != null) {
-                    sender.spigot().sendMessage(C.m(player.getName(), "{user}", "{user}", u.getName() + "#" + u.getDiscriminator()));
+                    sender.spigot().sendMessage(Chat.INSTANCE.message(player.getName(), "{user}", "{user}", u.getName() + "#" + u.getDiscriminator()));
                 }
                 linked.add(uuid);
             });
@@ -92,7 +92,7 @@ public class CommandDiscord extends BaseCommand {
             List<UUID> unlinked = new ArrayList<>(Bukkit.getOnlinePlayers().stream().map(Entity::getUniqueId).collect(Collectors.toList()));
             unlinked.removeIf(linked::contains);
             unlinked.stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> {
-                sender.spigot().sendMessage(C.m(p.getName(), "UNLINKED!"));
+                sender.spigot().sendMessage(Chat.INSTANCE.message(p.getName(), "UNLINKED!"));
             });
         });
     }
@@ -102,7 +102,7 @@ public class CommandDiscord extends BaseCommand {
     public void update(CommandSender sender, OnlinePlayer player) {
         ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> {
             m.getRobot().updateUserTeams(player.getPlayer());
-            sender.sendMessage(C.m("Discord", "Updating teams for {player}", "{player}", player.getPlayer().getName()).toLegacyText());
+            sender.sendMessage(Chat.INSTANCE.message("Discord", "Updating teams for {player}", "{player}", player.getPlayer().getName()).toLegacyText());
         });
     }
 }

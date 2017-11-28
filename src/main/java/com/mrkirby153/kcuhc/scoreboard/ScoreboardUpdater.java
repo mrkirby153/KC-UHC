@@ -8,6 +8,8 @@ import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.player.PvPGraceModule;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
+import java.util.ArrayList;
+import java.util.List;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
@@ -16,11 +18,6 @@ import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * The scoreboard updater
@@ -66,7 +63,7 @@ public class ScoreboardUpdater implements Listener {
                 ModuleRegistry.INSTANCE.getLoadedModule(PvPGraceModule.class).ifPresent(mod -> {
                     if (mod.getGraceTimeRemaining() > 0) {
                         scoreboard.add(" ");
-                        scoreboard.add(new ElementHeadedText(ChatColor.AQUA + "" + ChatColor.BOLD + "PvP Enabled in", Time.format(1, mod.getGraceTimeRemaining(), Time.TimeUnit.FIT)));
+                        scoreboard.add(new ElementHeadedText(ChatColor.AQUA + "" + ChatColor.BOLD + "PvP Enabled in", Time.INSTANCE.format(1, mod.getGraceTimeRemaining(), Time.TimeUnit.FIT)));
                     }
                 });
                 scoreboard.add(" ");
@@ -83,7 +80,7 @@ public class ScoreboardUpdater implements Listener {
                             String.format("from -%.1f to +%.1f", worldBorderModule.worldborderLoc()[0], worldBorderModule.worldborderLoc()[0])));
                 });
                 scoreboard.add(new ElementHeadedText(ChatColor.GREEN + "" + ChatColor.BOLD + "Time Elapsed",
-                        Time.format(1, System.currentTimeMillis() - game.getStartTime(), Time.TimeUnit.FIT)));
+                        Time.INSTANCE.format(1, System.currentTimeMillis() - game.getStartTime(), Time.TimeUnit.FIT)));
 
         }
         scoreboard.draw();

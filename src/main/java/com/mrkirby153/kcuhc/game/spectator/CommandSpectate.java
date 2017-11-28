@@ -7,11 +7,12 @@ import co.aikar.commands.annotation.Subcommand;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
-import me.mrkirby153.kcutils.C;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.gui.Inventory;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 @CommandAlias("spectate")
 public class CommandSpectate extends BaseCommand {
@@ -25,29 +26,34 @@ public class CommandSpectate extends BaseCommand {
 
     @Subcommand("inv")
     public void inventory(Player player) {
-        new SpectatorGui(uhc, player).open();
+        new SpectatorGui(uhc).open(player);
     }
 
     @Default
     public void returnToSurvival(Player player) {
         if (uhc.getGame().getCurrentState() != GameState.ALIVE) {
             if (uhc.spectatorHandler.pendingSpectators.contains(player.getUniqueId())) {
-                player.spigot().sendMessage(C.m("Spectate", "You are no longer spectating this round"));
+                player.spigot().sendMessage(
+                    Chat.INSTANCE.message("Spectate", "You are no longer spectating this round"));
             } else {
                 uhc.spectatorHandler.pendingSpectators.add(player.getUniqueId());
-                player.spigot().sendMessage(C.m("Spectate", "You are spectating this round"));
+                player.spigot().sendMessage(
+                    Chat.INSTANCE.message("Spectate", "You are spectating this round"));
             }
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
         } else {
             if (!uhc.getGame().isSpectator(player)) {
-                player.spigot().sendMessage(C.e("You are not a spectator."));
+                player.spigot().sendMessage(Chat.INSTANCE.error("You are not a spectator."));
                 return;
             }
             player.setGameMode(GameMode.SURVIVAL);
             player.setAllowFlight(true);
             player.setFlying(true);
-            if (Inventory.getOpenInventory(player) != null)
-                Inventory.getOpenInventory(player).build();
+            Inventory<? extends JavaPlugin> openInventory = Inventory.Companion
+                .getOpenInventory(player);
+            if (openInventory != null) {
+                openInventory.build();
+            }
         }
     }
 }

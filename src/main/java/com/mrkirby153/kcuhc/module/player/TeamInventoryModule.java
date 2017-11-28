@@ -12,7 +12,10 @@ import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.UHCModule;
-import me.mrkirby153.kcutils.C;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Objects;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -21,10 +24,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.Inventory;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Objects;
 
 public class TeamInventoryModule extends UHCModule {
 
@@ -74,11 +73,11 @@ public class TeamInventoryModule extends UHCModule {
             return getInventory((UHCTeam) game.getTeam(player));
         }
         if (game.getTeam(player) instanceof SpectatorTeam) {
-            player.spigot().sendMessage(C.e("Spectators do not have a team inventory!"));
+            player.spigot().sendMessage(Chat.INSTANCE.error("Spectators do not have a team inventory!"));
             return null;
         }
         if (game.getTeam(player) == null) {
-            player.spigot().sendMessage(C.e("You are not on a team!"));
+            player.spigot().sendMessage(Chat.INSTANCE.error("You are not on a team!"));
             return null;
         }
         return null;
@@ -120,11 +119,11 @@ public class TeamInventoryModule extends UHCModule {
         public void openTeamInventory(Player player) {
             // TODO: 7/27/2017 Add restriction to running game
             if (!ModuleRegistry.INSTANCE.loaded(TeamInventoryModule.class)) {
-                player.sendMessage(C.e("Team inventories are not enabled").toLegacyText());
+                player.sendMessage(Chat.INSTANCE.error("Team inventories are not enabled").toLegacyText());
                 return;
             }
             if (uhc.getGame().getCurrentState() != GameState.ALIVE) {
-                player.sendMessage(C.e("You cannot open the team inventory before the game starts").toLegacyText());
+                player.sendMessage(Chat.INSTANCE.error("You cannot open the team inventory before the game starts").toLegacyText());
                 return;
             }
             Inventory inventory = ModuleRegistry.INSTANCE.getModule(TeamInventoryModule.class).getInventory(player);

@@ -5,7 +5,13 @@ import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
-import me.mrkirby153.kcutils.C;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
@@ -18,13 +24,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 public class SpectatorHandler implements Listener {
 
@@ -91,9 +90,9 @@ public class SpectatorHandler implements Listener {
                 .map(Bukkit::getPlayer).filter(Objects::nonNull)
                 .filter(p -> p.getGameMode() == GameMode.SPECTATOR)
                 .forEach(p -> {
-                    TextComponent component = C.formattedChat("Type ", ChatColor.GREEN);
-                    component.addExtra(C.formattedChat("/spectate", ChatColor.GOLD, C.Style.BOLD));
-                    component.addExtra(C.formattedChat(" to return to survival", ChatColor.GREEN));
+                    TextComponent component = Chat.INSTANCE.formattedChat("Type ", ChatColor.GREEN);
+                    component.addExtra(Chat.INSTANCE.formattedChat("/spectate", ChatColor.GOLD, Chat.Style.BOLD));
+                    component.addExtra(Chat.INSTANCE.formattedChat(" to return to survival", ChatColor.GREEN));
                     uhc.protocolLibManager.sendActionBar(p, component);
                 });
         uhc.getGame().getSpectators().getPlayers().stream()

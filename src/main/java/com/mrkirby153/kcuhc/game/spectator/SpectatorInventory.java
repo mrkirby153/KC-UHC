@@ -1,7 +1,7 @@
 package com.mrkirby153.kcuhc.game.spectator;
 
 import com.mrkirby153.kcuhc.UHC;
-import me.mrkirby153.kcutils.C;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.gui.Inventory;
 import org.bukkit.ChatColor;
@@ -22,13 +22,13 @@ public class SpectatorInventory extends Inventory<UHC> {
     public void build() {
         clear();
         addItem(hotbarSlot(1), new ItemFactory(Material.COMPASS).name("Spectate " + ChatColor.GREEN + "( Right Click)").construct(), (player1, clickType) -> {
-            new SpectatorGui(plugin, player1).open();
+            new SpectatorGui(getPlugin()).open(player1);
         });
-        if (player.getGameMode() != GameMode.SPECTATOR)
+        if (getPlayer().getGameMode() != GameMode.SPECTATOR)
             addItem(hotbarSlot(3), new ItemFactory(Material.BARRIER).name("Enter Vanilla Spectator" + ChatColor.GREEN + " (Right Click)").construct(), (player1, clickType) -> {
                 if (clickType == ClickType.RIGHT) {
                     player1.setGameMode(GameMode.SPECTATOR);
-                    player1.spigot().sendMessage(C.m("Spectator", "You have entered vanilla spectator mode. Type {spec} to return to survival",
+                    player1.spigot().sendMessage(Chat.INSTANCE.message("Spectator", "You have entered vanilla spectator mode. Type {spec} to return to survival",
                             "{spec}", "/spectate"));
                     build();
                 }
@@ -39,7 +39,7 @@ public class SpectatorInventory extends Inventory<UHC> {
                     p.setGameMode(GameMode.SURVIVAL);
                     p.setAllowFlight(true);
                     p.setFlying(true);
-                    p.spigot().sendMessage(C.m("Spectator", "You have returned to survival mode."));
+                    p.spigot().sendMessage(Chat.INSTANCE.message("Spectator", "You have returned to survival mode."));
                     build();
                 }
             });

@@ -7,7 +7,9 @@ import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
-import me.mrkirby153.kcutils.C;
+import java.util.Arrays;
+import java.util.HashMap;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
 import me.mrkirby153.kcutils.flags.WorldFlags;
@@ -32,9 +34,6 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-
-import java.util.Arrays;
-import java.util.HashMap;
 
 /**
  * The main game class
@@ -115,7 +114,7 @@ public class UHCGame implements Listener {
             new GenerationTask(plugin, UHC.getUHCWorld(), minX, maxX, minZ, maxZ, Void -> {
                 this.generating = false;
                 Bukkit.getServer().getOnlinePlayers().forEach(p -> {
-                    p.sendMessage(C.m("Pregeneration", "Pregeneration complete!").toLegacyText());
+                    p.sendMessage(Chat.INSTANCE.message("Pregeneration", "Pregeneration complete!").toLegacyText());
                     p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
                 });
             });
@@ -215,7 +214,7 @@ public class UHCGame implements Listener {
                     return;
                 }
                 Bukkit.getOnlinePlayers().forEach(p -> {
-                    p.spigot().sendMessage(C.m("Game", "Starting in {time} seconds", "{time}", time));
+                    p.spigot().sendMessage(Chat.INSTANCE.message("Game", "Starting in {time} seconds", "{time}", time));
                     p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
                 });
             });

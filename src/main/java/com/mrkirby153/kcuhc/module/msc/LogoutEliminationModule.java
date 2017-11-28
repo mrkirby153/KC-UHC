@@ -5,7 +5,11 @@ import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
-import me.mrkirby153.kcutils.C;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
@@ -15,11 +19,6 @@ import org.bukkit.Sound;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
 
 public class LogoutEliminationModule extends UHCModule {
 
@@ -31,7 +30,8 @@ public class LogoutEliminationModule extends UHCModule {
 
     @Inject
     public LogoutEliminationModule(UHC uhc) {
-        super("Eliminate on Logout", "Eliminates the player 5 minutes after they log out", Material.TNT);
+        super("Eliminate on Logout", "Eliminates the player 5 minutes after they log out",
+            Material.TNT);
         this.uhc = uhc;
         this.autoLoad = true;
     }
@@ -41,8 +41,8 @@ public class LogoutEliminationModule extends UHCModule {
         if (loggedOutPlayers.containsKey(event.getPlayer().getUniqueId())) {
             loggedOutPlayers.remove(event.getPlayer().getUniqueId());
             Bukkit.getOnlinePlayers().forEach(p -> {
-                p.sendMessage(C.m("Login", "{player} has rejoined!",
-                        "{player}", event.getPlayer().getName()).toLegacyText());
+                p.sendMessage(Chat.INSTANCE.message("Login", "{player} has rejoined!",
+                    "{player}", event.getPlayer().getName()).toLegacyText());
                 p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
             });
         }
@@ -51,15 +51,20 @@ public class LogoutEliminationModule extends UHCModule {
     @EventHandler(ignoreCancelled = true)
     public void onPlayerQuit(PlayerQuitEvent event) {
         ScoreboardTeam team = this.uhc.getGame().getTeam(event.getPlayer());
-        if (team == null || team instanceof SpectatorTeam)
+        if (team == null || team instanceof SpectatorTeam) {
             return;
+        }
         long eliminationTime = System.currentTimeMillis() + (1000 * LOGOUT_TIME_MINUTES * 60);
-        LoggedOutPlayer player = new LoggedOutPlayer(event.getPlayer().getName(), team.getTeamName(),
-                eliminationTime);
+        LoggedOutPlayer player = new LoggedOutPlayer(event.getPlayer().getName(),
+            team.getTeamName(),
+            eliminationTime);
         Bukkit.getOnlinePlayers().forEach(p -> {
-            p.sendMessage(C.m("Logout", "{player} has logged out, {time} to rejoin",
+            p.sendMessage(
+                Chat.INSTANCE.message("Logout", "{player} has logged out, {time} to rejoin",
                     "{player}", event.getPlayer().getName(),
-                    "{time}", Time.format(1, eliminationTime - System.currentTimeMillis(), Time.TimeUnit.FIT)).toLegacyText());
+                    "{time}", Time.INSTANCE
+                        .format(1, eliminationTime - System.currentTimeMillis(), Time.TimeUnit.FIT))
+                    .toLegacyText());
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
         });
         this.loggedOutPlayers.put(event.getPlayer().getUniqueId(), player);
@@ -75,8 +80,9 @@ public class LogoutEliminationModule extends UHCModule {
                 if (team != null) {
                     team.removePlayer(uuid);
                     Bukkit.getOnlinePlayers().forEach(p -> {
-                        p.sendMessage(C.m("Game", "{player} has been offline for too long and has been eliminated!",
-                                "{player}", player.name).toLegacyText());
+                        p.sendMessage(Chat.INSTANCE.message("Game",
+                            "{player} has been offline for too long and has been eliminated!",
+                            "{player}", player.name).toLegacyText());
                         p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_THUNDER, 1F, 1F);
                     });
                 }
@@ -87,6 +93,7 @@ public class LogoutEliminationModule extends UHCModule {
     }
 
     private class LoggedOutPlayer {
+
         private final String name;
         private final String teamName;
         private final long eliminationTime;

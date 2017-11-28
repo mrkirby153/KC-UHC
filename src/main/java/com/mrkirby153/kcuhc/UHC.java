@@ -19,7 +19,13 @@ import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.player.TeamInventoryModule;
 import com.mrkirby153.kcuhc.player.UHCPlayer;
 import com.mrkirby153.kcuhc.scoreboard.ScoreboardUpdater;
-import me.mrkirby153.kcutils.C;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.command.CommandManager;
 import me.mrkirby153.kcutils.event.UpdateEventHandler;
 import me.mrkirby153.kcutils.flags.FlagModule;
@@ -29,13 +35,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class UHC extends JavaPlugin {
 
@@ -83,7 +82,7 @@ public class UHC extends JavaPlugin {
         ModuleRegistry.setPresetDirectory(new File(getDataFolder(), "presets"));
 
         // Initialize the command manager
-        CommandManager.initialize(this);
+        CommandManager.Companion.initialize(this);
         // Initialize ACF
         manager = new BukkitCommandManager(this);
 
@@ -161,7 +160,8 @@ public class UHC extends JavaPlugin {
             String name = c.popFirstArg();
             UHCTeam team = this.game.getTeam(name);
             if (team == null) {
-                c.getSender().sendMessage(C.m("Error", "There is no team by the name of {team}", "{team}", name).toLegacyText());
+                c.getSender().sendMessage(
+                    Chat.INSTANCE.message("Error", "There is no team by the name of {team}", "{team}", name).toLegacyText());
                 throw new InvalidCommandArgument(false);
             }
             return team;
@@ -170,7 +170,7 @@ public class UHC extends JavaPlugin {
             String internalName = c.popFirstArg();
             UHCModule mod = ModuleRegistry.INSTANCE.getModuleByName(internalName);
             if (mod == null) {
-                c.getSender().sendMessage(C.m("Error", "There is no module by the name of {module}",
+                c.getSender().sendMessage(Chat.INSTANCE.message("Error", "There is no module by the name of {module}",
                         "{module}", internalName
                 ).toLegacyText());
                 throw new InvalidCommandArgument(false);

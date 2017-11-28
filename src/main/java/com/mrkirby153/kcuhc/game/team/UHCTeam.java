@@ -9,8 +9,8 @@ public class UHCTeam extends ScoreboardTeam {
 
     public UHCTeam(String name, ChatColor color) {
         super(name, color);
-        friendlyFire = false;
-        seeInvisible = true;
+        setFriendlyFire(false);
+        setSeeInvisible(true);
     }
 
     public Color toColor() {

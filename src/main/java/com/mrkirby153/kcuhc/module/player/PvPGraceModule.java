@@ -6,7 +6,8 @@ import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.module.UHCModule;
-import me.mrkirby153.kcutils.C;
+import java.util.HashMap;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
@@ -21,8 +22,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
-import java.util.HashMap;
-
 public class PvPGraceModule extends UHCModule {
 
     private long graceUntil = 0;
@@ -34,7 +33,8 @@ public class PvPGraceModule extends UHCModule {
 
     @Inject
     public PvPGraceModule(UHC uhc, UHCGame game) {
-        super("PvP Grace", "Prevents PvP damage for a configurable amount of time", Material.DIAMOND_SWORD);
+        super("PvP Grace", "Prevents PvP damage for a configurable amount of time",
+            Material.DIAMOND_SWORD);
         this.game = game;
         this.autoLoad = true;
         this.uhc = uhc;
@@ -66,18 +66,22 @@ public class PvPGraceModule extends UHCModule {
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.ALIVE) {
             graceUntil = System.currentTimeMillis() + (1000 * 60 * GRACE_MINUTES);
-            broadcast(C.m("PvP", "PVP is disabled for {time}",
-                    "{time}", Time.format(1, graceUntil - System.currentTimeMillis(), Time.TimeUnit.FIT)).toLegacyText());
+            broadcast(Chat.INSTANCE.message("PvP", "PVP is disabled for {time}",
+                "{time}",
+                Time.INSTANCE.format(1, graceUntil - System.currentTimeMillis(), Time.TimeUnit.FIT))
+                .toLegacyText());
         }
-        if (event.getTo() == GameState.ENDING)
+        if (event.getTo() == GameState.ENDING) {
             graceUntil = 0;
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onUpdate(UpdateEvent event) {
         if (event.getType() == UpdateType.SECOND && game.getCurrentState() == GameState.ALIVE) {
-            if (pvpDisabled())
+            if (pvpDisabled()) {
                 announcePvPGrace();
+            }
         }
     }
 
@@ -87,8 +91,9 @@ public class PvPGraceModule extends UHCModule {
     }
 
     public void setGraceMinutes(int grace) {
-        if (game.getCurrentState() == GameState.ALIVE)
+        if (game.getCurrentState() == GameState.ALIVE) {
             return;
+        }
         this.GRACE_MINUTES = grace;
     }
 
@@ -97,14 +102,19 @@ public class PvPGraceModule extends UHCModule {
         double secondsRemaining = Math.floor(msRemaining / 1000D);
         double minuteusRemaining = Math.floor(secondsRemaining / 60D);
         if (secondsRemaining <= 0) {
-            broadcast(C.m("PvP", "PVP has been enabled!").toLegacyText(), Sound.ENTITY_ENDERDRAGON_GROWL);
+            broadcast(Chat.INSTANCE.message("PvP", "PVP has been enabled!").toLegacyText(),
+                Sound.ENTITY_ENDERDRAGON_GROWL);
             return;
         }
         if (minuteusRemaining >= 1) {
             if (secondsRemaining % 60 == 0) {
-                BaseComponent component = C.formattedChat("Grace period ends in", ChatColor.RED, C.Style.BOLD);
-                component.addExtra(C.formattedChat(" " + Time.format(1, (long) msRemaining, Time.TimeUnit.FIT), ChatColor.AQUA, C.Style.BOLD));
-                component.addExtra(C.formattedChat("!", ChatColor.RED, C.Style.BOLD));
+                BaseComponent component = Chat.INSTANCE
+                    .formattedChat("Grace period ends in", ChatColor.RED, Chat.Style.BOLD);
+                component.addExtra(Chat.INSTANCE.formattedChat(
+                    " " + Time.INSTANCE.format(1, (long) msRemaining, Time.TimeUnit.FIT),
+                    ChatColor.AQUA, Chat.Style.BOLD));
+                component
+                    .addExtra(Chat.INSTANCE.formattedChat("!", ChatColor.RED, Chat.Style.BOLD));
                 Bukkit.getOnlinePlayers().forEach(p -> {
                     this.uhc.protocolLibManager.sendActionBar(p, component);
                     p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1F, 1F);
@@ -112,9 +122,12 @@ public class PvPGraceModule extends UHCModule {
             }
         } else {
             if (secondsRemaining < 10 || (secondsRemaining % 15) == 0) {
-                BaseComponent component = C.formattedChat("Grace period ends in", ChatColor.RED, C.Style.BOLD);
-                component.addExtra(C.formattedChat(" " + (int) secondsRemaining, ChatColor.AQUA, C.Style.BOLD));
-                component.addExtra(C.formattedChat(" seconds!", ChatColor.RED, C.Style.BOLD));
+                BaseComponent component = Chat.INSTANCE
+                    .formattedChat("Grace period ends in", ChatColor.RED, Chat.Style.BOLD);
+                component.addExtra(Chat.INSTANCE
+                    .formattedChat(" " + (int) secondsRemaining, ChatColor.AQUA, Chat.Style.BOLD));
+                component.addExtra(
+                    Chat.INSTANCE.formattedChat(" seconds!", ChatColor.RED, Chat.Style.BOLD));
                 Bukkit.getOnlinePlayers().forEach(p -> {
                     this.uhc.protocolLibManager.sendActionBar(p, component);
                     p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1F, 1F);
@@ -130,8 +143,9 @@ public class PvPGraceModule extends UHCModule {
     private void broadcast(String message, Sound sound) {
         Bukkit.getOnlinePlayers().forEach(p -> {
             p.sendMessage(message);
-            if (sound != null)
+            if (sound != null) {
                 p.playSound(p.getLocation(), sound, SoundCategory.MASTER, 1F, 1F);
+            }
         });
     }
 

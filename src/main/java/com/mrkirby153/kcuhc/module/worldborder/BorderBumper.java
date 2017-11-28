@@ -1,7 +1,9 @@
 package com.mrkirby153.kcuhc.module.worldborder;
 
 import com.mrkirby153.kcuhc.module.UHCModule;
-import me.mrkirby153.kcutils.C;
+import java.util.HashMap;
+import java.util.UUID;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
 import org.bukkit.Bukkit;
@@ -12,9 +14,6 @@ import org.bukkit.WorldBorder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.util.Vector;
-
-import java.util.HashMap;
-import java.util.UUID;
 
 public class BorderBumper extends UHCModule {
 
@@ -73,7 +72,7 @@ public class BorderBumper extends UHCModule {
         bumpVector.multiply(0.75);
         bumpVector.setY(0.1879);
         player.setVelocity(bumpVector);
-        player.sendMessage(C.m("Stay inside the worldborder".toUpperCase()).toLegacyText());
+        player.sendMessage(Chat.INSTANCE.message("Stay inside the worldborder".toUpperCase()).toLegacyText());
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BASS, 1F, 1F);
     }
 

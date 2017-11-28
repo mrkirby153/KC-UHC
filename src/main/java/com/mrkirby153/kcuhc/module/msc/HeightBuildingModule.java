@@ -4,14 +4,13 @@ import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
-import me.mrkirby153.kcutils.C;
+import java.util.HashMap;
+import java.util.Optional;
+import me.mrkirby153.kcutils.Chat;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockPlaceEvent;
-
-import java.util.HashMap;
-import java.util.Optional;
 
 public class HeightBuildingModule extends UHCModule {
 
@@ -55,7 +54,8 @@ public class HeightBuildingModule extends UHCModule {
         if (center.distanceSquared(builtBlock) <= Math.pow(buildRadius, 2)) {
             if (builtBlock.getBlockY() >= MAX_BUILD_HEIGHT) {
                 event.setCancelled(true);
-                event.getPlayer().sendMessage(C.e("You cannot build this high near spawn").toLegacyText());
+                event.getPlayer().sendMessage(
+                    Chat.INSTANCE.error("You cannot build this high near spawn").toLegacyText());
             }
         }
     }

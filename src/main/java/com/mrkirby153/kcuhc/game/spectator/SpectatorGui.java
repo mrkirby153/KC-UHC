@@ -2,7 +2,10 @@ package com.mrkirby153.kcuhc.game.spectator;
 
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
-import me.mrkirby153.kcutils.C;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
@@ -20,23 +23,19 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 public class SpectatorGui extends Gui<UHC> {
 
     private static final int ROWS_PER_PAGE = 5;
     private int page = 1;
 
-    public SpectatorGui(UHC plugin, Player player) {
-        super(plugin, player, 6, "Spectate");
+    public SpectatorGui(UHC plugin) {
+        super(plugin, 6, "Spectate");
     }
 
     @Override
     public void build() {
         clear();
-        List<UHCTeam> teams = new ArrayList<>(this.plugin.getGame().getTeams().values());
+        List<UHCTeam> teams = new ArrayList<>(this.getPlugin().getGame().getTeams().values());
         teams.sort(((o1, o2) -> o2.getPlayers().size() - o1.getPlayers().size()));
         Paginator<UHCTeam> paginator = new Paginator<>(teams, ROWS_PER_PAGE);
 
@@ -64,7 +63,7 @@ public class SpectatorGui extends Gui<UHC> {
                     addButton((row * 9) + column, skullItem, (p, click) -> {
                         if (finalPlayer instanceof Player) {
                             p.teleport(((Player) finalPlayer).getLocation());
-                            p.sendMessage(C.m("Spectate", "Teleported to {player}",
+                            p.sendMessage(Chat.INSTANCE.message("Spectate", "Teleported to {player}",
                                     "{player}", finalPlayer.getName()).toLegacyText());
                         }
                     });
