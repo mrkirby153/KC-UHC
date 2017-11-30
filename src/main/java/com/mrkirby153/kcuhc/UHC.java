@@ -5,7 +5,6 @@ import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.MinecraftMessageKeys;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.mrkirby153.kcuhc.discord.CommandDiscord;
 import com.mrkirby153.kcuhc.game.GameCommand;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
@@ -189,6 +188,5 @@ public class UHC extends JavaPlugin {
         manager
             .registerCommand(injector.getInstance(TeamInventoryModule.TeamInventoryCommand.class));
         manager.registerCommand(injector.getInstance(CommandSpectate.class));
-        manager.registerCommand(injector.getInstance(CommandDiscord.class));
     }
 }
