@@ -171,7 +171,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>3.2.0_226</version>
+            <version>3.3.1_307</version>
         </dependency>
 
     </dependencies>
