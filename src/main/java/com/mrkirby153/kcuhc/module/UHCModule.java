@@ -107,7 +107,7 @@ public abstract class UHCModule implements Listener {
     /**
      * Loads the module
      */
-    public boolean load() {
+    public final boolean load() {
         if (this.loaded) {
             throw new IllegalArgumentException(
                 "Attempted to load a module that was already loaded!");
@@ -150,7 +150,7 @@ public abstract class UHCModule implements Listener {
     /**
      * Unloads the module
      */
-    public boolean unload() {
+    public final boolean unload() {
         try {
             onUnload();
             HandlerList.unregisterAll(this);
