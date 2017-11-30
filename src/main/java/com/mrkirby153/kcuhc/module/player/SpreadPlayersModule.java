@@ -1,7 +1,6 @@
 package com.mrkirby153.kcuhc.module.player;
 
 import com.google.inject.Inject;
-import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.SpawnUtils;
 import com.mrkirby153.kcuhc.game.UHCGame;
@@ -45,14 +44,14 @@ public class SpreadPlayersModule extends UHCModule {
      */
     public void distributeTeams(int minRadius) {
         System.out
-            .println("Worldborder location +- " + UHC.getUHCWorld().getWorldBorder().getSize() / 2);
+            .println("Worldborder location +- " + this.game.getUHCWorld().getWorldBorder().getSize() / 2);
         System.out.println("Spreading teams...");
 
         Map<UHCTeam, Location> spawnLocations = new HashMap<>();
         List<Location> finalSpawnLocs = new ArrayList<>();
         for (UHCTeam team : game.getTeams().values()) {
             Location randomSpawn = SpawnUtils
-                .getRandomSpawn(UHC.getUHCWorld(), module.getStartSize());
+                .getRandomSpawn(this.game.getUHCWorld(), module.getStartSize());
             spawnLocations.put(team, randomSpawn);
         }
         for (Map.Entry<UHCTeam, Location> entry : spawnLocations.entrySet()) {
@@ -73,7 +72,7 @@ public class SpreadPlayersModule extends UHCModule {
                 if (!clash) {
                     break;
                 }
-                spawnLoc = SpawnUtils.getRandomSpawn(UHC.getUHCWorld(), module.getStartSize());
+                spawnLoc = SpawnUtils.getRandomSpawn(this.game.getUHCWorld(), module.getStartSize());
             }
             finalSpawnLocs.add(spawnLoc);
             final Location finalLoc = spawnLoc;

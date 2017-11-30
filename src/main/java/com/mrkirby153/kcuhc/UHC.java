@@ -57,10 +57,6 @@ public class UHC extends JavaPlugin {
         return manager;
     }
 
-    public static World getUHCWorld() {
-        return Bukkit.getWorlds().get(0);
-    }
-
     /**
      * Gets the {@link UHCGame}
      *

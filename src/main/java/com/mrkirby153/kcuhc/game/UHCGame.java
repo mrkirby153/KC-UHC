@@ -77,6 +77,11 @@ public class UHCGame implements Listener {
 
     private boolean generating = false;
 
+    /**
+     * The name of the world that the UHC game will take place in
+     */
+    private String uhcWorld = "world";
+
     @Inject
     public UHCGame(UHC plugin) {
         this.plugin = plugin;
@@ -108,13 +113,13 @@ public class UHCGame implements Listener {
         }
         ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class).ifPresent(module -> {
             double wbSize = module.getStartSize() * (2D / 3);
-            WorldBorder wb = UHC.getUHCWorld().getWorldBorder();
+            WorldBorder wb = this.getWorldBorder();
             int minX = (int) Math.ceil(wb.getCenter().getBlockX() - wbSize);
             int maxX = (int) Math.ceil(wb.getCenter().getBlockX() + wbSize);
             int minZ = (int) Math.ceil(wb.getCenter().getBlockZ() - wbSize);
             int maxZ = (int) Math.ceil(wb.getCenter().getBlockZ() + wbSize);
 
-            new GenerationTask(plugin, UHC.getUHCWorld(), minX, maxX, minZ, maxZ, Void -> {
+            new GenerationTask(plugin, this.getUHCWorld(), minX, maxX, minZ, maxZ, Void -> {
                 this.generating = false;
                 Bukkit.getServer().getOnlinePlayers().forEach(p -> {
                     p.sendMessage(Chat.INSTANCE.message("Pregeneration", "Pregeneration complete!")
@@ -245,23 +250,23 @@ public class UHCGame implements Listener {
                 p.addPotionEffect(
                     new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 5, true));
             });
-            UHC.getUHCWorld().setGameRuleValue("doDaylightCycle", "true");
-            UHC.getUHCWorld().setTime(0);
+        this.getUHCWorld().setGameRuleValue("doDaylightCycle", "true");
+            this.getUHCWorld().setTime(0);
         }
         if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
             Arrays.stream(WorldFlags.values())
-                .forEach(f -> plugin.flagModule.set(UHC.getUHCWorld(), f, false, false));
-            UHC.getUHCWorld().setGameRuleValue("doDaylightCycle", "false");
-            UHC.getUHCWorld().setTime(1200);
+                .forEach(f -> plugin.flagModule.set(this.getUHCWorld(), f, false, false));
+            this.getUHCWorld().setGameRuleValue("doDaylightCycle", "false");
+            this.getUHCWorld().setTime(1200);
         }
         if (event.getTo() == GameState.ALIVE) {
             Arrays.stream(WorldFlags.values())
-                .forEach(f -> plugin.flagModule.set(UHC.getUHCWorld(), f, true, false));
+                .forEach(f -> plugin.flagModule.set(this.getUHCWorld(), f, true, false));
             this.startTime = System.currentTimeMillis();
         }
         if (event.getTo() == GameState.ENDING) {
             // Teleport everyone to the center
-            Location toTeleport = UHC.getUHCWorld().getWorldBorder().getCenter();
+            Location toTeleport = this.getUHCWorld().getWorldBorder().getCenter();
             toTeleport = toTeleport.getWorld().getHighestBlockAt(toTeleport).getLocation()
                 .add(0, 0.5, 0);
             Location finalToTeleport = toTeleport;
@@ -281,6 +286,33 @@ public class UHCGame implements Listener {
                     new TitleTimings(20, 60, 20));
             });
         }
+    }
+
+    /**
+     * Gets the world that the UHC game will take place in
+     *
+     * @return The world that the UHC game is taking place in
+     */
+    public World getUHCWorld() {
+        return Bukkit.getWorld(this.uhcWorld);
+    }
+
+    /**
+     * Gets the nether world corresponding to the UHC world
+     *
+     * @return The nether world
+     */
+    public World getUHCNether() {
+        return Bukkit.getWorld(this.uhcWorld + "_the_nether");
+    }
+
+    /**
+     * Gets the world border for the UHC world
+     *
+     * @return The world border
+     */
+    public WorldBorder getWorldBorder() {
+        return this.getUHCWorld().getWorldBorder();
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -319,7 +351,7 @@ public class UHCGame implements Listener {
             if (getCurrentState() == GameState.ENDING) {
                 // Spawn the fireworks
                 if (this.spawnedFireworks++ < 8) {
-                    spawnFireworks(UHC.getUHCWorld());
+                    spawnFireworks(this.getUHCWorld());
                 } else {
                     setCurrentState(GameState.ENDED);
                 }

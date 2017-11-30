@@ -1,6 +1,6 @@
 package com.mrkirby153.kcuhc.module.msc;
 
-import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
@@ -18,9 +18,12 @@ public class HeightBuildingModule extends UHCModule {
     private static final int BUILD_RADIUS = 50;
     private int MAX_BUILD_HEIGHT = 100;
 
-    public HeightBuildingModule() {
+    private UHCGame game;
+
+    public HeightBuildingModule(UHCGame game) {
         super("Height Restriction", "Prevents building above a certain height near spawn",
             Material.IRON_DOOR);
+        this.game = game;
         autoLoad = true;
     }
 
@@ -50,10 +53,10 @@ public class HeightBuildingModule extends UHCModule {
         Optional<WorldBorderModule> mod = ModuleRegistry.INSTANCE
             .getLoadedModule(WorldBorderModule.class);
         if (mod.isPresent()) {
-            center = UHC.getUHCWorld().getWorldBorder().getCenter().clone();
+            center = this.game.getUHCWorld().getWorldBorder().getCenter().clone();
             buildRadius = mod.get().getEndSize() / 2;
         } else {
-            center = UHC.getUHCWorld().getSpawnLocation();
+            center = this.game.getUHCWorld().getSpawnLocation();
         }
 
         Location builtBlock = event.getBlockPlaced().getLocation().clone();

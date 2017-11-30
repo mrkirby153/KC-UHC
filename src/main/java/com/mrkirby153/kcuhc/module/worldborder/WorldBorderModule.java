@@ -3,6 +3,7 @@ package com.mrkirby153.kcuhc.module.worldborder;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
+import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import me.mrkirby153.kcutils.Chat;
@@ -29,10 +30,13 @@ public class WorldBorderModule extends UHCModule {
     private int duration = 300; // Default to 5 minutes
 
     private UHC uhc;
+    
+    private UHCGame game;
 
     @Inject
-    public WorldBorderModule(UHC uhc) {
+    public WorldBorderModule(UHC uhc, UHCGame game) {
         super("World Border", "Controls an automatic worldborder", Material.BARRIER);
+        this.game = game;
         autoLoad = true;
         this.uhc = uhc;
     }
@@ -100,13 +104,13 @@ public class WorldBorderModule extends UHCModule {
 
     @Override
     public void onLoad() {
-        UHC.getUHCWorld().getWorldBorder().setSize(LOBBY_SIZE);
-        UHC.getUHCWorld().getWorldBorder().setWarningDistance(0);
+        this.game.getWorldBorder().setSize(LOBBY_SIZE);
+        this.game.getWorldBorder().setWarningDistance(0);
     }
 
     @Override
     public void onUnload() {
-        UHC.getUHCWorld().getWorldBorder().setSize(DEFAULT_SIZE);
+        this.game.getWorldBorder().setSize(DEFAULT_SIZE);
     }
 
     @Override
@@ -119,15 +123,15 @@ public class WorldBorderModule extends UHCModule {
     @EventHandler
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
-            UHC.getUHCWorld().getWorldBorder().setSize(LOBBY_SIZE);
-            UHC.getUHCWorld().getWorldBorder().setWarningDistance(0);
+            this.game.getWorldBorder().setSize(LOBBY_SIZE);
+            this.game.getWorldBorder().setWarningDistance(0);
         }
         if (event.getTo() == GameState.ALIVE) {
-            UHC.getUHCWorld().getWorldBorder().setSize(startSize);
-            UHC.getUHCWorld().getWorldBorder().setSize(endSize, duration);
+            this.game.getWorldBorder().setSize(startSize);
+            this.game.getWorldBorder().setSize(endSize, duration);
             System.out
                 .println("Moving " + (startSize - endSize) + " blocks in " + duration + " seconds");
-            UHC.getUHCWorld().getWorldBorder().setWarningDistance(50);
+            this.game.getWorldBorder().setWarningDistance(50);
         }
     }
 
@@ -135,7 +139,7 @@ public class WorldBorderModule extends UHCModule {
      * Resolves a stalemate
      */
     public void resolveStalemate() {
-        UHC.getUHCWorld().getWorldBorder().setSize(1, 60 * 10);
+        this.game.getWorldBorder().setSize(1, 60 * 10);
         Bukkit.getOnlinePlayers().forEach(p -> {
             p.sendMessage(Chat.INSTANCE.message("Stalemate",
                 "Stalemate detected! Worldborder shrinking to one block over 10 minutes")
@@ -148,7 +152,7 @@ public class WorldBorderModule extends UHCModule {
     }
 
     public void updateSpeed(int newDuration) {
-        WorldBorder border = UHC.getUHCWorld().getWorldBorder();
+        WorldBorder border = this.game.getWorldBorder();
         double size = border.getSize();
         border.setSize(size); // Reset the border to its current position
         Bukkit.getOnlinePlayers().forEach(p -> {
@@ -163,7 +167,7 @@ public class WorldBorderModule extends UHCModule {
     }
 
     public double[] worldborderLoc() {
-        WorldBorder wb = UHC.getUHCWorld().getWorldBorder();
+        WorldBorder wb = this.game.getWorldBorder();
         Location l = wb.getCenter();
         double locX = (wb.getSize() / 2) + l.getX();
         double locY = (wb.getSize() / 2) + l.getY();

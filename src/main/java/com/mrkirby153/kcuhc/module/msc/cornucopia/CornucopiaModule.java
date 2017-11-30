@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.SpawnUtils;
+import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.UHCModule;
@@ -30,12 +31,14 @@ public class CornucopiaModule extends UHCModule {
     private static final int CORN_SIZE_Y = 6;
     private static final int CORN_SIZE_Z = 6;
     private UHC uhc;
+    private UHCGame game;
     private boolean spawned = false;
 
     @Inject
-    public CornucopiaModule(UHC uhc) {
+    public CornucopiaModule(UHC uhc, UHCGame game) {
         super("Spawn Cornucopia", "Spawns a cornucopia in a random location", Material.CHEST);
         this.uhc = uhc;
+        this.game = game;
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -60,7 +63,7 @@ public class CornucopiaModule extends UHCModule {
             // Spawn the cornucopia when the border travel is 75% complete
             ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class)
                 .ifPresent(worldBorderModule -> {
-                    double currentSize = UHC.getUHCWorld().getWorldBorder().getSize();
+                    double currentSize = this.game.getUHCWorld().getWorldBorder().getSize();
 
                     double startSize = worldBorderModule.getStartSize();
                     double endSize = worldBorderModule.getEndSize();
@@ -80,7 +83,7 @@ public class CornucopiaModule extends UHCModule {
 
     public void spawnCornucopia(double maxRadius) {
         Location randomSpawn = SpawnUtils
-            .getRandomSpawn(UHC.getUHCWorld(), (int) Math.floor(maxRadius));
+            .getRandomSpawn(this.game.getUHCWorld(), (int) Math.floor(maxRadius));
         System.out.println("Cornucopia has spawned at " + randomSpawn);
         new Structure(new File(uhc.getDataFolder(), "cornucopia.schematic")).place(randomSpawn);
         Bukkit.getOnlinePlayers().forEach(player -> {
