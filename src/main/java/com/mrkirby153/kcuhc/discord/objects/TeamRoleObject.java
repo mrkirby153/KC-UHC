@@ -22,16 +22,19 @@ public class TeamRoleObject extends DiscordObject<Role> {
         robot.getGuild().getController().createRole().queue(role -> {
             object = role;
             RoleManager manager = role.getManager();
-            manager.setName(WordUtils.capitalizeFully("Team " + team.getTeamName())).queue(success -> {
-                if (callback != null)
-                    callback.accept(role);
-            });
+            manager.setName(WordUtils.capitalizeFully("Team " + team.getTeamName()))
+                .queue(success -> {
+                    if (callback != null) {
+                        callback.accept(role);
+                    }
+                });
         });
     }
 
     @Override
     public void delete() {
-        if (object != null)
+        if (object != null) {
             object.delete().queue();
+        }
     }
 }

@@ -17,7 +17,6 @@ import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import org.bukkit.entity.Player;
 
-import javax.security.auth.login.LoginException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,6 +24,7 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.security.auth.login.LoginException;
 
 public class DiscordRobot {
 
@@ -67,8 +67,8 @@ public class DiscordRobot {
     public void connect() {
         try {
             this.jda = new JDABuilder(AccountType.BOT).setToken(this.apiToken)
-                    .addEventListener(new DiscordEventListener(this))
-                    .setStatus(OnlineStatus.IDLE).buildAsync();
+                .addEventListener(new DiscordEventListener(this))
+                .setStatus(OnlineStatus.IDLE).buildAsync();
         } catch (LoginException | RateLimitedException e) {
             Throwables.propagate(e);
         }
@@ -78,6 +78,7 @@ public class DiscordRobot {
      * Creates a link code for the user
      *
      * @param uuid The user to create a link code for
+     *
      * @return The link code
      */
     public String createLinkCode(UUID uuid) {
@@ -95,18 +96,19 @@ public class DiscordRobot {
         DiscordUHCTeam t = new DiscordUHCTeam(team, this);
         this.teams.put(team, t);
         t.create(r -> team.getPlayers().stream()
-                .map(this::getUser)
-                .filter(Objects::nonNull)
-                .forEach(u -> {
-                    getGuild().getController().addRolesToMember(getGuild().getMember(u), r).queue();
-                    Member m = getGuild().getMember(u);
-                    if (m.getVoiceState().inVoiceChannel()) {
-                        // Move user into the team channel
-                        VoiceChannel object = t.getVoiceChannel().getObject();
-                        if (object != null)
-                            getGuild().getController().moveVoiceMember(m, object).queue();
+            .map(this::getUser)
+            .filter(Objects::nonNull)
+            .forEach(u -> {
+                getGuild().getController().addRolesToMember(getGuild().getMember(u), r).queue();
+                Member m = getGuild().getMember(u);
+                if (m.getVoiceState().inVoiceChannel()) {
+                    // Move user into the team channel
+                    VoiceChannel object = t.getVoiceChannel().getObject();
+                    if (object != null) {
+                        getGuild().getController().moveVoiceMember(m, object).queue();
                     }
-                }));
+                }
+            }));
     }
 
     /**
@@ -123,8 +125,9 @@ public class DiscordRobot {
      * @param team The team to destroy
      */
     public void destroyTeam(ScoreboardTeam team) {
-        if (this.teams.containsKey(team))
+        if (this.teams.containsKey(team)) {
             this.teams.remove(team).destroy();
+        }
     }
 
     /**
@@ -175,6 +178,7 @@ public class DiscordRobot {
      * Gets a {@link User} from a Minecraft UUID
      *
      * @param uuid The uuid
+     *
      * @return The
      */
     public User getUser(UUID uuid) {
@@ -192,18 +196,23 @@ public class DiscordRobot {
      * Moves all the linked users to the lobby channel (which is created)
      */
     public void moveAllUsersToLobby() {
-        if (this.lobbyChannel == null)
+        if (this.lobbyChannel == null) {
             getGuild().getController().createVoiceChannel("Lobby").queue(chan -> {
                 this.lobbyChannel = (VoiceChannel) chan;
                 this.linkedUsers.values().stream().map(id -> this.jda.getUserById(id))
-                        .filter(Objects::nonNull).map(user -> getGuild().getMember(user)).forEach(user -> {
-                    getGuild().getController().moveVoiceMember(user, (VoiceChannel) chan).queue();
+                    .filter(Objects::nonNull).map(user -> getGuild().getMember(user))
+                    .forEach(user -> {
+                        getGuild().getController().moveVoiceMember(user, (VoiceChannel) chan)
+                            .queue();
+                    });
+            });
+        } else {
+            this.linkedUsers.values().stream().map(id -> this.jda.getUserById(id))
+                .filter(Objects::nonNull).map(user -> getGuild().getMember(user))
+                .forEach(member -> {
+                    getGuild().getController().moveVoiceMember(member, this.lobbyChannel).queue();
                 });
-            });
-        else
-            this.linkedUsers.values().stream().map(id -> this.jda.getUserById(id)).filter(Objects::nonNull).map(user -> getGuild().getMember(user)).forEach(member -> {
-                getGuild().getController().moveVoiceMember(member, this.lobbyChannel).queue();
-            });
+        }
     }
 
     /**
@@ -212,15 +221,17 @@ public class DiscordRobot {
      * @param player The player to update
      */
     public void updateUserTeams(Player player) {
-        if (getUser(player.getUniqueId()) == null)
+        if (getUser(player.getUniqueId()) == null) {
             return;
+        }
         Member member = getGuild().getMember(getUser(player.getUniqueId()));
         List<DiscordUHCTeam> currentTeams = getTeams(member);
         List<DiscordUHCTeam> toAdd = new ArrayList<>();
         List<DiscordUHCTeam> toRemove = new ArrayList<>(currentTeams);
 
         List<ScoreboardTeam> currentSBTeams = uhc.getGame().getTeams().values().stream()
-                .filter(team -> team.getPlayers().contains(player.getUniqueId())).collect(Collectors.toList());
+            .filter(team -> team.getPlayers().contains(player.getUniqueId()))
+            .collect(Collectors.toList());
 
         currentSBTeams.forEach(sbTeam -> {
             if (!currentTeams.contains(this.teams.get(sbTeam))) {
@@ -231,12 +242,12 @@ public class DiscordRobot {
         toRemove.removeAll(toAdd);
 
         getGuild().getController().modifyMemberRoles(member, toAdd.stream()
-                .map(DiscordUHCTeam::getTeamRole)
-                .map(TeamRoleObject::getObject)
-                .collect(Collectors.toList()), toRemove.stream()
-                .map(DiscordUHCTeam::getTeamRole)
-                .map(TeamRoleObject::getObject)
-                .collect(Collectors.toList())).queue();
+            .map(DiscordUHCTeam::getTeamRole)
+            .map(TeamRoleObject::getObject)
+            .collect(Collectors.toList()), toRemove.stream()
+            .map(DiscordUHCTeam::getTeamRole)
+            .map(TeamRoleObject::getObject)
+            .collect(Collectors.toList())).queue();
     }
 
     /**

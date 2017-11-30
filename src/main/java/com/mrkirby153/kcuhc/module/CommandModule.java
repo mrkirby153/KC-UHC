@@ -29,7 +29,8 @@ public class CommandModule extends BaseCommand {
     public void loadModule(CommandSender sender, UHCModule module) {
         ModuleRegistry.INSTANCE.load(module);
         sender.sendMessage(
-            Chat.INSTANCE.message("Module", "Module {module} loaded!", "{module}", module.getName()).toLegacyText());
+            Chat.INSTANCE.message("Module", "Module {module} loaded!", "{module}", module.getName())
+                .toLegacyText());
     }
 
     @Default
@@ -41,6 +42,8 @@ public class CommandModule extends BaseCommand {
     @CommandCompletion("@loadedModules")
     public void unloadModule(CommandSender sender, UHCModule module) {
         ModuleRegistry.INSTANCE.unload(module);
-        sender.sendMessage(Chat.INSTANCE.message("Module", "Module {module} unloaded!", "{module}", module.getName()).toLegacyText());
+        sender.sendMessage(Chat.INSTANCE
+            .message("Module", "Module {module} unloaded!", "{module}", module.getName())
+            .toLegacyText());
     }
 }

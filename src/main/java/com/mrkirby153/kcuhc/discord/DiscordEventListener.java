@@ -16,9 +16,16 @@ public class DiscordEventListener extends ListenerAdapter {
     }
 
     @Override
+    public void onReady(ReadyEvent event) {
+        System.out.println("Discord robot ready!");
+        robot.setReady();
+    }
+
+    @Override
     public void onMessageReceived(MessageReceivedEvent event) {
-        if (!robot.isReady())
+        if (!robot.isReady()) {
             return;
+        }
         if (!event.getMessage().getContent().startsWith("!uhcbot")) {
             return;
         }
@@ -43,15 +50,11 @@ public class DiscordEventListener extends ListenerAdapter {
                 }
                 robot.link(event.getAuthor(), code);
                 event.getMessage().delete().queue();
-                event.getChannel().sendMessage("You have linked your discord account to the minecraft account `" + Bukkit.getOfflinePlayer(u).getName() + "`!").queue();
+                event.getChannel().sendMessage(
+                    "You have linked your discord account to the minecraft account `" + Bukkit
+                        .getOfflinePlayer(u).getName() + "`!").queue();
             }
         }
-    }
-
-    @Override
-    public void onReady(ReadyEvent event) {
-        System.out.println("Discord robot ready!");
-        robot.setReady();
     }
 
 

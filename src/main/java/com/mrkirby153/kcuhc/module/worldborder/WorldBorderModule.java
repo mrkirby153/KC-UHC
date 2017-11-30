@@ -5,7 +5,6 @@ import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.module.UHCModule;
-import java.util.HashMap;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.protocollib.TitleTimings;
@@ -16,6 +15,8 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.WorldBorder;
 import org.bukkit.event.EventHandler;
+
+import java.util.HashMap;
 
 public class WorldBorderModule extends UHCModule {
 
@@ -97,20 +98,6 @@ public class WorldBorderModule extends UHCModule {
         duration = Integer.parseInt(data.get("wb-duration"));
     }
 
-    @EventHandler
-    public void onGameStateChange(GameStateChangeEvent event) {
-        if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
-            UHC.getUHCWorld().getWorldBorder().setSize(LOBBY_SIZE);
-            UHC.getUHCWorld().getWorldBorder().setWarningDistance(0);
-        }
-        if (event.getTo() == GameState.ALIVE) {
-            UHC.getUHCWorld().getWorldBorder().setSize(startSize);
-            UHC.getUHCWorld().getWorldBorder().setSize(endSize, duration);
-            System.out.println("Moving " + (startSize - endSize) + " blocks in " + duration + " seconds");
-            UHC.getUHCWorld().getWorldBorder().setWarningDistance(50);
-        }
-    }
-
     @Override
     public void onLoad() {
         UHC.getUHCWorld().getWorldBorder().setSize(LOBBY_SIZE);
@@ -122,18 +109,6 @@ public class WorldBorderModule extends UHCModule {
         UHC.getUHCWorld().getWorldBorder().setSize(DEFAULT_SIZE);
     }
 
-    /**
-     * Resolves a stalemate
-     */
-    public void resolveStalemate() {
-        UHC.getUHCWorld().getWorldBorder().setSize(1, 60 * 10);
-        Bukkit.getOnlinePlayers().forEach(p -> {
-            p.sendMessage(Chat.INSTANCE.message("Stalemate", "Stalemate detected! Worldborder shrinking to one block over 10 minutes").toLegacyText());
-            p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1F, 1F);
-            uhc.protocolLibManager.title(p, ChatColor.GOLD + "Stalemate Detected", "Shrinking world border", new TitleTimings(10, 60, 10));
-        });
-    }
-
     @Override
     public void saveData(HashMap<String, String> data) {
         data.put("wb-start-size", Integer.toString(startSize));
@@ -141,15 +116,47 @@ public class WorldBorderModule extends UHCModule {
         data.put("wb-duration", Integer.toString(duration));
     }
 
+    @EventHandler
+    public void onGameStateChange(GameStateChangeEvent event) {
+        if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
+            UHC.getUHCWorld().getWorldBorder().setSize(LOBBY_SIZE);
+            UHC.getUHCWorld().getWorldBorder().setWarningDistance(0);
+        }
+        if (event.getTo() == GameState.ALIVE) {
+            UHC.getUHCWorld().getWorldBorder().setSize(startSize);
+            UHC.getUHCWorld().getWorldBorder().setSize(endSize, duration);
+            System.out
+                .println("Moving " + (startSize - endSize) + " blocks in " + duration + " seconds");
+            UHC.getUHCWorld().getWorldBorder().setWarningDistance(50);
+        }
+    }
+
+    /**
+     * Resolves a stalemate
+     */
+    public void resolveStalemate() {
+        UHC.getUHCWorld().getWorldBorder().setSize(1, 60 * 10);
+        Bukkit.getOnlinePlayers().forEach(p -> {
+            p.sendMessage(Chat.INSTANCE.message("Stalemate",
+                "Stalemate detected! Worldborder shrinking to one block over 10 minutes")
+                .toLegacyText());
+            p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1F, 1F);
+            uhc.protocolLibManager
+                .title(p, ChatColor.GOLD + "Stalemate Detected", "Shrinking world border",
+                    new TitleTimings(10, 60, 10));
+        });
+    }
+
     public void updateSpeed(int newDuration) {
         WorldBorder border = UHC.getUHCWorld().getWorldBorder();
         double size = border.getSize();
         border.setSize(size); // Reset the border to its current position
         Bukkit.getOnlinePlayers().forEach(p -> {
-            p.spigot().sendMessage(Chat.INSTANCE.message("World Border", "Alert! Moving from {startSize} to {endSize} in {duration}",
-                    "{startSize}", size,
-                    "{endSize}", endSize,
-                    "{duration}", Time.INSTANCE.format(1, newDuration * 1000, Time.TimeUnit.FIT)));
+            p.spigot().sendMessage(Chat.INSTANCE.message("World Border",
+                "Alert! Moving from {startSize} to {endSize} in {duration}",
+                "{startSize}", size,
+                "{endSize}", endSize,
+                "{duration}", Time.INSTANCE.format(1, newDuration * 1000, Time.TimeUnit.FIT)));
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
         });
         border.setSize(endSize, newDuration);

@@ -20,7 +20,8 @@ public class EndgameLastTeamStanding extends UHCModule {
 
     @Inject
     public EndgameLastTeamStanding(UHCGame game) {
-        super("Last Team Standing", "The game will automatically end when there is one team left.", Material.IRON_SWORD);
+        super("Last Team Standing", "The game will automatically end when there is one team left.",
+            Material.IRON_SWORD);
         this.game = game;
         this.autoLoad = true;
     }
@@ -30,8 +31,9 @@ public class EndgameLastTeamStanding extends UHCModule {
         if (event.getType() == UpdateType.FAST && game.getCurrentState() == GameState.ALIVE) {
             List<UHCTeam> aliveTeams = new ArrayList<>();
             game.getTeams().values().forEach(team -> {
-                if (team.getPlayers().size() > 0)
+                if (team.getPlayers().size() > 0) {
                     aliveTeams.add(team);
+                }
             });
 
             if (aliveTeams.size() <= 1) {

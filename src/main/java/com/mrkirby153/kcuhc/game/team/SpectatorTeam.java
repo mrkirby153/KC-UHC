@@ -26,25 +26,11 @@ public class SpectatorTeam extends ScoreboardTeam {
     }
 
     @Override
-    public void addPlayer(Player player) {
-        super.addPlayer(player);
-        Bukkit.getOnlinePlayers().forEach(p -> p.hidePlayer(player));
-        getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> {
-            player.showPlayer(p);
-            p.showPlayer(player);
-        });
-        player.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0));
-        player.setAllowFlight(true);
-        player.setFlying(true);
-        new SpectatorInventory(uhc, player);
-    }
-
-    @Override
     public void removePlayer(Player player) {
         super.removePlayer(player);
         Bukkit.getOnlinePlayers().forEach(p -> p.showPlayer(player));
-        getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(player::hidePlayer);
+        getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull)
+            .forEach(player::hidePlayer);
         player.removePotionEffect(PotionEffectType.INVISIBILITY);
         player.removePotionEffect(PotionEffectType.NIGHT_VISION);
         if (player.getGameMode() == GameMode.SURVIVAL) {
@@ -56,5 +42,22 @@ public class SpectatorTeam extends ScoreboardTeam {
         if (openInventory != null && openInventory instanceof SpectatorInventory) {
             openInventory.close();
         }
+    }
+
+    @Override
+    public void addPlayer(Player player) {
+        super.addPlayer(player);
+        Bukkit.getOnlinePlayers().forEach(p -> p.hidePlayer(player));
+        getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> {
+            player.showPlayer(p);
+            p.showPlayer(player);
+        });
+        player
+            .addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0));
+        player
+            .addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 0));
+        player.setAllowFlight(true);
+        player.setFlying(true);
+        new SpectatorInventory(uhc, player);
     }
 }

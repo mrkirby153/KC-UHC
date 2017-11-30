@@ -7,10 +7,10 @@ import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.ChatColor;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
 import java.util.Set;
-import org.jetbrains.annotations.NotNull;
 
 public class UHCScoreboard extends KirbyScoreboard {
 
@@ -25,7 +25,8 @@ public class UHCScoreboard extends KirbyScoreboard {
         this.game = plugin.getGame();
 
         tablistHealth = addObjective("TablistHealth", DisplaySlot.PLAYER_LIST, "health");
-        belowNameHealth = addObjective(ChatColor.RED + Character.toString('\u2764'), DisplaySlot.BELOW_NAME, "health");
+        belowNameHealth = addObjective(ChatColor.RED + Character.toString('\u2764'),
+            DisplaySlot.BELOW_NAME, "health");
     }
 
     public Objective getBelowNameHealth() {

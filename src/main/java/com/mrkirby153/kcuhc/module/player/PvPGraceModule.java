@@ -6,7 +6,6 @@ import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.module.UHCModule;
-import java.util.HashMap;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.event.UpdateEvent;
@@ -21,6 +20,8 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+
+import java.util.HashMap;
 
 public class PvPGraceModule extends UHCModule {
 
@@ -53,6 +54,11 @@ public class PvPGraceModule extends UHCModule {
         GRACE_MINUTES = Integer.parseInt(data.get("pvp-grace-time"));
     }
 
+    @Override
+    public void saveData(HashMap<String, String> data) {
+        data.put("pvp-grace-time", Integer.toString(GRACE_MINUTES));
+    }
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
         if (event.getDamager().getType() == EntityType.PLAYER) {
@@ -83,11 +89,6 @@ public class PvPGraceModule extends UHCModule {
                 announcePvPGrace();
             }
         }
-    }
-
-    @Override
-    public void saveData(HashMap<String, String> data) {
-        data.put("pvp-grace-time", Integer.toString(GRACE_MINUTES));
     }
 
     public void setGraceMinutes(int grace) {

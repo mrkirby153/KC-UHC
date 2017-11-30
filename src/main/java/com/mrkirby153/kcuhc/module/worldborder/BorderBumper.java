@@ -1,8 +1,6 @@
 package com.mrkirby153.kcuhc.module.worldborder;
 
 import com.mrkirby153.kcuhc.module.UHCModule;
-import java.util.HashMap;
-import java.util.UUID;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
@@ -15,12 +13,16 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.util.Vector;
 
+import java.util.HashMap;
+import java.util.UUID;
+
 public class BorderBumper extends UHCModule {
 
     private HashMap<UUID, Long> bumperCooldown = new HashMap<>();
 
     public BorderBumper() {
-        super("Worldborder Bumper", "Bump players back inside the worldborder", Material.PISTON_BASE);
+        super("Worldborder Bumper", "Bump players back inside the worldborder",
+            Material.PISTON_BASE);
     }
 
     /**
@@ -44,16 +46,17 @@ public class BorderBumper extends UHCModule {
         Direction closest;
         double closestPos = Math.min(distPosX, Math.min(distNegX, Math.min(distPosZ, distNegZ)));
 
-        if (closestPos == distPosX)
+        if (closestPos == distPosX) {
             closest = Direction.POSITIVE_X;
-        else if (closestPos == distNegX)
+        } else if (closestPos == distNegX) {
             closest = Direction.NEGATIVE_X;
-        else if (closestPos == distPosZ)
+        } else if (closestPos == distPosZ) {
             closest = Direction.POSITIVE_Z;
-        else if (closestPos == distNegZ)
+        } else if (closestPos == distNegZ) {
             closest = Direction.NEGATIVE_Z;
-        else
+        } else {
             closest = Direction.UNKNOWN;
+        }
         Vector bumpVector = new Vector(0, 0, 0);
         switch (closest) {
             case POSITIVE_X:
@@ -72,24 +75,31 @@ public class BorderBumper extends UHCModule {
         bumpVector.multiply(0.75);
         bumpVector.setY(0.1879);
         player.setVelocity(bumpVector);
-        player.sendMessage(Chat.INSTANCE.message("Stay inside the worldborder".toUpperCase()).toLegacyText());
+        player.sendMessage(
+            Chat.INSTANCE.message("Stay inside the worldborder".toUpperCase()).toLegacyText());
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BASS, 1F, 1F);
     }
 
     @EventHandler
     public void onUpdate(UpdateEvent event) {
-        if (event.getType() != UpdateType.TICK)
+        if (event.getType() != UpdateType.TICK) {
             return;
+        }
         Bukkit.getOnlinePlayers().forEach(p -> {
-            if (bumperCooldown.containsKey(p.getUniqueId()))
-                if (System.currentTimeMillis() < bumperCooldown.get(p.getUniqueId()))
+            if (bumperCooldown.containsKey(p.getUniqueId())) {
+                if (System.currentTimeMillis() < bumperCooldown.get(p.getUniqueId())) {
                     return;
+                }
+            }
             WorldBorder worldBorder = p.getWorld().getWorldBorder();
             double borderBounds = (worldBorder.getSize() / 2) - 0.25;
-            if (borderBounds < 10)
+            if (borderBounds < 10) {
                 return;
-            if (Math.abs(p.getLocation().getX()) > borderBounds || Math.abs(p.getLocation().getZ()) > borderBounds) {
-                bumpPlayer(p, p.getLocation().getWorld().getWorldBorder().getCenter(), worldBorder.getSize());
+            }
+            if (Math.abs(p.getLocation().getX()) > borderBounds
+                || Math.abs(p.getLocation().getZ()) > borderBounds) {
+                bumpPlayer(p, p.getLocation().getWorld().getWorldBorder().getCenter(),
+                    worldBorder.getSize());
                 bumperCooldown.put(p.getUniqueId(), System.currentTimeMillis() + 500);
             }
         });

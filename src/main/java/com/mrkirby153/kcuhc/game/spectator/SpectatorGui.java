@@ -2,9 +2,6 @@ package com.mrkirby153.kcuhc.game.spectator;
 
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.event.UpdateEvent;
@@ -22,6 +19,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class SpectatorGui extends Gui<UHC> {
 
@@ -44,68 +45,83 @@ public class SpectatorGui extends Gui<UHC> {
         int row = 0;
         for (UHCTeam team : teams) {
             getInventory().setItem(row * 9,
-                    new ItemFactory(Material.WOOL)
-                            .data(getDye(team).getWoolData())
-                            .name(team.getColor() + WordUtils.capitalizeFully(team.getTeamName())).construct());
+                new ItemFactory(Material.WOOL)
+                    .data(getDye(team).getWoolData())
+                    .name(team.getColor() + WordUtils.capitalizeFully(team.getTeamName()))
+                    .construct());
             int column = 1;
-            if (team.getPlayers().size() > 0)
+            if (team.getPlayers().size() > 0) {
                 for (UUID uuid : team.getPlayers()) {
-                    if (column > 8)
+                    if (column > 8) {
                         continue;
+                    }
                     OfflinePlayer player = Bukkit.getPlayer(uuid);
                     boolean offline = false;
                     if (player == null) {
                         player = Bukkit.getOfflinePlayer(uuid);
                         offline = true;
                     }
-                    ItemStack skullItem = offline ? createOfflinePlayer(player.getName()) : createPlayerHead((Player) player);
+                    ItemStack skullItem = offline ? createOfflinePlayer(player.getName())
+                        : createPlayerHead((Player) player);
                     OfflinePlayer finalPlayer = player;
                     addButton((row * 9) + column, skullItem, (p, click) -> {
                         if (finalPlayer instanceof Player) {
                             p.teleport(((Player) finalPlayer).getLocation());
-                            p.sendMessage(Chat.INSTANCE.message("Spectate", "Teleported to {player}",
+                            p.sendMessage(
+                                Chat.INSTANCE.message("Spectate", "Teleported to {player}",
                                     "{player}", finalPlayer.getName()).toLegacyText());
                         }
                     });
                     column++;
                 }
-            else
+            } else {
                 for (int i = 1; i <= 8; i++) {
-                    getInventory().setItem((row * 9) + i, new ItemFactory(Material.BARRIER).name(ChatColor.RED + "" + ChatColor.BOLD + "ELIMINATED!").construct());
+                    getInventory().setItem((row * 9) + i, new ItemFactory(Material.BARRIER)
+                        .name(ChatColor.RED + "" + ChatColor.BOLD + "ELIMINATED!").construct());
                 }
+            }
             row++;
         }
         if (page < paginator.getMaxPages()) {
-            addButton(53, new ItemFactory(Material.ARROW).name("Page " + (page + 1)).amount(page + 1).construct(), (p, click) -> {
-                this.page += 1;
-                build();
-            });
+            addButton(53,
+                new ItemFactory(Material.ARROW).name("Page " + (page + 1)).amount(page + 1)
+                    .construct(), (p, click) -> {
+                    this.page += 1;
+                    build();
+                });
         }
         if (page > 1) {
-            addButton(45, new ItemFactory(Material.ARROW).name("Page " + (page - 1)).amount(page - 1).construct(), (p, click) -> {
-                this.page -= 1;
-                build();
-            });
+            addButton(45,
+                new ItemFactory(Material.ARROW).name("Page " + (page - 1)).amount(page - 1)
+                    .construct(), (p, click) -> {
+                    this.page -= 1;
+                    build();
+                });
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onUpdate(UpdateEvent event) {
-        if (event.getType() == UpdateType.TWO_SECOND)
+        if (event.getType() == UpdateType.TWO_SECOND) {
             build();
+        }
     }
 
     private ItemStack createOfflinePlayer(String name) {
-        return new ItemFactory(Material.SKULL_ITEM).name(name).lore("", ChatColor.RED + "" + ChatColor.BOLD + "OFFLINE").construct();
+        return new ItemFactory(Material.SKULL_ITEM).name(name)
+            .lore("", ChatColor.RED + "" + ChatColor.BOLD + "OFFLINE").construct();
     }
 
     private ItemStack createPlayerHead(Player player) {
         ItemStack itemStack = new ItemFactory(Material.SKULL_ITEM)
-                .data(3)
-                .name(player.getName())
-                .lore(ChatColor.GREEN + "Health: " + ChatColor.RESET + (int) player.getHealth() + "/" + (int) player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(),
-                        ChatColor.GREEN + "Food: " + ChatColor.RESET + String.format("%s", (int) (100 * player.getFoodLevel() / 20D)) + "%",
-                        ChatColor.GREEN + "World: " + ChatColor.RESET + player.getLocation().getWorld().getName()).construct();
+            .data(3)
+            .name(player.getName())
+            .lore(ChatColor.GREEN + "Health: " + ChatColor.RESET + (int) player.getHealth() + "/"
+                    + (int) player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(),
+                ChatColor.GREEN + "Food: " + ChatColor.RESET + String
+                    .format("%s", (int) (100 * player.getFoodLevel() / 20D)) + "%",
+                ChatColor.GREEN + "World: " + ChatColor.RESET + player.getLocation().getWorld()
+                    .getName()).construct();
 
         SkullMeta meta = (SkullMeta) itemStack.getItemMeta();
         meta.setOwner(player.getName());

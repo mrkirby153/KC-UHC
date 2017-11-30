@@ -12,9 +12,6 @@ import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.UHCModule;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Objects;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.Bukkit;
@@ -24,6 +21,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.Inventory;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Objects;
 
 public class TeamInventoryModule extends UHCModule {
 
@@ -45,16 +46,19 @@ public class TeamInventoryModule extends UHCModule {
      */
     public void dropInventory(UHCTeam team, Location location) {
         Inventory inv = getInventory(team);
-        if (inv == null)
+        if (inv == null) {
             return;
-        Arrays.stream(inv.getContents()).filter(Objects::nonNull).forEach(i -> location.getWorld().dropItemNaturally(location, i));
+        }
+        Arrays.stream(inv.getContents()).filter(Objects::nonNull)
+            .forEach(i -> location.getWorld().dropItemNaturally(location, i));
     }
 
     @EventHandler
     public void gameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.ALIVE) {
             this.game.getTeams().values().forEach(
-                    t -> teamInventories.put(t, Bukkit.createInventory(null, 9 * 2, "Team Inventory: " + t.getTeamName())));
+                t -> teamInventories.put(t,
+                    Bukkit.createInventory(null, 9 * 2, "Team Inventory: " + t.getTeamName())));
         }
         if (event.getTo() == GameState.ENDING) {
             this.teamInventories.forEach((team, inventory) -> inventory.clear());
@@ -66,6 +70,7 @@ public class TeamInventoryModule extends UHCModule {
      * Returns the player's team inventory
      *
      * @param player The player
+     *
      * @return The inventory
      */
     public Inventory getInventory(Player player) {
@@ -73,7 +78,8 @@ public class TeamInventoryModule extends UHCModule {
             return getInventory((UHCTeam) game.getTeam(player));
         }
         if (game.getTeam(player) instanceof SpectatorTeam) {
-            player.spigot().sendMessage(Chat.INSTANCE.error("Spectators do not have a team inventory!"));
+            player.spigot()
+                .sendMessage(Chat.INSTANCE.error("Spectators do not have a team inventory!"));
             return null;
         }
         if (game.getTeam(player) == null) {
@@ -87,6 +93,7 @@ public class TeamInventoryModule extends UHCModule {
      * Gets a team inventory for the team
      *
      * @param team The team
+     *
      * @return The inventory
      */
     public Inventory getInventory(UHCTeam team) {
@@ -96,10 +103,12 @@ public class TeamInventoryModule extends UHCModule {
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         ScoreboardTeam team = this.game.getTeam(event.getEntity());
-        if (team == null)
+        if (team == null) {
             return;
-        if (team instanceof SpectatorTeam)
+        }
+        if (team instanceof SpectatorTeam) {
             return;
+        }
         if (team.getPlayers().size() <= 1) {
             dropInventory((UHCTeam) team, event.getEntity().getLocation());
         }
@@ -119,16 +128,21 @@ public class TeamInventoryModule extends UHCModule {
         public void openTeamInventory(Player player) {
             // TODO: 7/27/2017 Add restriction to running game
             if (!ModuleRegistry.INSTANCE.loaded(TeamInventoryModule.class)) {
-                player.sendMessage(Chat.INSTANCE.error("Team inventories are not enabled").toLegacyText());
+                player.sendMessage(
+                    Chat.INSTANCE.error("Team inventories are not enabled").toLegacyText());
                 return;
             }
             if (uhc.getGame().getCurrentState() != GameState.ALIVE) {
-                player.sendMessage(Chat.INSTANCE.error("You cannot open the team inventory before the game starts").toLegacyText());
+                player.sendMessage(
+                    Chat.INSTANCE.error("You cannot open the team inventory before the game starts")
+                        .toLegacyText());
                 return;
             }
-            Inventory inventory = ModuleRegistry.INSTANCE.getModule(TeamInventoryModule.class).getInventory(player);
-            if (inventory != null)
+            Inventory inventory = ModuleRegistry.INSTANCE.getModule(TeamInventoryModule.class)
+                .getInventory(player);
+            if (inventory != null) {
                 player.openInventory(inventory);
+            }
         }
     }
 }

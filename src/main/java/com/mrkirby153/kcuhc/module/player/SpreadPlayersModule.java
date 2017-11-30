@@ -32,7 +32,8 @@ public class SpreadPlayersModule extends UHCModule {
 
     @Inject
     public SpreadPlayersModule(UHCGame game) {
-        super("Spread Players", "Distribute players randomly throughout the map", Material.ENDER_PEARL);
+        super("Spread Players", "Distribute players randomly throughout the map",
+            Material.ENDER_PEARL);
         this.game = game;
         this.autoLoad = true;
     }
@@ -43,13 +44,15 @@ public class SpreadPlayersModule extends UHCModule {
      * @param minRadius The radius
      */
     public void distributeTeams(int minRadius) {
-        System.out.println("Worldborder location +- " + UHC.getUHCWorld().getWorldBorder().getSize() / 2);
+        System.out
+            .println("Worldborder location +- " + UHC.getUHCWorld().getWorldBorder().getSize() / 2);
         System.out.println("Spreading teams...");
 
         Map<UHCTeam, Location> spawnLocations = new HashMap<>();
         List<Location> finalSpawnLocs = new ArrayList<>();
         for (UHCTeam team : game.getTeams().values()) {
-            Location randomSpawn = SpawnUtils.getRandomSpawn(UHC.getUHCWorld(), module.getStartSize());
+            Location randomSpawn = SpawnUtils
+                .getRandomSpawn(UHC.getUHCWorld(), module.getStartSize());
             spawnLocations.put(team, randomSpawn);
         }
         for (Map.Entry<UHCTeam, Location> entry : spawnLocations.entrySet()) {
@@ -60,7 +63,8 @@ public class SpreadPlayersModule extends UHCModule {
             for (int i = 0; i < 1000; i++) {
                 boolean clash = false;
                 for (Location otherLoc : locs) {
-                    if (otherLoc.distanceSquared(spawnLoc) < Math.pow(minRadius, 2) && !otherLoc.equals(spawnLoc)) {
+                    if (otherLoc.distanceSquared(spawnLoc) < Math.pow(minRadius, 2) && !otherLoc
+                        .equals(spawnLoc)) {
 //                        System.out.println("CLASH: " + spawnLoc.toString() + " is too close to " + otherLoc.toString());
                         clash = true;
                         break;
@@ -73,12 +77,17 @@ public class SpreadPlayersModule extends UHCModule {
             }
             finalSpawnLocs.add(spawnLoc);
             final Location finalLoc = spawnLoc;
-            System.out.println(String.format("Teleporting players on team %s around %.2f, %.2f, %.2f", team.getTeamName(), spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ()));
-            team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> {
-                Location spawnAround = SpawnUtils.getSpawnAround(finalLoc, 2);
-                System.out.println(String.format("\tTeleporting %s to %.2f, %.2f, %.2f", p.getName(), spawnAround.getX(), spawnAround.getY(), spawnAround.getZ()));
-                p.teleport(spawnAround);
-            });
+            System.out.println(String
+                .format("Teleporting players on team %s around %.2f, %.2f, %.2f",
+                    team.getTeamName(), spawnLoc.getX(), spawnLoc.getY(), spawnLoc.getZ()));
+            team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull)
+                .forEach(p -> {
+                    Location spawnAround = SpawnUtils.getSpawnAround(finalLoc, 2);
+                    System.out.println(String
+                        .format("\tTeleporting %s to %.2f, %.2f, %.2f", p.getName(),
+                            spawnAround.getX(), spawnAround.getY(), spawnAround.getZ()));
+                    p.teleport(spawnAround);
+                });
         }
     }
 
@@ -102,20 +111,23 @@ public class SpreadPlayersModule extends UHCModule {
 
     @EventHandler
     public void moduleUnload(ModuleUnloadEvent event) {
-        if (event.getModule().getClass() == WorldBorderModule.class)
+        if (event.getModule().getClass() == WorldBorderModule.class) {
             event.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onGameStateChange(GameStateChangeEvent event) {
-        if (event.getTo() == GameState.ALIVE)
+        if (event.getTo() == GameState.ALIVE) {
             this.distributeTeams(getMinDistance());
+        }
     }
 
     @Override
     public void onLoad() {
         if (!ModuleRegistry.INSTANCE.loaded(WorldBorderModule.class)) {
-            ModuleRegistry.INSTANCE.load(module = ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class));
+            ModuleRegistry.INSTANCE
+                .load(module = ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class));
         } else {
             module = ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class);
         }

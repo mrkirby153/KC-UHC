@@ -27,17 +27,22 @@ public class DiscordUHCTeam {
         teamRole = new TeamRoleObject(this.robot, team);
 
         teamRole.create(role -> {
-            textChannel = new TextChannelObject(robot, "team-" + team.getTeamName().replace(' ', '-'));
+            textChannel = new TextChannelObject(robot,
+                "team-" + team.getTeamName().replace(' ', '-'));
             textChannel.create(textChannel -> {
-                PermissionOverride defaultRole = textChannel.getPermissionOverride(this.robot.getGuild().getPublicRole());
-                if (defaultRole == null)
-                    textChannel.createPermissionOverride(this.robot.getGuild().getPublicRole()).setDeny(Permission.MESSAGE_READ).queue();
-                else
+                PermissionOverride defaultRole = textChannel
+                    .getPermissionOverride(this.robot.getGuild().getPublicRole());
+                if (defaultRole == null) {
+                    textChannel.createPermissionOverride(this.robot.getGuild().getPublicRole())
+                        .setDeny(Permission.MESSAGE_READ).queue();
+                } else {
                     defaultRole.getManager().deny(Permission.MESSAGE_READ).queue();
+                }
 
                 PermissionOverride teamRole = textChannel.getPermissionOverride(role);
                 if (teamRole == null) {
-                    textChannel.createPermissionOverride(role).setAllow(Permission.MESSAGE_READ).queue();
+                    textChannel.createPermissionOverride(role).setAllow(Permission.MESSAGE_READ)
+                        .queue();
                 } else {
                     teamRole.getManager().grant(Permission.MESSAGE_READ).queue();
                 }
@@ -45,21 +50,26 @@ public class DiscordUHCTeam {
 
             voiceChannel = new VoiceChannelObject(robot, "Team " + team.getTeamName());
             voiceChannel.create(voiceChannel -> {
-                PermissionOverride defaultRole = voiceChannel.getPermissionOverride(this.robot.getGuild().getPublicRole());
+                PermissionOverride defaultRole = voiceChannel
+                    .getPermissionOverride(this.robot.getGuild().getPublicRole());
                 if (defaultRole == null) {
-                    voiceChannel.createPermissionOverride(this.robot.getGuild().getPublicRole()).setDeny(Permission.VOICE_CONNECT).queue();
+                    voiceChannel.createPermissionOverride(this.robot.getGuild().getPublicRole())
+                        .setDeny(Permission.VOICE_CONNECT).queue();
                 } else {
                     defaultRole.getManager().deny(Permission.VOICE_CONNECT).queue();
                 }
 
                 PermissionOverride teamRole = voiceChannel.getPermissionOverride(role);
-                if (teamRole == null)
-                    voiceChannel.createPermissionOverride(role).setAllow(Permission.VOICE_CONNECT).queue();
-                else
+                if (teamRole == null) {
+                    voiceChannel.createPermissionOverride(role).setAllow(Permission.VOICE_CONNECT)
+                        .queue();
+                } else {
                     teamRole.getManager().grant(Permission.VOICE_CONNECT).queue();
+                }
             });
-            if (consumer != null)
+            if (consumer != null) {
                 consumer.accept(role);
+            }
         });
     }
 

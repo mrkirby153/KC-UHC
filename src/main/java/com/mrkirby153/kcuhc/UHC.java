@@ -19,12 +19,6 @@ import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.player.TeamInventoryModule;
 import com.mrkirby153.kcuhc.player.UHCPlayer;
 import com.mrkirby153.kcuhc.scoreboard.ScoreboardUpdater;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.stream.Collectors;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.command.CommandManager;
 import me.mrkirby153.kcutils.event.UpdateEventHandler;
@@ -36,8 +30,16 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class UHC extends JavaPlugin {
 
+    public static Injector injector;
     private static BukkitCommandManager manager;
     public FlagModule flagModule;
     public ProtocolLib protocolLibManager;
@@ -45,8 +47,6 @@ public class UHC extends JavaPlugin {
     private UpdateEventHandler tickEventHandler;
     private ScoreboardUpdater scoreboardUpdater;
     private UHCGame game;
-
-    public static Injector injector;
 
     /**
      * Gets the ACF command manager
@@ -131,27 +131,33 @@ public class UHC extends JavaPlugin {
             Arrays.stream(GameState.values()).map(GameState::name).forEach(states::add);
             return states;
         });
-        manager.getCommandCompletions().registerCompletion("teams", c -> this.game.getTeams().keySet());
+        manager.getCommandCompletions()
+            .registerCompletion("teams", c -> this.game.getTeams().keySet());
         manager.getCommandCompletions().registerCompletion("modules",
-                c -> ModuleRegistry.INSTANCE.availableModules().stream().map(UHCModule::getInternalName).collect(Collectors.toList()));
+            c -> ModuleRegistry.INSTANCE.availableModules().stream().map(UHCModule::getInternalName)
+                .collect(Collectors.toList()));
         manager.getCommandCompletions().registerCompletion("unloadedModules", c -> {
             HashSet<UHCModule> modules = ModuleRegistry.INSTANCE.availableModules();
             modules.removeIf(m ->
-                    ModuleRegistry.INSTANCE.getLoadedModules().stream().map(UHCModule::getInternalName)
-                            .collect(Collectors.toList()).contains(m.getInternalName()));
+                ModuleRegistry.INSTANCE.getLoadedModules().stream().map(UHCModule::getInternalName)
+                    .collect(Collectors.toList()).contains(m.getInternalName()));
             return modules.stream().map(UHCModule::getInternalName).collect(Collectors.toList());
         });
         manager.getCommandCompletions().registerCompletion("loadedModules",
-                c -> ModuleRegistry.INSTANCE.getLoadedModules().stream().map(UHCModule::getInternalName).collect(Collectors.toList()));
-        manager.getCommandCompletions().registerCompletion("presets", c -> ModuleRegistry.INSTANCE.getAvailablePresets());
+            c -> ModuleRegistry.INSTANCE.getLoadedModules().stream().map(UHCModule::getInternalName)
+                .collect(Collectors.toList()));
+        manager.getCommandCompletions()
+            .registerCompletion("presets", c -> ModuleRegistry.INSTANCE.getAvailablePresets());
 
         // Register resolvers
-        manager.getCommandContexts().registerContext(GameState.class, c -> GameState.valueOf(c.popFirstArg()));
+        manager.getCommandContexts()
+            .registerContext(GameState.class, c -> GameState.valueOf(c.popFirstArg()));
         manager.getCommandContexts().registerContext(UHCPlayer.class, c -> {
             String playerName = c.popFirstArg();
             Player player = Bukkit.getPlayer(playerName);
             if (player == null) {
-                c.getIssuer().sendError(MinecraftMessageKeys.NO_PLAYER_FOUND_SERVER, "{search}", playerName);
+                c.getIssuer()
+                    .sendError(MinecraftMessageKeys.NO_PLAYER_FOUND_SERVER, "{search}", playerName);
                 throw new InvalidCommandArgument(false);
             }
             return UHCPlayer.getPlayer(player);
@@ -161,7 +167,9 @@ public class UHC extends JavaPlugin {
             UHCTeam team = this.game.getTeam(name);
             if (team == null) {
                 c.getSender().sendMessage(
-                    Chat.INSTANCE.message("Error", "There is no team by the name of {team}", "{team}", name).toLegacyText());
+                    Chat.INSTANCE
+                        .message("Error", "There is no team by the name of {team}", "{team}", name)
+                        .toLegacyText());
                 throw new InvalidCommandArgument(false);
             }
             return team;
@@ -170,9 +178,10 @@ public class UHC extends JavaPlugin {
             String internalName = c.popFirstArg();
             UHCModule mod = ModuleRegistry.INSTANCE.getModuleByName(internalName);
             if (mod == null) {
-                c.getSender().sendMessage(Chat.INSTANCE.message("Error", "There is no module by the name of {module}",
+                c.getSender().sendMessage(
+                    Chat.INSTANCE.message("Error", "There is no module by the name of {module}",
                         "{module}", internalName
-                ).toLegacyText());
+                    ).toLegacyText());
                 throw new InvalidCommandArgument(false);
             }
             return mod;
@@ -181,7 +190,8 @@ public class UHC extends JavaPlugin {
         manager.registerCommand(injector.getInstance(GameCommand.class));
         manager.registerCommand(injector.getInstance(CommandTeam.class));
         manager.registerCommand(injector.getInstance(CommandModule.class));
-        manager.registerCommand(injector.getInstance(TeamInventoryModule.TeamInventoryCommand.class));
+        manager
+            .registerCommand(injector.getInstance(TeamInventoryModule.TeamInventoryCommand.class));
         manager.registerCommand(injector.getInstance(CommandSpectate.class));
         manager.registerCommand(injector.getInstance(CommandDiscord.class));
     }

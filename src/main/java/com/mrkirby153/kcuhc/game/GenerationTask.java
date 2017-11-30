@@ -1,8 +1,5 @@
 package com.mrkirby153.kcuhc.game;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import org.bukkit.Bukkit;
@@ -10,6 +7,10 @@ import org.bukkit.Chunk;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 public class GenerationTask implements Runnable {
 

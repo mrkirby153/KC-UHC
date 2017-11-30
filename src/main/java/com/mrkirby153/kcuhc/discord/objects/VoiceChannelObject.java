@@ -18,14 +18,16 @@ public class VoiceChannelObject extends DiscordObject<VoiceChannel> {
     public void create(Consumer<VoiceChannel> callback) {
         robot.getGuild().getController().createVoiceChannel(name).queue(channel -> {
             this.object = (VoiceChannel) channel;
-            if (callback != null)
+            if (callback != null) {
                 callback.accept((VoiceChannel) channel);
+            }
         });
     }
 
     @Override
     public void delete() {
-        if (this.object != null)
+        if (this.object != null) {
             this.object.delete().queue();
+        }
     }
 }

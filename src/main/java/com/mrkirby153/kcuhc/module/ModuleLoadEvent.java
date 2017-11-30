@@ -8,6 +8,7 @@ import org.bukkit.event.HandlerList;
  * Event fired when a {@link UHCModule} is loaded
  */
 public class ModuleLoadEvent extends Event implements Cancellable {
+
     private static HandlerList handlers = new HandlerList();
 
     private boolean canceled = false;

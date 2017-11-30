@@ -7,13 +7,6 @@ import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
-import java.util.stream.Collectors;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.Time;
@@ -33,6 +26,14 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 public class PlayerTrackerModule extends UHCModule {
 
     private Map<Player, Player> targets = new HashMap<>();
@@ -42,7 +43,8 @@ public class PlayerTrackerModule extends UHCModule {
 
     @Inject
     public PlayerTrackerModule(UHC uhc, UHCGame game) {
-        super("Player Tracker", "Compasses will point towards the closest player", Material.ENDER_PEARL);
+        super("Player Tracker", "Compasses will point towards the closest player",
+            Material.ENDER_PEARL);
         this.uhc = uhc;
         this.game = game;
 
@@ -59,14 +61,17 @@ public class PlayerTrackerModule extends UHCModule {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPlayerInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
-        if (game.isSpectator(player))
+        if (game.isSpectator(player)) {
             return;
-        if (event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_AIR) {
+        }
+        if (event.getAction() == Action.LEFT_CLICK_BLOCK
+            || event.getAction() == Action.LEFT_CLICK_AIR) {
             return;
         }
         ItemStack item = event.getItem();
-        if (item == null)
+        if (item == null) {
             return;
+        }
         if (item.getType() == Material.COMPASS) {
             HashSet<UUID> toExclude = new HashSet<>();
             UHCTeam team = (UHCTeam) game.getTeam(player);
@@ -82,7 +87,8 @@ public class PlayerTrackerModule extends UHCModule {
                 this.resetCompass(player);
                 player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1F, 2F);
             } else {
-                double distance = Time.INSTANCE.trim(1, player.getLocation().distance(closestPlayer.getLocation()));
+                double distance = Time.INSTANCE
+                    .trim(1, player.getLocation().distance(closestPlayer.getLocation()));
                 player.spigot().sendMessage(
                     Chat.INSTANCE.message("", "Located {player} {distance} blocks away",
                         "{player}", closestPlayer.getName(), "{distance}", distance));
@@ -95,19 +101,22 @@ public class PlayerTrackerModule extends UHCModule {
 
     @EventHandler(ignoreCancelled = true)
     public void onPrepareItemCraft(PrepareItemCraftEvent event) {
-        if (event.getRecipe() == null || event.getRecipe().getResult() == null || event.getInventory() == null)
+        if (event.getRecipe() == null || event.getRecipe().getResult() == null
+            || event.getInventory() == null) {
             return;
-        if (event.getRecipe().getResult().getType() != Material.COMPASS)
+        }
+        if (event.getRecipe().getResult().getType() != Material.COMPASS) {
             return;
+        }
         event.getInventory().setResult(makeCompass(null));
     }
 
     @Override
     public void onUnload() {
         game.getTeams().values().forEach(t -> t.getPlayers().stream()
-                .map(Bukkit::getPlayer)
-                .filter(Objects::nonNull)
-                .forEach(this::clearCompassMetadata));
+            .map(Bukkit::getPlayer)
+            .filter(Objects::nonNull)
+            .forEach(this::clearCompassMetadata));
     }
 
     @EventHandler
@@ -117,10 +126,12 @@ public class PlayerTrackerModule extends UHCModule {
                 if (tracker.getLocation().getWorld().equals(tracked.getWorld())) {
                     tracker.setCompassTarget(tracked.getLocation());
                 } else {
-                    if (tracker.getBedSpawnLocation() != null)
+                    if (tracker.getBedSpawnLocation() != null) {
                         tracker.setCompassTarget(tracker.getBedSpawnLocation());
-                    else
-                        tracker.setCompassTarget(tracker.getLocation().getWorld().getSpawnLocation());
+                    } else {
+                        tracker
+                            .setCompassTarget(tracker.getLocation().getWorld().getSpawnLocation());
+                    }
                 }
             });
         }
@@ -135,8 +146,9 @@ public class PlayerTrackerModule extends UHCModule {
         PlayerInventory inventory = player.getInventory();
         for (int i = 0; i < inventory.getSize(); i++) {
             ItemStack stack = inventory.getItem(i);
-            if (stack == null)
+            if (stack == null) {
                 continue;
+            }
             if (stack.getType() == Material.COMPASS) {
                 ItemStack newCompass = new ItemStack(Material.COMPASS);
                 inventory.setItem(i, newCompass);
@@ -150,15 +162,16 @@ public class PlayerTrackerModule extends UHCModule {
      *
      * @param location The location
      * @param toIgnore A list of UUIDs to ignore
+     *
      * @return The closest player, or null if none was found
      */
     private Player findClosestPlayer(Location location, Collection<UUID> toIgnore) {
         double closestDistance = Double.MAX_VALUE;
         Player foundPlayer = null;
         for (Player p : Bukkit.getOnlinePlayers().stream()
-                .filter(p -> !toIgnore.contains(p.getUniqueId()))
-                .filter(p -> p.getLocation().getWorld().equals(location.getWorld()))
-                .collect(Collectors.toList())) {
+            .filter(p -> !toIgnore.contains(p.getUniqueId()))
+            .filter(p -> p.getLocation().getWorld().equals(location.getWorld()))
+            .collect(Collectors.toList())) {
             double distance = location.distanceSquared(p.getLocation());
             if (distance < closestDistance) {
                 foundPlayer = p;
@@ -173,6 +186,7 @@ public class PlayerTrackerModule extends UHCModule {
      * Makes a compass
      *
      * @param tracking The player to track
+     *
      * @return The item
      */
     private ItemStack makeCompass(Player tracking) {
@@ -181,9 +195,10 @@ public class PlayerTrackerModule extends UHCModule {
             target = "Tracking: " + tracking.getName();
         }
         return new ItemFactory(Material.COMPASS)
-                .name(ChatColor.AQUA + "Player Tracker (" + ChatColor.GREEN + target + ChatColor.AQUA + ")")
-                .lore("", ChatColor.GRAY + "Right click to set a target")
-                .construct();
+            .name(ChatColor.AQUA + "Player Tracker (" + ChatColor.GREEN + target + ChatColor.AQUA
+                + ")")
+            .lore("", ChatColor.GRAY + "Right click to set a target")
+            .construct();
     }
 
     /**
@@ -192,10 +207,11 @@ public class PlayerTrackerModule extends UHCModule {
      * @param p The player to reset
      */
     private void resetCompass(Player p) {
-        if (p.getBedSpawnLocation() != null)
+        if (p.getBedSpawnLocation() != null) {
             p.setCompassTarget(p.getBedSpawnLocation());
-        else
+        } else {
             p.setCompassTarget(p.getWorld().getSpawnLocation());
+        }
     }
 
     /**
@@ -207,8 +223,9 @@ public class PlayerTrackerModule extends UHCModule {
         PlayerInventory inventory = player.getInventory();
         for (int i = 0; i < inventory.getSize(); i++) {
             ItemStack stack = inventory.getItem(i);
-            if (stack == null)
+            if (stack == null) {
                 return;
+            }
             if (stack.getType() == Material.COMPASS) {
                 Player tracking = targets.get(player);
                 inventory.setItem(i, makeCompass(tracking));

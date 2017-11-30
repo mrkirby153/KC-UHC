@@ -14,16 +14,17 @@ import com.mrkirby153.kcuhc.module.msc.HeightBuildingModule;
 import com.mrkirby153.kcuhc.module.msc.cornucopia.CornucopiaModule;
 import com.mrkirby153.kcuhc.module.player.PvPGraceModule;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.UUID;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import org.bukkit.Color;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.UUID;
 
 @CommandAlias("game")
 public class GameCommand extends BaseCommand {
@@ -41,17 +42,22 @@ public class GameCommand extends BaseCommand {
 
     @Subcommand("build-height")
     public void buildHeight(CommandSender sender, @Optional Integer height) {
-        java.util.Optional<HeightBuildingModule> wbm = ModuleRegistry.INSTANCE.getLoadedModule(HeightBuildingModule.class);
+        java.util.Optional<HeightBuildingModule> wbm = ModuleRegistry.INSTANCE
+            .getLoadedModule(HeightBuildingModule.class);
         if (!wbm.isPresent()) {
-            sender.sendMessage(Chat.INSTANCE.error("The height module is not loaded").toLegacyText());
+            sender
+                .sendMessage(Chat.INSTANCE.error("The height module is not loaded").toLegacyText());
             return;
         }
         if (height == null) {
-            sender.sendMessage(Chat.INSTANCE.message("Build Height", "The build height is set to {height} blocks",
+            sender.sendMessage(
+                Chat.INSTANCE.message("Build Height", "The build height is set to {height} blocks",
                     "{height}", wbm.get().getMaxBuildHeight()).toLegacyText());
         } else {
             wbm.get().setMaxBuildHeight(height);
-            sender.sendMessage(Chat.INSTANCE.message("Build Height", "Set build height to {height} blocks", "{height}", height).toLegacyText());
+            sender.sendMessage(Chat.INSTANCE
+                .message("Build Height", "Set build height to {height} blocks", "{height}", height)
+                .toLegacyText());
         }
     }
 
@@ -59,10 +65,14 @@ public class GameCommand extends BaseCommand {
     public void grace(CommandSender sender, @Optional Integer minutes) {
         ModuleRegistry.INSTANCE.getLoadedModule(PvPGraceModule.class).ifPresent(mod -> {
             if (minutes == null) {
-                sender.sendMessage(Chat.INSTANCE.message("Grace", "Grace is currently {time} minutes", "{time}", mod.getGraceTime()).toLegacyText());
+                sender.sendMessage(Chat.INSTANCE
+                    .message("Grace", "Grace is currently {time} minutes", "{time}",
+                        mod.getGraceTime()).toLegacyText());
             } else {
                 mod.setGraceMinutes(minutes);
-                sender.sendMessage(Chat.INSTANCE.message("Grace", "Set grace to {time} minutes", "{time}", minutes).toLegacyText());
+                sender.sendMessage(
+                    Chat.INSTANCE.message("Grace", "Set grace to {time} minutes", "{time}", minutes)
+                        .toLegacyText());
             }
         });
     }
@@ -75,29 +85,37 @@ public class GameCommand extends BaseCommand {
 
     @Subcommand("stalemate")
     public void resolveStalemate(Player sender, @Optional String code) {
-        java.util.Optional<WorldBorderModule> mod = ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class);
+        java.util.Optional<WorldBorderModule> mod = ModuleRegistry.INSTANCE
+            .getLoadedModule(WorldBorderModule.class);
         if (!mod.isPresent()) {
-            sender.sendMessage(Chat.INSTANCE.error("Worldborder module not loaded!").toLegacyText());
+            sender
+                .sendMessage(Chat.INSTANCE.error("Worldborder module not loaded!").toLegacyText());
             return;
         }
         if (uhc.getGame().getCurrentState() != GameState.ALIVE) {
-            sender.sendMessage(Chat.INSTANCE.error("This can only be run when the game is active!").toLegacyText());
+            sender.sendMessage(Chat.INSTANCE.error("This can only be run when the game is active!")
+                .toLegacyText());
             return;
         }
         if (code != null) {
             String requiredCode = this.stalemateCode.get(sender.getUniqueId());
             if (requiredCode != null && requiredCode.equalsIgnoreCase(code)) {
-                sender.sendMessage(Chat.INSTANCE.message("Stalemate", "Stalemate resolution system activated!").toLegacyText());
+                sender.sendMessage(
+                    Chat.INSTANCE.message("Stalemate", "Stalemate resolution system activated!")
+                        .toLegacyText());
                 this.stalemateCode.remove(sender.getUniqueId());
                 mod.get().resolveStalemate();
             } else {
-                sender.sendMessage(Chat.INSTANCE.message("Stalemate", "Code incorrect.").toLegacyText());
+                sender.sendMessage(
+                    Chat.INSTANCE.message("Stalemate", "Code incorrect.").toLegacyText());
             }
         } else {
             int c = (int) (Math.random() * 10000);
             this.stalemateCode.put(sender.getUniqueId(), Integer.toString(c));
-            sender.sendMessage(Chat.INSTANCE.message("Stalemate", "Are you sure you want to activate the stalemate resolution system? " +
-                    "Type {command} to confirm", "{command}", "/game stalemate " + c).toLegacyText());
+            sender.sendMessage(Chat.INSTANCE.message("Stalemate",
+                "Are you sure you want to activate the stalemate resolution system? " +
+                    "Type {command} to confirm", "{command}", "/game stalemate " + c)
+                .toLegacyText());
         }
     }
 
@@ -105,7 +123,9 @@ public class GameCommand extends BaseCommand {
     @CommandCompletion("@state")
     public void setGameState(CommandSender sender, GameState state) {
         game.setCurrentState(state);
-        sender.sendMessage(Chat.INSTANCE.message("Game", "Set game state to {state}", "{state}", state).toLegacyText());
+        sender.sendMessage(
+            Chat.INSTANCE.message("Game", "Set game state to {state}", "{state}", state)
+                .toLegacyText());
     }
 
     @Subcommand("cornucopia")
@@ -141,24 +161,31 @@ public class GameCommand extends BaseCommand {
         @Subcommand("get")
         public void getBorder(CommandSender sender) {
             if (!ModuleRegistry.INSTANCE.loaded(WorldBorderModule.class)) {
-                sender.sendMessage(Chat.INSTANCE.error("Worldborder is not loaded!").toLegacyText());
+                sender
+                    .sendMessage(Chat.INSTANCE.error("Worldborder is not loaded!").toLegacyText());
                 return;
             }
             WorldBorderModule module = ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class);
-            sender.sendMessage(Chat.INSTANCE.message("Worldborder", "Worldborder will move from {start} to {end} in {time}",
+            sender.sendMessage(Chat.INSTANCE
+                .message("Worldborder", "Worldborder will move from {start} to {end} in {time}",
                     "{start}", module.getStartSize(),
                     "{end}", module.getEndSize(),
-                    "{time}", Time.INSTANCE.format(2, module.getDuration() * 1000, Time.TimeUnit.FIT)).toLegacyText());
+                    "{time}",
+                    Time.INSTANCE.format(2, module.getDuration() * 1000, Time.TimeUnit.FIT))
+                .toLegacyText());
         }
 
         @Subcommand("update")
         public void newTime(CommandSender sender, Integer newTime) {
             if (!ModuleRegistry.INSTANCE.loaded(WorldBorderModule.class)) {
-                sender.sendMessage(Chat.INSTANCE.error("Worldborder is not loaded!").toLegacyText());
+                sender
+                    .sendMessage(Chat.INSTANCE.error("Worldborder is not loaded!").toLegacyText());
                 return;
             }
             if (game.getCurrentState() != GameState.ALIVE) {
-                sender.sendMessage(Chat.INSTANCE.error("This command can only be used when the game is alive!").toLegacyText());
+                sender.sendMessage(
+                    Chat.INSTANCE.error("This command can only be used when the game is alive!")
+                        .toLegacyText());
                 return;
             }
             WorldBorderModule module = ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class);
@@ -168,20 +195,26 @@ public class GameCommand extends BaseCommand {
         @Subcommand("set")
         public void setBorder(CommandSender sender, Integer start, Integer end, Integer time) {
             if (game.getCurrentState() != GameState.WAITING) {
-                sender.sendMessage(Chat.INSTANCE.error("You cannot change the worldborder while the game is in motion!").toLegacyText());
+                sender.sendMessage(Chat.INSTANCE
+                    .error("You cannot change the worldborder while the game is in motion!")
+                    .toLegacyText());
             }
             if (!ModuleRegistry.INSTANCE.loaded(WorldBorderModule.class)) {
-                sender.sendMessage(Chat.INSTANCE.error("Worldborder is not loaded!").toLegacyText());
+                sender
+                    .sendMessage(Chat.INSTANCE.error("Worldborder is not loaded!").toLegacyText());
                 return;
             }
             WorldBorderModule module = ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class);
             module.setStartSize(start);
             module.setEndSize(end);
             module.setDuration(time);
-            sender.sendMessage(Chat.INSTANCE.message("Worldborder", "Worldborder will move from {start} to {end} in {time}",
+            sender.sendMessage(Chat.INSTANCE
+                .message("Worldborder", "Worldborder will move from {start} to {end} in {time}",
                     "{start}", module.getStartSize(),
                     "{end}", module.getEndSize(),
-                    "{time}", Time.INSTANCE.format(2, module.getDuration() * 1000, Time.TimeUnit.FIT)).toLegacyText());
+                    "{time}",
+                    Time.INSTANCE.format(2, module.getDuration() * 1000, Time.TimeUnit.FIT))
+                .toLegacyText());
         }
     }
 
@@ -196,7 +229,8 @@ public class GameCommand extends BaseCommand {
                 builder.append(p).append(", ");
             });
             String presets = builder.toString().trim();
-            sender.sendMessage(Chat.INSTANCE.message("Presets", "Available presets ({count}): {presets}",
+            sender.sendMessage(
+                Chat.INSTANCE.message("Presets", "Available presets ({count}): {presets}",
                     "{count}", ModuleRegistry.INSTANCE.getAvailablePresets().size(),
                     "{presets}", presets).toLegacyText());
         }
@@ -206,7 +240,7 @@ public class GameCommand extends BaseCommand {
             try {
                 ModuleRegistry.INSTANCE.saveToPreset(name);
                 sender.sendMessage(Chat.INSTANCE.message("Preset", "Saved preset {preset}",
-                        "{preset}", name).toLegacyText());
+                    "{preset}", name).toLegacyText());
             } catch (IOException e) {
                 Throwables.propagate(e);
             }
@@ -218,7 +252,7 @@ public class GameCommand extends BaseCommand {
             try {
                 ModuleRegistry.INSTANCE.loadFromPreset(preset);
                 sender.sendMessage(Chat.INSTANCE.message("Preset", "Loaded preset {preset}",
-                        "{preset}", preset).toLegacyText());
+                    "{preset}", preset).toLegacyText());
             } catch (FileNotFoundException e) {
                 sender.sendMessage(Chat.INSTANCE.error("That preset doesn't exist").toLegacyText());
             } catch (IOException e) {

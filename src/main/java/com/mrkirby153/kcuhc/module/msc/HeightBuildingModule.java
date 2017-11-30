@@ -4,13 +4,14 @@ import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
-import java.util.HashMap;
-import java.util.Optional;
 import me.mrkirby153.kcutils.Chat;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockPlaceEvent;
+
+import java.util.HashMap;
+import java.util.Optional;
 
 public class HeightBuildingModule extends UHCModule {
 
@@ -18,7 +19,8 @@ public class HeightBuildingModule extends UHCModule {
     private int MAX_BUILD_HEIGHT = 100;
 
     public HeightBuildingModule() {
-        super("Height Restriction", "Prevents building above a certain height near spawn", Material.IRON_DOOR);
+        super("Height Restriction", "Prevents building above a certain height near spawn",
+            Material.IRON_DOOR);
         autoLoad = true;
     }
 
@@ -35,12 +37,18 @@ public class HeightBuildingModule extends UHCModule {
         MAX_BUILD_HEIGHT = Integer.valueOf(data.get("max-build-height"));
     }
 
+    @Override
+    public void saveData(HashMap<String, String> data) {
+        data.put("max-build-height", Integer.toString(MAX_BUILD_HEIGHT));
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
         int buildRadius = BUILD_RADIUS;
 
         Location center;
-        Optional<WorldBorderModule> mod = ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class);
+        Optional<WorldBorderModule> mod = ModuleRegistry.INSTANCE
+            .getLoadedModule(WorldBorderModule.class);
         if (mod.isPresent()) {
             center = UHC.getUHCWorld().getWorldBorder().getCenter().clone();
             buildRadius = mod.get().getEndSize() / 2;
@@ -58,10 +66,5 @@ public class HeightBuildingModule extends UHCModule {
                     Chat.INSTANCE.error("You cannot build this high near spawn").toLegacyText());
             }
         }
-    }
-
-    @Override
-    public void saveData(HashMap<String, String> data) {
-        data.put("max-build-height", Integer.toString(MAX_BUILD_HEIGHT));
     }
 }

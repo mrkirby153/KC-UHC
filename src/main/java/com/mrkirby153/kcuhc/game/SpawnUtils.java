@@ -27,7 +27,9 @@ public class SpawnUtils {
             block = getHighest(world, x, z);
 
             // Prevent spawning in lava or water (That would be embarrassing)
-            if (!isValid(block)) continue;
+            if (!isValid(block)) {
+                continue;
+            }
             loc = block.getLocation().add(0.5, 0.5, 0.5);
         }
         return loc;
@@ -44,8 +46,9 @@ public class SpawnUtils {
             int zOffset = random.nextInt(radius * 2) - radius;
 
             block = getHighest(location.getWorld(), x + xOffset, z + zOffset);
-            if (!isValid(block))
+            if (!isValid(block)) {
                 continue;
+            }
             loc = block.getLocation().add(0.5, 0.5, 0.5);
         }
         return loc;
@@ -53,6 +56,7 @@ public class SpawnUtils {
 
     private static boolean isValid(Block block) {
         return !block.getRelative(BlockFace.DOWN).isLiquid()
-                && block.getType() == Material.AIR && block.getRelative(BlockFace.UP).getType() == Material.AIR;
+            && block.getType() == Material.AIR
+            && block.getRelative(BlockFace.UP).getType() == Material.AIR;
     }
 }

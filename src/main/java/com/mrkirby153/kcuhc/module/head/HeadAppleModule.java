@@ -5,9 +5,6 @@ import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.function.Predicate;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
@@ -29,16 +26,23 @@ import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.util.Collections;
+import java.util.Objects;
+import java.util.function.Predicate;
+
 public class HeadAppleModule extends UHCModule {
 
-    private static Recipe HEAD_APPLE_RECIPE = new ShapedRecipe(new ItemFactory(Material.GOLDEN_APPLE)
+    private static Recipe HEAD_APPLE_RECIPE = new ShapedRecipe(
+        new ItemFactory(Material.GOLDEN_APPLE)
             .enchantment(Enchantment.ARROW_DAMAGE, 1)
             .name(ChatColor.AQUA + "Head Apple").construct())
-            .shape("GGG", "GHG", "GGG")
-            .setIngredient('G', Material.GOLD_INGOT)
-            .setIngredient('H', new MaterialData(Material.SKULL_ITEM, (byte) SkullType.PLAYER.ordinal()));
+        .shape("GGG", "GHG", "GGG")
+        .setIngredient('G', Material.GOLD_INGOT)
+        .setIngredient('H',
+            new MaterialData(Material.SKULL_ITEM, (byte) SkullType.PLAYER.ordinal()));
 
-    private static Predicate<Recipe> IS_HEAD_APPLE = recipe -> recipe.getResult().getType() == Material.GOLDEN_APPLE
+    private static Predicate<Recipe> IS_HEAD_APPLE = recipe ->
+        recipe.getResult().getType() == Material.GOLDEN_APPLE
             && recipe.getResult().getEnchantments().containsKey(Enchantment.ARROW_DAMAGE);
 
     private UHC uhc;
@@ -52,12 +56,15 @@ public class HeadAppleModule extends UHCModule {
     @EventHandler
     public void consumeHeadApple(PlayerItemConsumeEvent event) {
         ItemStack item = event.getItem();
-        if (item.getItemMeta().getDisplayName() == null)
+        if (item.getItemMeta().getDisplayName() == null) {
             return;
-        if (!item.getItemMeta().getDisplayName().contains("Head"))
+        }
+        if (!item.getItemMeta().getDisplayName().contains("Head")) {
             return;
-        if (!item.getEnchantments().containsKey(Enchantment.ARROW_DAMAGE))
+        }
+        if (!item.getEnchantments().containsKey(Enchantment.ARROW_DAMAGE)) {
             return;
+        }
         if (item.getType() != Material.GOLDEN_APPLE) {
             return;
         }
@@ -66,17 +73,20 @@ public class HeadAppleModule extends UHCModule {
         ScoreboardTeam team = this.uhc.getGame().getTeam(event.getPlayer());
         if (team != null) {
             if (team instanceof UHCTeam) {
-                team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> {
-                    p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
-                    p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
+                team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull)
+                    .forEach(p -> {
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 200, 1));
+                        p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 2400, 1));
 
-                    if (p.getUniqueId().equals(event.getPlayer().getUniqueId())) {
-                        p.spigot().sendMessage(Chat.INSTANCE.message("You have given your team Regeneration II and Absorption"));
-                    } else {
-                        p.spigot().sendMessage(Chat.INSTANCE.message("", "{player} has given you Regeneration II and Absorption",
+                        if (p.getUniqueId().equals(event.getPlayer().getUniqueId())) {
+                            p.spigot().sendMessage(Chat.INSTANCE.message(
+                                "You have given your team Regeneration II and Absorption"));
+                        } else {
+                            p.spigot().sendMessage(Chat.INSTANCE.message("",
+                                "{player} has given you Regeneration II and Absorption",
                                 "{player}", event.getPlayer().getName()));
-                    }
-                });
+                        }
+                    });
             }
         } else {
             Player p = event.getPlayer();
@@ -100,7 +110,8 @@ public class HeadAppleModule extends UHCModule {
     @EventHandler
     public void prepareCraft(PrepareItemCraftEvent event) {
         if (event.getRecipe() != null) {
-            if (event.getRecipe().getResult().containsEnchantment(Enchantment.ARROW_DAMAGE) && event.getRecipe().getResult().getType() == Material.GOLDEN_APPLE) {
+            if (event.getRecipe().getResult().containsEnchantment(Enchantment.ARROW_DAMAGE)
+                && event.getRecipe().getResult().getType() == Material.GOLDEN_APPLE) {
                 // Get player head
                 ItemStack playerHead = event.getInventory().getMatrix()[4];
                 String playerName = null;
@@ -109,7 +120,8 @@ public class HeadAppleModule extends UHCModule {
                 }
                 ItemStack output = event.getInventory().getResult();
                 ItemMeta meta = output.getItemMeta();
-                meta.setLore(Collections.singletonList(ChatColor.WHITE + "Crafted with the head of " + ChatColor.GOLD + playerName));
+                meta.setLore(Collections.singletonList(
+                    ChatColor.WHITE + "Crafted with the head of " + ChatColor.GOLD + playerName));
                 output.setItemMeta(meta);
                 event.getInventory().setResult(output);
             }

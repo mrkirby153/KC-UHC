@@ -19,13 +19,15 @@ public class CornucopiaLootTable {
         addLoot(new ItemFactory(Material.DIAMOND).construct(), 70, 2);
         addLoot(new ItemFactory(Material.DIAMOND_SWORD).construct(), 90, 1, true);
         addLoot(new ItemFactory(Material.STICK).construct(), 10, 3);
-        addLoot(new ItemFactory(Material.DIAMOND_CHESTPLATE).enchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1).construct(), 95, 1, true);
+        addLoot(new ItemFactory(Material.DIAMOND_CHESTPLATE)
+            .enchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 1).construct(), 95, 1, true);
         addLoot(new ItemFactory(Material.COBBLESTONE).construct(), 10, 10);
         addLoot(new ItemFactory(Material.IRON_INGOT).construct(), 45, 2);
         addLoot(new ItemFactory(Material.GOLDEN_APPLE).construct(), 0, 3, true);
         addLoot(new ItemFactory(Material.BEDROCK).construct(), 90, 30);
         addLoot(new ItemFactory(Material.INK_SACK).data(4).construct(), 60, 4);
-        addLoot(new ItemFactory(Material.BOW).enchantment(Enchantment.KNOCKBACK, 30).name("POW!").data(382).construct(), 90, 1, true);
+        addLoot(new ItemFactory(Material.BOW).enchantment(Enchantment.KNOCKBACK, 30).name("POW!")
+            .data(382).construct(), 90, 1, true);
         addLoot(new ItemFactory(Material.EXP_BOTTLE).construct(), 0, 32, true);
         addLoot(new ItemFactory(Material.FLINT_AND_STEEL).data(52).construct(), 60, 1, true);
         addLoot(new ItemFactory(Material.LAVA_BUCKET).construct(), 70, 1, true);
@@ -57,10 +59,11 @@ public class CornucopiaLootTable {
             loot.forEach(lootItem -> {
                 double number = random.nextDouble() * 100;
                 if (lootItem.probability <= number) {
-                    if (lootItem.oneOnly && oneOnly.contains(lootItem))
+                    if (lootItem.oneOnly && oneOnly.contains(lootItem)) {
                         return;
-                    else
+                    } else {
                         oneOnly.add(lootItem);
+                    }
                     ItemStack itemStack = lootItem.itemStack;
                     itemStack.setAmount(Math.max(1, random.nextInt(lootItem.maxStackSize)));
                     toReturn.add(itemStack);
@@ -72,6 +75,7 @@ public class CornucopiaLootTable {
     }
 
     private class LootItem {
+
         private final ItemStack itemStack;
         private final int probability;
         private final boolean oneOnly;

@@ -44,8 +44,9 @@ public class ModuleRegistry {
      * @param directory The directory
      */
     public static void setPresetDirectory(File directory) {
-        if (!directory.exists())
+        if (!directory.exists()) {
             directory.mkdirs();
+        }
         presetDirectory = directory;
     }
 
@@ -65,10 +66,11 @@ public class ModuleRegistry {
      */
     public List<String> getAvailablePresets() {
         ArrayList<String> list = new ArrayList<>();
-        if (presetDirectory != null && presetDirectory.listFiles() != null)
+        if (presetDirectory != null && presetDirectory.listFiles() != null) {
             Arrays.stream(presetDirectory.listFiles()).map(File::getName).forEach(f -> {
                 list.add(f.replace(".json", ""));
             });
+        }
         return list;
     }
 
@@ -76,6 +78,7 @@ public class ModuleRegistry {
      * Gets a {@link UHCModule} if its loaded.
      *
      * @param clazz The module to get
+     *
      * @return An {@link Optional} of the module.
      */
     public <T extends UHCModule> Optional<T> getLoadedModule(Class<T> clazz) {
@@ -100,6 +103,7 @@ public class ModuleRegistry {
      * Gets a {@link UHCModule} by its class
      *
      * @param clazz The module class
+     *
      * @return The module, or null if it wasn't available
      */
     @SuppressWarnings("unchecked")
@@ -108,8 +112,9 @@ public class ModuleRegistry {
             throw new IllegalArgumentException(clazz + " does not extend " + UHCModule.class);
         }
         for (UHCModule mod : availableModules) {
-            if (mod.getClass().equals(clazz))
+            if (mod.getClass().equals(clazz)) {
                 return (T) mod;
+            }
         }
         return null;
     }
@@ -118,12 +123,14 @@ public class ModuleRegistry {
      * Gets a module by its internal name
      *
      * @param internalName The name of the module
+     *
      * @return The module, or null if it doesn't exist
      */
     public UHCModule getModuleByName(String internalName) {
         for (UHCModule m : availableModules) {
-            if (m.getInternalName().equals(internalName))
+            if (m.getInternalName().equals(internalName)) {
                 return m;
+            }
         }
         return null;
     }
@@ -136,8 +143,9 @@ public class ModuleRegistry {
     public void load(UHCModule module) {
         ModuleLoadEvent event = new ModuleLoadEvent(module);
         Bukkit.getServer().getPluginManager().callEvent(event);
-        if (event.isCancelled())
+        if (event.isCancelled()) {
             return;
+        }
         if (module.load()) {
             loadedModules.add(module);
         }
@@ -174,18 +182,21 @@ public class ModuleRegistry {
             }*/
         });
         // Load all modules set to autoload
-        availableModules.stream().filter(UHCModule::autoLoad).filter(m -> !loaded(m.getClass())).forEach(this::load);
+        availableModules.stream().filter(UHCModule::autoLoad).filter(m -> !loaded(m.getClass()))
+            .forEach(this::load);
     }
 
     /**
      * Loads modules from a preset
      *
      * @param presetName The preset to load
+     *
      * @throws java.io.FileNotFoundException If the preset doesn't exist
      * @throws IOException                   If there was an error loading the preset
      */
     public void loadFromPreset(String presetName) throws IOException {
-        FileInputStream inputStream = new FileInputStream(new File(presetDirectory, presetName + ".json"));
+        FileInputStream inputStream = new FileInputStream(
+            new File(presetDirectory, presetName + ".json"));
         JSONObject object = new JSONObject(new JSONTokener(inputStream));
         inputStream.close();
 
@@ -209,12 +220,14 @@ public class ModuleRegistry {
      * Checks if a module is loaded
      *
      * @param clazz The module to check if loaded
+     *
      * @return True if the module is loaded
      */
     public boolean loaded(Class<? extends UHCModule> clazz) {
         for (UHCModule m : this.loadedModules) {
-            if (m.getClass().equals(clazz))
+            if (m.getClass().equals(clazz)) {
                 return true;
+            }
         }
         return false;
     }
@@ -223,6 +236,7 @@ public class ModuleRegistry {
      * Saves the module to a preset
      *
      * @param presetName The name to save
+     *
      * @throws IOException If any error occurrs
      */
     public void saveToPreset(String presetName) throws IOException {
@@ -256,8 +270,9 @@ public class ModuleRegistry {
     public void unload(UHCModule module) {
         ModuleUnloadEvent event = new ModuleUnloadEvent(module);
         Bukkit.getServer().getPluginManager().callEvent(event);
-        if (event.isCancelled())
+        if (event.isCancelled()) {
             return;
+        }
         if (module.unload()) {
             loadedModules.remove(module);
         }
@@ -270,10 +285,12 @@ public class ModuleRegistry {
      */
     private void forceLoad(UHCModule mod) {
         if (mod != null) {
-            if (mod.isLoaded())
+            if (mod.isLoaded()) {
                 return;
-            if (mod.load())
+            }
+            if (mod.load()) {
                 loadedModules.add(mod);
+            }
         }
     }
 
@@ -283,7 +300,8 @@ public class ModuleRegistry {
      * @param module The module to unload
      */
     private void forceUnload(UHCModule module) {
-        if (module.unload())
+        if (module.unload()) {
             loadedModules.remove(module);
+        }
     }
 }

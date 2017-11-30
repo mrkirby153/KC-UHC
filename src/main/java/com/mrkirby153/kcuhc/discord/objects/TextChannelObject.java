@@ -18,16 +18,18 @@ public class TextChannelObject extends DiscordObject<TextChannel> {
     @Override
     public void create(Consumer<TextChannel> callback) {
         robot.getGuild().getController().createTextChannel(name.replace(' ', '-'))
-                .queue(chan -> {
-                    this.object = (TextChannel) chan;
-                    if (callback != null)
-                        callback.accept((TextChannel) chan);
-                });
+            .queue(chan -> {
+                this.object = (TextChannel) chan;
+                if (callback != null) {
+                    callback.accept((TextChannel) chan);
+                }
+            });
     }
 
     @Override
     public void delete() {
-        if (this.object != null)
+        if (this.object != null) {
             this.object.delete().queue();
+        }
     }
 }

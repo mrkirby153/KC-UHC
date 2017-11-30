@@ -10,16 +10,17 @@ import co.aikar.commands.contexts.OnlinePlayer;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Random;
 
 @CommandAlias("team")
 public class CommandTeam extends BaseCommand {
@@ -35,14 +36,17 @@ public class CommandTeam extends BaseCommand {
     @Subcommand("create|add")
     public void createTeam(CommandSender sender, String name, ChatColor color) {
         uhc.getGame().createTeam(name, color);
-        sender.sendMessage(Chat.INSTANCE.message("Team", "Created team {team}!", "{team}", name).toLegacyText());
+        sender.sendMessage(
+            Chat.INSTANCE.message("Team", "Created team {team}!", "{team}", name).toLegacyText());
     }
 
     @Subcommand("delete")
     @CommandCompletion("@teams")
     public void deleteTeam(CommandSender sender, UHCTeam team) {
         uhc.getGame().deleteTeam(team);
-        sender.sendMessage(Chat.INSTANCE.message("Team", "Team {team} removed!", "{team}", team.getTeamName()).toLegacyText());
+        sender.sendMessage(
+            Chat.INSTANCE.message("Team", "Team {team} removed!", "{team}", team.getTeamName())
+                .toLegacyText());
     }
 
     @Subcommand("list")
@@ -55,25 +59,30 @@ public class CommandTeam extends BaseCommand {
         });
         String s = teams.toString();
         String substring = s.substring(0, Math.max(0, s.length() - 2));
-        sender.sendMessage(Chat.INSTANCE.message("Team", "Teams: {teams}", "{teams}", substring).toLegacyText());
+        sender.sendMessage(
+            Chat.INSTANCE.message("Team", "Teams: {teams}", "{teams}", substring).toLegacyText());
     }
 
     @Subcommand("join")
     @CommandCompletion("@teams @players")
     public void joinTeam(Player sender, UHCTeam team, @Optional OnlinePlayer player) {
         if (player != null) {
-            if (uhc.getGame().getTeam(player.player) != null)
+            if (uhc.getGame().getTeam(player.player) != null) {
                 uhc.getGame().getTeam(player.player).removePlayer(player.player);
+            }
             team.addPlayer(player.player);
-            player.player.spigot().sendMessage(Chat.INSTANCE.message("Team", "You have been assigned to {team} by {assignee}",
+            player.player.spigot().sendMessage(
+                Chat.INSTANCE.message("Team", "You have been assigned to {team} by {assignee}",
                     "{team}", team.getTeamName(), "{assignee}", sender.getName()));
             sender.sendMessage(Chat.INSTANCE.message("Team", "Assigned {player} to {team}",
-                    "{player}", player.player.getName(), "{team}", team.getTeamName()).toLegacyText());
+                "{player}", player.player.getName(), "{team}", team.getTeamName()).toLegacyText());
         } else {
-            if (uhc.getGame().getTeam(sender) != null)
+            if (uhc.getGame().getTeam(sender) != null) {
                 uhc.getGame().getTeam(sender).removePlayer(sender);
+            }
             team.addPlayer(sender);
-            sender.spigot().sendMessage(Chat.INSTANCE.message("Team", "You have joined team {team}", "{team}", team.getTeamName()));
+            sender.spigot().sendMessage(Chat.INSTANCE
+                .message("Team", "You have joined team {team}", "{team}", team.getTeamName()));
         }
     }
 
@@ -81,7 +90,8 @@ public class CommandTeam extends BaseCommand {
     public void leaveTeam(Player sender) {
         ScoreboardTeam currentTeam = uhc.getGame().getTeam(sender);
         if (uhc.getGame().getCurrentState() == GameState.ALIVE) {
-            sender.spigot().sendMessage(Chat.INSTANCE.error("You cannot change teams while the game is running!"));
+            sender.spigot().sendMessage(
+                Chat.INSTANCE.error("You cannot change teams while the game is running!"));
             return;
         }
         if (currentTeam == null) {
@@ -89,14 +99,17 @@ public class CommandTeam extends BaseCommand {
             return;
         }
         currentTeam.removePlayer(sender);
-        sender.spigot().sendMessage(Chat.INSTANCE.message("Team", "You have left team {team}", "{team}", currentTeam.getTeamName()));
+        sender.spigot().sendMessage(Chat.INSTANCE
+            .message("Team", "You have left team {team}", "{team}", currentTeam.getTeamName()));
     }
 
     @Subcommand("random")
     public void randomizeTeams(Player sender, Integer teamSize) {
         List<UHCTeam> currentTeams = new ArrayList<>(uhc.getGame().getTeams().values());
         currentTeams.forEach(c -> uhc.getGame().deleteTeam(c));
-        List<ChatColor> blacklistedColors = Arrays.asList(ChatColor.RESET, ChatColor.BOLD, ChatColor.STRIKETHROUGH, ChatColor.MAGIC, ChatColor.WHITE);
+        List<ChatColor> blacklistedColors = Arrays
+            .asList(ChatColor.RESET, ChatColor.BOLD, ChatColor.STRIKETHROUGH, ChatColor.MAGIC,
+                ChatColor.WHITE);
 
         List<Player> availablePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
 
@@ -131,7 +144,8 @@ public class CommandTeam extends BaseCommand {
             selectedPlayers.forEach(t::addPlayer);
             usedColors.add(color);
         }
-        sender.spigot().sendMessage(Chat.INSTANCE.message("Team", "Created {teamSize} teams with {players} players",
+        sender.spigot().sendMessage(
+            Chat.INSTANCE.message("Team", "Created {teamSize} teams with {players} players",
                 "{teamSize}", teamsRequired, "{players}", teamSize));
     }
 
@@ -142,7 +156,8 @@ public class CommandTeam extends BaseCommand {
             sender.spigot().sendMessage(Chat.INSTANCE.message("Team", "You are not on a team!"));
             return;
         }
-        sender.spigot().sendMessage(Chat.INSTANCE.message("Team", "You are on team {team}", "{team}", team.getTeamName()));
+        sender.spigot().sendMessage(
+            Chat.INSTANCE.message("Team", "You are on team {team}", "{team}", team.getTeamName()));
     }
 
     @Subcommand("swap")
@@ -161,7 +176,9 @@ public class CommandTeam extends BaseCommand {
             p2Team.removePlayer(player2.player);
             p2Team.addPlayer(player1.player);
         }
-        sender.spigot().sendMessage(Chat.INSTANCE.message("Team", "Swapping the teams of {p1} and {p2}", "{p1}", player1.player.getName(),
+        sender.spigot().sendMessage(Chat.INSTANCE
+            .message("Team", "Swapping the teams of {p1} and {p2}", "{p1}",
+                player1.player.getName(),
                 "{p2}", player2.player.getName()));
     }
 
@@ -191,6 +208,8 @@ public class CommandTeam extends BaseCommand {
             blueTeam.addPlayer(p);
         }
 
-        player.spigot().sendMessage(Chat.INSTANCE.message("Team", "Created two teams with {players} on each team", "{players}", playersPerTeam));
+        player.spigot().sendMessage(Chat.INSTANCE
+            .message("Team", "Created two teams with {players} on each team", "{players}",
+                playersPerTeam));
     }
 }

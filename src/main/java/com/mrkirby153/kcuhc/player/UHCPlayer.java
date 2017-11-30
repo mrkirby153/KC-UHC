@@ -22,6 +22,7 @@ public class UHCPlayer {
      * Resolves a {@link Player} to a {@link UHCPlayer}
      *
      * @param player The player to resolve
+     *
      * @return The {@link UHCPlayer}
      */
     public static UHCPlayer getPlayer(Player player) {

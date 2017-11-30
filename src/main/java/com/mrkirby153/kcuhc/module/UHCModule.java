@@ -109,13 +109,16 @@ public abstract class UHCModule implements Listener {
      */
     public boolean load() {
         if (this.loaded) {
-            throw new IllegalArgumentException("Attempted to load a module that was already loaded!");
+            throw new IllegalArgumentException(
+                "Attempted to load a module that was already loaded!");
         }
         Bukkit.getServer().getPluginManager().registerEvents(this, UHC.getPlugin(UHC.class));
         try {
             onLoad();
         } catch (Exception e) {
-            UHC.getPlugin(UHC.class).getLogger().severe("An error occurred when loading the module " + this.moduleName + ". It will remain unloaded");
+            UHC.getPlugin(UHC.class).getLogger().severe(
+                "An error occurred when loading the module " + this.moduleName
+                    + ". It will remain unloaded");
             return false;
         }
         this.loaded = true;
@@ -152,7 +155,9 @@ public abstract class UHCModule implements Listener {
             onUnload();
             HandlerList.unregisterAll(this);
         } catch (Exception e) {
-            UHC.getPlugin(UHC.class).getLogger().severe("An error occurred when unloading the module " + this.moduleName + ". It will remain loaded");
+            UHC.getPlugin(UHC.class).getLogger().severe(
+                "An error occurred when unloading the module " + this.moduleName
+                    + ". It will remain loaded");
             return false;
         }
         this.loaded = false;

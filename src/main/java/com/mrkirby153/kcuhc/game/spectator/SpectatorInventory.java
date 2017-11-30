@@ -21,27 +21,36 @@ public class SpectatorInventory extends Inventory<UHC> {
     @Override
     public void build() {
         clear();
-        addItem(hotbarSlot(1), new ItemFactory(Material.COMPASS).name("Spectate " + ChatColor.GREEN + "( Right Click)").construct(), (player1, clickType) -> {
-            new SpectatorGui(getPlugin()).open(player1);
-        });
-        if (getPlayer().getGameMode() != GameMode.SPECTATOR)
-            addItem(hotbarSlot(3), new ItemFactory(Material.BARRIER).name("Enter Vanilla Spectator" + ChatColor.GREEN + " (Right Click)").construct(), (player1, clickType) -> {
-                if (clickType == ClickType.RIGHT) {
-                    player1.setGameMode(GameMode.SPECTATOR);
-                    player1.spigot().sendMessage(Chat.INSTANCE.message("Spectator", "You have entered vanilla spectator mode. Type {spec} to return to survival",
+        addItem(hotbarSlot(1),
+            new ItemFactory(Material.COMPASS).name("Spectate " + ChatColor.GREEN + "( Right Click)")
+                .construct(), (player1, clickType) -> {
+                new SpectatorGui(getPlugin()).open(player1);
+            });
+        if (getPlayer().getGameMode() != GameMode.SPECTATOR) {
+            addItem(hotbarSlot(3), new ItemFactory(Material.BARRIER)
+                    .name("Enter Vanilla Spectator" + ChatColor.GREEN + " (Right Click)").construct(),
+                (player1, clickType) -> {
+                    if (clickType == ClickType.RIGHT) {
+                        player1.setGameMode(GameMode.SPECTATOR);
+                        player1.spigot().sendMessage(Chat.INSTANCE.message("Spectator",
+                            "You have entered vanilla spectator mode. Type {spec} to return to survival",
                             "{spec}", "/spectate"));
-                    build();
-                }
-            });
-        else
-            addItem(hotbarSlot(3), new ItemFactory(Material.WOOL).data(DyeColor.RED.getWoolData()).name("Return to Survival" + ChatColor.GREEN + "(Right Click)").construct(), (p, clickType) -> {
-                if (clickType == ClickType.RIGHT) {
-                    p.setGameMode(GameMode.SURVIVAL);
-                    p.setAllowFlight(true);
-                    p.setFlying(true);
-                    p.spigot().sendMessage(Chat.INSTANCE.message("Spectator", "You have returned to survival mode."));
-                    build();
-                }
-            });
+                        build();
+                    }
+                });
+        } else {
+            addItem(hotbarSlot(3), new ItemFactory(Material.WOOL).data(DyeColor.RED.getWoolData())
+                    .name("Return to Survival" + ChatColor.GREEN + "(Right Click)").construct(),
+                (p, clickType) -> {
+                    if (clickType == ClickType.RIGHT) {
+                        p.setGameMode(GameMode.SURVIVAL);
+                        p.setAllowFlight(true);
+                        p.setFlying(true);
+                        p.spigot().sendMessage(Chat.INSTANCE
+                            .message("Spectator", "You have returned to survival mode."));
+                        build();
+                    }
+                });
+        }
     }
 }

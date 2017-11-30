@@ -17,7 +17,8 @@ public class CountdownTimer implements Runnable {
     public CountdownTimer(JavaPlugin plugin, int time, int interval, Consumer<Integer> function) {
         this.timer = time;
         this.plugin = plugin;
-        taskId = plugin.getServer().getScheduler().scheduleSyncRepeatingTask(plugin, this, 0L, interval);
+        taskId = plugin.getServer().getScheduler()
+            .scheduleSyncRepeatingTask(plugin, this, 0L, interval);
         this.function = function;
     }
 

@@ -24,16 +24,19 @@ public class HardcoreHeartsModule extends UHCModule {
 
     @Override
     public void onLoad() {
-        ProtocolLibrary.getProtocolManager().addPacketListener(listener = new HardcoreHeartsListener(uhc));
+        ProtocolLibrary.getProtocolManager()
+            .addPacketListener(listener = new HardcoreHeartsListener(uhc));
     }
 
     @Override
     public void onUnload() {
-        if (listener != null)
+        if (listener != null) {
             ProtocolLibrary.getProtocolManager().removePacketListener(listener);
+        }
     }
 
     class HardcoreHeartsListener extends PacketAdapter {
+
         HardcoreHeartsListener(JavaPlugin plugin) {
             super(plugin, ListenerPriority.NORMAL, PacketType.Play.Server.LOGIN);
         }
