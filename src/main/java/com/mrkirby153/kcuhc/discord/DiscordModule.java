@@ -3,6 +3,8 @@ package com.mrkirby153.kcuhc.discord;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.discord.mapper.PlayerMapper;
+import com.mrkirby153.kcuhc.discord.mapper.UHCBotLinkMapper;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
@@ -41,6 +43,11 @@ public class DiscordModule extends UHCModule {
      */
     private JDA jda;
 
+    /**
+     * Maps the minecraft players to their discord users
+     */
+    private PlayerMapper mapper;
+
     @Inject
     public DiscordModule(UHC uhc) {
         super("Discord Module", "Integrate Discord with the game", Material.NOTE_BLOCK);
@@ -59,6 +66,7 @@ public class DiscordModule extends UHCModule {
         } catch (RateLimitedException e) {
             Throwables.propagate(e);
         }
+        this.mapper = new UHCBotLinkMapper(this);
     }
 
     @Override
@@ -96,6 +104,15 @@ public class DiscordModule extends UHCModule {
         return this.jda.getGuildById(this.guildId);
     }
 
+    /**
+     * Gets the PlayerMapper currently in use to link a {@link java.util.UUID} to a {@link
+     * net.dv8tion.jda.core.entities.User}
+     *
+     * @return The mapper
+     */
+    public PlayerMapper getMapper() {
+        return mapper;
+    }
 
     /**
      * Load configuration files
