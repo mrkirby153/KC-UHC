@@ -48,25 +48,31 @@ public class DiscordModule extends UHCModule {
      */
     private PlayerMapper mapper;
 
+    private CommandDiscord command;
+
     @Inject
     public DiscordModule(UHC uhc) {
         super("Discord Module", "Integrate Discord with the game", Material.NOTE_BLOCK);
         this.uhc = uhc;
+        this.command = new CommandDiscord(this);
     }
 
     @Override
     public void onLoad() {
         this.loadConfiguration();
-        try {
-            this.jda = new JDABuilder(AccountType.BOT).setToken(this.apiToken)
-                .addEventListener(new EventListener()).setStatus(OnlineStatus.IDLE).buildAsync();
-        } catch (LoginException e) {
-            e.printStackTrace();
-            this.uhc.getLogger().severe("[DISCORD] An error occurred when logging in");
-        } catch (RateLimitedException e) {
-            Throwables.propagate(e);
-        }
-        this.mapper = new UHCBotLinkMapper(this);
+        uhc.getServer().getScheduler().runTaskAsynchronously(uhc, () -> {
+            try {
+                this.jda = new JDABuilder(AccountType.BOT).setToken(this.apiToken)
+                    .addEventListener(new EventListener()).setStatus(OnlineStatus.IDLE)
+                    .buildAsync();
+            } catch (LoginException e) {
+                e.printStackTrace();
+                this.uhc.getLogger().severe("[DISCORD] An error occurred when logging in");
+            } catch (RateLimitedException e) {
+                Throwables.propagate(e);
+            }
+        });
+        UHC.getCommandManager().registerCommand(command);
     }
 
     @Override
@@ -75,6 +81,7 @@ public class DiscordModule extends UHCModule {
             this.jda.shutdown();
             this.jda = null;
         }
+        UHC.getCommandManager().unregisterCommand(command);
     }
 
     /**
@@ -131,6 +138,7 @@ public class DiscordModule extends UHCModule {
             DiscordModule.this.jda.getPresence().setStatus(OnlineStatus.ONLINE);
             DiscordModule.this.uhc.getLogger()
                 .info("[DISCORD] Discord robot connected and initialized successfully!");
+            DiscordModule.this.mapper = new UHCBotLinkMapper(DiscordModule.this);
         }
     }
 }

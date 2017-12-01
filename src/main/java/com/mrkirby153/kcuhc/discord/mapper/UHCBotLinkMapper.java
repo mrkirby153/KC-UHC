@@ -10,6 +10,9 @@ import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
+import org.bukkit.Bukkit;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -142,6 +145,15 @@ public class UHCBotLinkMapper extends ListenerAdapter implements PlayerMapper {
 
                 this.uuidToDiscordMap.put(u, event.getAuthor().getId());
                 this.acceptMessage(event.getMessage());
+                Player p = Bukkit.getPlayer(u);
+                if (p != null) {
+                    p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.MASTER,
+                        1F, 1F);
+                    p.spigot().sendMessage(Chat.INSTANCE.message("Discord",
+                        "Your minecraft account was linked to the discord account {user}",
+                        "{user}",
+                        event.getAuthor().getName() + "#" + event.getAuthor().getDiscriminator()));
+                }
             }
         }
     }

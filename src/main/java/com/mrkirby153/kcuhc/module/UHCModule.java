@@ -116,6 +116,7 @@ public abstract class UHCModule implements Listener {
         try {
             onLoad();
         } catch (Exception e) {
+            e.printStackTrace();
             UHC.getPlugin(UHC.class).getLogger().severe(
                 "An error occurred when loading the module " + this.moduleName
                     + ". It will remain unloaded");
@@ -155,6 +156,7 @@ public abstract class UHCModule implements Listener {
             onUnload();
             HandlerList.unregisterAll(this);
         } catch (Exception e) {
+            e.printStackTrace();
             UHC.getPlugin(UHC.class).getLogger().severe(
                 "An error occurred when unloading the module " + this.moduleName
                     + ". It will remain loaded");
