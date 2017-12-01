@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.module.msc;
 
+import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.UHCModule;
@@ -20,6 +21,7 @@ public class HeightBuildingModule extends UHCModule {
 
     private UHCGame game;
 
+    @Inject
     public HeightBuildingModule(UHCGame game) {
         super("Height Restriction", "Prevents building above a certain height near spawn",
             Material.IRON_DOOR);
