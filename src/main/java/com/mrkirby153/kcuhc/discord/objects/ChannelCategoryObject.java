@@ -1,6 +1,7 @@
 package com.mrkirby153.kcuhc.discord.objects;
 
 import com.mrkirby153.kcuhc.discord.DiscordModule;
+import com.mrkirby153.kcuhc.discord.ObjectRegistry;
 import net.dv8tion.jda.core.entities.Category;
 
 import java.util.function.Consumer;
@@ -18,6 +19,7 @@ public class ChannelCategoryObject extends DiscordObject<Category> {
     public void delete() {
         get().ifPresent(cat -> cat.delete().queue());
         set(null);
+        ObjectRegistry.INSTANCE.unregister(this);
     }
 
     @Override

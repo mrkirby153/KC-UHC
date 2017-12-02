@@ -30,5 +30,6 @@ public class TextChannelObject extends DiscordObject<TextChannel> {
     public void delete() {
         get().ifPresent(chan -> chan.delete().queue());
         set(null);
+        ObjectRegistry.INSTANCE.unregister(this);
     }
 }

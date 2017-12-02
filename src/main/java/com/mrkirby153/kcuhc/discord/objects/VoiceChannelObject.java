@@ -30,5 +30,6 @@ public class VoiceChannelObject extends DiscordObject<VoiceChannel> {
     public void delete() {
         get().ifPresent(chan -> chan.delete().queue());
         set(null);
+        ObjectRegistry.INSTANCE.unregister(this);
     }
 }

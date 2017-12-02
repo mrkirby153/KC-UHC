@@ -36,5 +36,6 @@ public class TeamRoleObject extends DiscordObject<Role> {
     public void delete() {
         get().ifPresent(r -> r.delete().queue());
         set(null);
+        ObjectRegistry.INSTANCE.unregister(this);
     }
 }

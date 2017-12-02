@@ -27,4 +27,13 @@ public class ObjectRegistry {
     public void registerForDelete(IDeletable deletable) {
         this.deletables.add(deletable);
     }
+
+    /**
+     * Unregisters an object from being deleted
+     *
+     * @param deletable The object to unregister`
+     */
+    public void unregister(IDeletable deletable) {
+        this.deletables.remove(deletable);
+    }
 }
