@@ -3,8 +3,11 @@ package com.mrkirby153.kcuhc.discord.objects;
 import com.mrkirby153.kcuhc.discord.DiscordModule;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.PermissionOverride;
 import net.dv8tion.jda.core.entities.Role;
+import net.dv8tion.jda.core.entities.User;
 
 import java.util.function.Consumer;
 
@@ -94,6 +97,56 @@ public class UHCTeamObject extends DiscordObject<UHCTeamObject> {
 
     public VoiceChannelObject getVoiceChannel() {
         return voiceChannel;
+    }
+
+    /**
+     * Adds the user to the team
+     *
+     * @param user     The user to add
+     * @param consumer An optional callback
+     */
+    public void joinTeam(User user, Consumer<User> consumer) {
+        this.getRole().get().ifPresent(role -> {
+            Guild guild = this.bot.getGuild();
+            guild.getController().addRolesToMember(guild.getMember(user), role).queue(ignored -> {
+                if (consumer != null) {
+                    consumer.accept(user);
+                }
+            });
+        });
+    }
+
+    /**
+     * Removes the user from the team
+     *
+     * @param user     The user to remove
+     * @param callback An optional callback
+     */
+    public void leaveTeam(User user, Consumer<User> callback) {
+        this.getRole().get().ifPresent(role -> {
+            Guild guild = this.bot.getGuild();
+            guild.getController().removeRolesFromMember(guild.getMember(user), role)
+                .queue(ignored -> {
+                    if (callback != null) {
+                        callback.accept(user);
+                    }
+                });
+        });
+    }
+
+    /**
+     * Moves the user into the team voice channel
+     *
+     * @param user The user to move
+     */
+    public void moveToTeamChannel(User user) {
+        this.getVoiceChannel().get().ifPresent(chan -> {
+            Guild guild = this.bot.getGuild();
+            Member member = guild.getMember(user);
+            if (member.getVoiceState().inVoiceChannel()) {
+                guild.getController().moveVoiceMember(member, chan).queue();
+            }
+        });
     }
 
     @Override
