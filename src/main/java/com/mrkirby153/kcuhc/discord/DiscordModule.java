@@ -6,6 +6,8 @@ import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.mapper.PlayerMapper;
 import com.mrkirby153.kcuhc.discord.mapper.UHCBotLinkMapper;
 import com.mrkirby153.kcuhc.discord.objects.UHCTeamObject;
+import com.mrkirby153.kcuhc.game.GameState;
+import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import net.dv8tion.jda.core.AccountType;
@@ -13,14 +15,20 @@ import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.event.EventHandler;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.security.auth.login.LoginException;
 
 public class DiscordModule extends UHCModule {
@@ -62,7 +70,7 @@ public class DiscordModule extends UHCModule {
 
     @Inject
     public DiscordModule(UHC uhc) {
-        super("Discord Module", "Integrate Discord with the game", Material.NOTE_BLOCK);
+        super("Discord", "Integrate Discord with the game", Material.NOTE_BLOCK);
         this.uhc = uhc;
         this.command = new CommandDiscord(this);
     }
@@ -142,7 +150,7 @@ public class DiscordModule extends UHCModule {
         this.uhc.getGame().getTeams().forEach((name, team) -> {
             UHCTeamObject obj = new UHCTeamObject(this, team);
             this.teams.put(team, obj);
-            new JoinTeamRunnable(this.uhc,team, obj, this);
+            new JoinTeamRunnable(this.uhc, team, obj, this);
             obj.create();
         });
         this.created = true;
@@ -155,6 +163,50 @@ public class DiscordModule extends UHCModule {
         this.teams.forEach((team, obj) -> obj.delete());
         this.teams.clear();
         this.created = false;
+    }
+
+    /**
+     * Moves all online members from their channels into the lobby channel. <br/> If the lobby
+     * channel does not exist, it will be created
+     *
+     * @param callback A callback called when everyone has been moved
+     */
+    public void moveEveryoneToLobby(Consumer<Void> callback) {
+        VoiceChannel lobbyChan = null;
+        // Attempt to find a channel named "general" or "lobby"
+        for (VoiceChannel c : this.getGuild().getVoiceChannels()) {
+            if (c.getName().equalsIgnoreCase("general") || c.getName().equalsIgnoreCase("lobby")) {
+                lobbyChan = c;
+                break;
+            }
+        }
+        if (lobbyChan == null) {
+            lobbyChan = (VoiceChannel) this.getGuild().getController().createVoiceChannel("Lobby")
+                .complete();
+        }
+        List<Member> members = this.getGuild().getMembers().stream()
+            .filter(m -> m.getVoiceState().inVoiceChannel()).collect(
+                Collectors.toList());
+        for (int i = 0; i < members.size(); i++) {
+            int finalI = i;
+            this.getGuild().getController().moveVoiceMember(members.get(i), lobbyChan).queue(v -> {
+                if (finalI >= members.size() - 1) {
+                    if (callback != null) {
+                        callback.accept(null);
+                    }
+                }
+            });
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onGameStateChange(GameStateChangeEvent event) {
+        if (event.getTo() == GameState.ALIVE) {
+            this.createTeams();
+        }
+        if (event.getTo() == GameState.ENDING) {
+            this.moveEveryoneToLobby(success -> this.remove());
+        }
     }
 
     /**
