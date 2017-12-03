@@ -10,6 +10,7 @@ import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
+import me.mrkirby153.kcutils.Chat;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
@@ -20,7 +21,10 @@ import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 
@@ -68,6 +72,8 @@ public class DiscordModule extends UHCModule {
     private boolean created;
     private Map<UHCTeam, UHCTeamObject> teams = new HashMap<>();
 
+    private int nagTaskId;
+
     @Inject
     public DiscordModule(UHC uhc) {
         super("Discord", "Integrate Discord with the game", Material.NOTE_BLOCK);
@@ -91,6 +97,20 @@ public class DiscordModule extends UHCModule {
             }
         });
         UHC.getCommandManager().registerCommand(command);
+        this.nagTaskId = this.uhc.getServer().getScheduler()
+            .scheduleSyncRepeatingTask(this.uhc, () -> {
+                if (this.uhc.getGame().getCurrentState() == GameState.WAITING && this.getMapper() != null) {
+                    Bukkit.getOnlinePlayers().stream()
+                        .filter(p -> this.getMapper().getUser(p.getUniqueId()) == null)
+                        .forEach(p -> {
+                            p.spigot().sendMessage(Chat.INSTANCE.message("Discord",
+                                "Your discord and minecraft account aren't linked. Type {command} to begin the process",
+                                "{command}", "/discord link"));
+                            p.playSound(p.getLocation(), Sound.ENTITY_CHICKEN_EGG,
+                                SoundCategory.MASTER, 1F, 1F);
+                        });
+                }
+            }, 0L, 600L);
     }
 
     @Override
@@ -101,6 +121,7 @@ public class DiscordModule extends UHCModule {
         }
         UHC.getCommandManager().unregisterCommand(command);
         ObjectRegistry.INSTANCE.delete();
+        this.uhc.getServer().getScheduler().cancelTask(this.nagTaskId);
     }
 
     /**
