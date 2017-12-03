@@ -5,6 +5,8 @@ import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.mapper.PlayerMapper;
 import com.mrkirby153.kcuhc.discord.mapper.UHCBotLinkMapper;
+import com.mrkirby153.kcuhc.discord.objects.UHCTeamObject;
+import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
@@ -17,6 +19,8 @@ import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.security.auth.login.LoginException;
 
 public class DiscordModule extends UHCModule {
@@ -50,6 +54,12 @@ public class DiscordModule extends UHCModule {
 
     private CommandDiscord command;
 
+    /**
+     * If the teams have already been created and everyone assigned
+     */
+    private boolean created;
+    private Map<UHCTeam, UHCTeamObject> teams = new HashMap<>();
+
     @Inject
     public DiscordModule(UHC uhc) {
         super("Discord Module", "Integrate Discord with the game", Material.NOTE_BLOCK);
@@ -82,6 +92,7 @@ public class DiscordModule extends UHCModule {
             this.jda = null;
         }
         UHC.getCommandManager().unregisterCommand(command);
+        ObjectRegistry.INSTANCE.delete();
     }
 
     /**
@@ -119,6 +130,31 @@ public class DiscordModule extends UHCModule {
      */
     public PlayerMapper getMapper() {
         return mapper;
+    }
+
+    /**
+     * Create teams and move everyone
+     */
+    public void createTeams() {
+        if (this.created) {
+            return;
+        }
+        this.uhc.getGame().getTeams().forEach((name, team) -> {
+            UHCTeamObject obj = new UHCTeamObject(this, team);
+            this.teams.put(team, obj);
+            new JoinTeamRunnable(this.uhc,team, obj, this);
+            obj.create();
+        });
+        this.created = true;
+    }
+
+    /**
+     * Removes all the teams
+     */
+    public void remove() {
+        this.teams.forEach((team, obj) -> obj.delete());
+        this.teams.clear();
+        this.created = false;
     }
 
     /**

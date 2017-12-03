@@ -6,6 +6,7 @@ import co.aikar.commands.annotation.Subcommand;
 import me.mrkirby153.kcutils.Chat;
 import net.dv8tion.jda.core.entities.User;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
@@ -44,5 +45,17 @@ public class CommandDiscord extends BaseCommand {
             .map(Bukkit::getPlayer).filter(
             Objects::nonNull).forEach(
             p -> sender.spigot().sendMessage(Chat.INSTANCE.message(p.getName(), "Unlinked!")));
+    }
+
+    @Subcommand("create")
+    public void createTeams(CommandSender sender){
+        this.module.createTeams();
+        sender.sendMessage(Chat.INSTANCE.message("Discord", "Starting creation of teams...").toLegacyText());
+    }
+
+    @Subcommand("destroy")
+    public void destroy(CommandSender sender){
+        this.module.remove();
+        sender.sendMessage(Chat.INSTANCE.message("Discord", "Removing teams...").toLegacyText());
     }
 }

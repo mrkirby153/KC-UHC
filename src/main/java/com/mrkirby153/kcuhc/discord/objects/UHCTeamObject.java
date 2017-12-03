@@ -164,4 +164,15 @@ public class UHCTeamObject extends DiscordObject<UHCTeamObject> {
             this.channelCategory.delete();
         }
     }
+
+    /**
+     * Checks if all parts of the team have been created
+     *
+     * @return True if the text and voice channel as well as the role are all created
+     */
+    public boolean isCreated() {
+        return this.role != null && this.textChannel != null && this.voiceChannel != null
+            && this.role.get().isPresent() && this.textChannel.get().isPresent()
+            && this.voiceChannel.get().isPresent();
+    }
 }

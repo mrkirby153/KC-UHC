@@ -28,6 +28,7 @@ public class ChannelCategoryObject extends DiscordObject<Category> {
             if (callback != null) {
                 callback.accept((Category) cat);
             }
+            set((Category) cat);
         });
     }
 }
