@@ -10,6 +10,8 @@ import com.mrkirby153.kcuhc.module.UHCModule;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.Time;
+import me.mrkirby153.kcutils.Time.TimeUnit;
+import me.mrkirby153.kcutils.cooldown.Cooldown;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
 import org.bukkit.Bukkit;
@@ -17,6 +19,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -26,6 +29,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,13 +45,16 @@ public class PlayerTrackerModule extends UHCModule {
     private UHC uhc;
     private UHCGame game;
 
+    private Cooldown<UUID> cooldown = new Cooldown<>(10 * 1000);
+
+    private ArrayList<UUID> notify = new ArrayList<>();
+
     @Inject
     public PlayerTrackerModule(UHC uhc, UHCGame game) {
         super("Player Tracker", "Compasses will point towards the closest player",
             Material.ENDER_PEARL);
         this.uhc = uhc;
         this.game = game;
-
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -73,6 +80,15 @@ public class PlayerTrackerModule extends UHCModule {
             return;
         }
         if (item.getType() == Material.COMPASS) {
+            if (!cooldown.check(player.getUniqueId())) {
+                player.spigot().sendMessage(Chat.INSTANCE
+                    .message("Cooldown", "You can use this again in {time}", "{time}", Time.INSTANCE
+                        .format(1, cooldown.getTimeLeft(player.getUniqueId()), TimeUnit.FIT)));
+                return;
+            } else {
+                cooldown.use(player.getUniqueId());
+                this.notify.add(player.getUniqueId());
+            }
             HashSet<UUID> toExclude = new HashSet<>();
             UHCTeam team = (UHCTeam) game.getTeam(player);
             if (team != null) {
@@ -112,14 +128,21 @@ public class PlayerTrackerModule extends UHCModule {
     }
 
     @Override
+    public void onLoad() {
+        this.uhc.cooldownManager.displayCooldown(Material.COMPASS, this.cooldown);
+        super.onLoad();
+    }
+
+    @Override
     public void onUnload() {
+        this.uhc.cooldownManager.removeCooldown(Material.COMPASS);
         game.getTeams().values().forEach(t -> t.getPlayers().stream()
             .map(Bukkit::getPlayer)
             .filter(Objects::nonNull)
             .forEach(this::clearCompassMetadata));
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onUpdate(UpdateEvent event) {
         if (event.getType() == UpdateType.TWO_SECOND) {
             this.targets.forEach((tracker, tracked) -> {
@@ -134,6 +157,16 @@ public class PlayerTrackerModule extends UHCModule {
                     }
                 }
             });
+        }
+        if(event.getType() == UpdateType.TICK){
+            notify.forEach(p -> {
+                if(this.cooldown.check(p)){
+                    Player player = Bukkit.getPlayer(p);
+                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, SoundCategory.MASTER, 1F, 1F);
+                    player.spigot().sendMessage(Chat.INSTANCE.message("Cooldown", "Compass recharged!"));
+                }
+            });
+            notify.removeIf(p -> this.cooldown.check(p));
         }
     }
 
