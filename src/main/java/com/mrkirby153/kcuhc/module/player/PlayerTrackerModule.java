@@ -19,7 +19,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -29,7 +28,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -45,9 +43,8 @@ public class PlayerTrackerModule extends UHCModule {
     private UHC uhc;
     private UHCGame game;
 
-    private Cooldown<UUID> cooldown = new Cooldown<>(10 * 1000);
+    private Cooldown<UUID> cooldown = new Cooldown<>(10 * 1000, "Player Tracker", true);
 
-    private ArrayList<UUID> notify = new ArrayList<>();
 
     @Inject
     public PlayerTrackerModule(UHC uhc, UHCGame game) {
@@ -87,7 +84,6 @@ public class PlayerTrackerModule extends UHCModule {
                 return;
             } else {
                 cooldown.use(player.getUniqueId());
-                this.notify.add(player.getUniqueId());
             }
             HashSet<UUID> toExclude = new HashSet<>();
             UHCTeam team = (UHCTeam) game.getTeam(player);
@@ -130,12 +126,14 @@ public class PlayerTrackerModule extends UHCModule {
     @Override
     public void onLoad() {
         this.uhc.cooldownManager.displayCooldown(Material.COMPASS, this.cooldown);
+        this.uhc.cooldownManager.registerNotifiable(this.cooldown);
         super.onLoad();
     }
 
     @Override
     public void onUnload() {
         this.uhc.cooldownManager.removeCooldown(Material.COMPASS);
+        this.uhc.cooldownManager.unregisterNotifiable(this.cooldown);
         game.getTeams().values().forEach(t -> t.getPlayers().stream()
             .map(Bukkit::getPlayer)
             .filter(Objects::nonNull)
@@ -157,16 +155,6 @@ public class PlayerTrackerModule extends UHCModule {
                     }
                 }
             });
-        }
-        if(event.getType() == UpdateType.TICK){
-            notify.forEach(p -> {
-                if(this.cooldown.check(p)){
-                    Player player = Bukkit.getPlayer(p);
-                    player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, SoundCategory.MASTER, 1F, 1F);
-                    player.spigot().sendMessage(Chat.INSTANCE.message("Cooldown", "Compass recharged!"));
-                }
-            });
-            notify.removeIf(p -> this.cooldown.check(p));
         }
     }
 
