@@ -12,6 +12,7 @@ import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
+import me.mrkirby153.kcutils.structure.RelativeBlock;
 import me.mrkirby153.kcutils.structure.Structure;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -20,19 +21,20 @@ import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.EventHandler;
+import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.util.Random;
 
 public class CornucopiaModule extends UHCModule {
 
-    private static final int CORN_SIZE_X = 6;
-    private static final int CORN_SIZE_Y = 6;
-    private static final int CORN_SIZE_Z = 6;
+    private static final String CORN_STRUCTURE = "cornucopia.yml";
+
     private UHC uhc;
     private UHCGame game;
-    private boolean spawned = false;
+    private Structure cornucopiaStructure;
 
     @Inject
     public CornucopiaModule(UHC uhc, UHCGame game) {
@@ -43,17 +45,32 @@ public class CornucopiaModule extends UHCModule {
 
     @EventHandler(ignoreCancelled = true)
     public void onGameStateChange(GameStateChangeEvent event) {
-        if (event.getTo() == GameState.ALIVE) {
-            spawned = false;
+        if(event.getTo() == GameState.ALIVE){
+            if(this.cornucopiaStructure.getPlaced()){
+                this.cornucopiaStructure.restore();
+            }
+        }
+        if(event.getTo() == GameState.ENDED){
+            this.cornucopiaStructure.restore();
         }
     }
 
     @Override
     public void onLoad() {
         // Copy the cornucopia file out of the jar
-        if (!new File(uhc.getDataFolder(), "cornucopia.schematic").exists()) {
-            uhc.saveResource("cornucopia.schematic", false);
+        File cornucopiaFile = new File(uhc.getDataFolder(), CORN_STRUCTURE);
+        if (!cornucopiaFile.exists()) {
+            this.uhc.getLogger()
+                .info("[CORNUCOPIA] Cornucopia structure file does not exist, creating...");
+            this.uhc.saveResource(CORN_STRUCTURE, false);
         }
+        // Load the cornucopia structure
+        this.cornucopiaStructure = new Structure(
+            YamlConfiguration.loadConfiguration(cornucopiaFile));
+        this.uhc.getLogger()
+            .info(String.format("[CORNUCOPIA] Loaded cornucopia with size %s, %s, %s",
+                this.cornucopiaStructure.getSizeX(), this.cornucopiaStructure.getSizeY(),
+                this.cornucopiaStructure.getSizeZ()));
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -73,9 +90,8 @@ public class CornucopiaModule extends UHCModule {
 
                     double percentDone = blocksTraveled / totalBlocksToTravel;
 
-                    if (percentDone >= 0.75 && !spawned) {
+                    if (percentDone >= 0.75 && !this.cornucopiaStructure.getPlaced()) {
                         spawnCornucopia(currentSize);
-                        spawned = true;
                     }
                 });
         }
@@ -83,9 +99,10 @@ public class CornucopiaModule extends UHCModule {
 
     public void spawnCornucopia(double maxRadius) {
         Location randomSpawn = SpawnUtils
-            .getRandomSpawn(this.game.getUHCWorld(), (int) Math.floor(maxRadius));
+            .getRandomSpawn(this.game.getUHCWorld(), (int) Math.floor(maxRadius * 0.75)).subtract(new Vector(0, 1, 0));
         System.out.println("Cornucopia has spawned at " + randomSpawn);
-        new Structure(new File(uhc.getDataFolder(), "cornucopia.schematic")).place(randomSpawn);
+        this.cornucopiaStructure.restore();
+        this.cornucopiaStructure.placeAll(randomSpawn);
         Bukkit.getOnlinePlayers().forEach(player -> {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, SoundCategory.MASTER, 1F,
                 1F);
@@ -100,21 +117,18 @@ public class CornucopiaModule extends UHCModule {
     private void fillChests(Location location) {
         CornucopiaLootTable table = new CornucopiaLootTable();
         Random random = new Random();
-        for (int x = location.getBlockX(); x >= location.getBlockX() - CORN_SIZE_X; x--) {
-            for (int z = location.getBlockZ(); z < location.getBlockZ() + CORN_SIZE_Z; z++) {
-                for (int y = location.getBlockY(); y < location.getBlockY() + CORN_SIZE_Y; y++) {
-                    Block b = location.getWorld().getBlockAt(x, y, z);
-                    if (b.getType() == Material.CHEST) {
-                        Chest chest = (Chest) b.getState();
-                        table.get(5).forEach(item -> {
-                            int slot = 0;
-                            do {
-                                slot = random.nextInt(chest.getBlockInventory().getSize());
-                            } while (chest.getBlockInventory().getItem(slot) != null);
-                            chest.getBlockInventory().setItem(slot, item);
-                        });
-                    }
-                }
+        for(RelativeBlock b : this.cornucopiaStructure.getBlocks()){
+            Block block = b.getLocation(location).getBlock();
+            if(block.getType() == Material.CHEST){
+                Chest c = (Chest) block.getState();
+                System.out.println(String.format("Found chest at %d, %d, %d", block.getX(), block.getY(), block.getZ()));
+                table.get(5).forEach(item -> {
+                    int slot;
+                    do {
+                        slot = random.nextInt(c.getBlockInventory().getSize());
+                    } while(c.getBlockInventory().getItem(slot) != null);
+                    c.getBlockInventory().setItem(slot, item);
+                });
             }
         }
     }
