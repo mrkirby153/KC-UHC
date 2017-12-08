@@ -26,7 +26,7 @@ public class UHCScoreboard extends KirbyScoreboard {
 
         tablistHealth = addObjective("TablistHealth", DisplaySlot.PLAYER_LIST, "health");
         belowNameHealth = addObjective(ChatColor.RED + Character.toString('\u2764'),
-            DisplaySlot.BELOW_NAME, "health");
+            DisplaySlot.BELOW_NAME, "dummy");
     }
 
     public Objective getBelowNameHealth() {
