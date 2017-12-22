@@ -11,6 +11,7 @@ import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.SkullType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -32,14 +33,7 @@ import java.util.function.Predicate;
 
 public class HeadAppleModule extends UHCModule {
 
-    private static Recipe HEAD_APPLE_RECIPE = new ShapedRecipe(
-        new ItemFactory(Material.GOLDEN_APPLE)
-            .enchantment(Enchantment.ARROW_DAMAGE, 1)
-            .name(ChatColor.AQUA + "Head Apple").construct())
-        .shape("GGG", "GHG", "GGG")
-        .setIngredient('G', Material.GOLD_INGOT)
-        .setIngredient('H',
-            new MaterialData(Material.SKULL_ITEM, (byte) SkullType.PLAYER.ordinal()));
+    private Recipe HEAD_APPLE_RECIPE;
 
     private static Predicate<Recipe> IS_HEAD_APPLE = recipe ->
         recipe.getResult().getType() == Material.GOLDEN_APPLE
@@ -51,6 +45,14 @@ public class HeadAppleModule extends UHCModule {
     public HeadAppleModule(UHC uhc) {
         super("Head Apple", "Player heads can be crafted into head apples", Material.APPLE);
         this.uhc = uhc;
+        HEAD_APPLE_RECIPE = new ShapedRecipe(new NamespacedKey(uhc, "head-apple"),
+            new ItemFactory(Material.GOLDEN_APPLE)
+                .enchantment(Enchantment.ARROW_DAMAGE, 1)
+                .name(ChatColor.AQUA + "Head Apple").construct())
+            .shape("GGG", "GHG", "GGG")
+            .setIngredient('G', Material.GOLD_INGOT)
+            .setIngredient('H',
+                new MaterialData(Material.SKULL_ITEM, (byte) SkullType.PLAYER.ordinal()));
     }
 
     @EventHandler
