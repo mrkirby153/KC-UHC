@@ -24,6 +24,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.scoreboard.Objective;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -137,9 +139,10 @@ public class ScoreboardUpdater implements Listener {
                                 } else {
                                     nameColor = ChatColor.GREEN;
                                 }
+                                float abs = this.getAbsorption(pl);
                                 finalScoreboard.add(
-                                    nameColor + p.getName() + " " + ChatColor.RED + (int) pl
-                                        .getHealth());
+                                    nameColor + p.getName() + " " + ChatColor.RED + (int) (pl
+                                        .getHealth() + abs));
                             } else {
                                 finalScoreboard.add(ChatColor.GRAY + p.getName());
                             }
@@ -173,12 +176,47 @@ public class ScoreboardUpdater implements Listener {
         Objective tabList = scoreboard.getTablistHealth();
         Objective belowName = scoreboard.getBelowNameHealth();
         Bukkit.getOnlinePlayers().forEach(p -> {
-            tabList.getScore(p.getName()).setScore((int) p.getHealth());
-            belowName.getScore(p.getName()).setScore((int) p.getHealth());
+            if (tabList.getScore(p.getName()).getScore() == 0 && !p.isDead()) {
+                tabList.getScore(p.getName()).setScore((int) p.getHealth());
+            }
+            if (belowName.getScore(p.getName()).getScore() == 0 && !p.isDead()) {
+                belowName.getScore(p.getName()).setScore((int) p.getHealth());
+            }
         });
         scoreboard.draw();
         if (player.getScoreboard() != scoreboard.getBoard()) {
             player.setScoreboard(scoreboard.getBoard());
+        }
+    }
+
+    private float getAbsorption(Player player) {
+        if (getVersion().equals("unknown")) {
+            return 0; // We couldn't determine the version
+        }
+        try {
+            Class<?> craftPlayerClass = Class
+                .forName("org.bukkit.craftbukkit." + getVersion() + ".entity.CraftPlayer");
+            Method handleMethod = craftPlayerClass.getMethod("getHandle");
+            handleMethod.setAccessible(true);
+
+            Object entityPlayer = handleMethod.invoke(craftPlayerClass.cast(player));
+
+            Class<?> entityPlayerClass = entityPlayer.getClass();
+            Method absorptionMethod = entityPlayerClass.getMethod("getAbsorptionHearts");
+            absorptionMethod.setAccessible(true);
+            return (float) absorptionMethod.invoke(entityPlayer);
+        } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            // Fail silently
+        }
+        return 0;
+    }
+
+    private String getVersion() {
+        try {
+            return Bukkit.getServer().getClass().getPackage().getName().replace(".", ",")
+                .split(",")[3];
+        } catch (IndexOutOfBoundsException e) {
+            return "unknown";
         }
     }
 }
