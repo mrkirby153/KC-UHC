@@ -179,9 +179,7 @@ public class ScoreboardUpdater implements Listener {
             if (tabList.getScore(p.getName()).getScore() == 0 && !p.isDead()) {
                 tabList.getScore(p.getName()).setScore((int) p.getHealth());
             }
-            if (belowName.getScore(p.getName()).getScore() == 0 && !p.isDead()) {
-                belowName.getScore(p.getName()).setScore((int) p.getHealth());
-            }
+                belowName.getScore(p.getName()).setScore((int) (p.getHealth()+getAbsorption(p)));
         });
         scoreboard.draw();
         if (player.getScoreboard() != scoreboard.getBoard()) {

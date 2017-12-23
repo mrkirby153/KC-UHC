@@ -26,8 +26,10 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.potion.PotionEffect;
@@ -250,7 +252,7 @@ public class UHCGame implements Listener {
                 p.addPotionEffect(
                     new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 5, true));
             });
-        this.getUHCWorld().setGameRuleValue("doDaylightCycle", "true");
+            this.getUHCWorld().setGameRuleValue("doDaylightCycle", "true");
             this.getUHCWorld().setTime(0);
         }
         if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
@@ -357,6 +359,36 @@ public class UHCGame implements Listener {
                 }
             }
         }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+    public void onAsyncPlayerChat(AsyncPlayerChatEvent event) {
+        if (event.getMessage().startsWith("$$") && event.getPlayer().isOp()) {
+            event.setMessage(event.getMessage().substring(2));
+            event.setCancelled(true);
+            Bukkit.getOnlinePlayers().forEach(p -> {
+                String[] parts = event.getMessage().split("\\|");
+                if(parts.length < 2)
+                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
+                else
+                    p.playSound(p.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1F, 1F);
+                p.sendMessage(
+                    ChatColor.GREEN + "" + ChatColor.BOLD + "ANNOUNCEMENT> " + ChatColor.YELLOW
+                        + event.getPlayer().getName() + " " + ChatColor.LIGHT_PURPLE + event
+                        .getMessage());
+                if (!plugin.protocolLibManager.isErrored() && parts.length == 2) {
+                    plugin.protocolLibManager
+                        .title(p, ChatColor.RED + parts[0].trim(), ChatColor.GOLD + parts[1].trim(),
+                            new TitleTimings(20, 120, 10));
+                }
+            });
+        }
+        ScoreboardTeam team = this.getTeam(event.getPlayer());
+        ChatColor color = ChatColor.GRAY;
+        if (team != null) {
+            color = team.getColor();
+        }
+        event.setFormat("<" + color + "%s" + ChatColor.RESET + "> %s");
     }
 
     /**
