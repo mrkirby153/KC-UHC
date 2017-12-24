@@ -91,6 +91,7 @@ public class PlayerTrackerModule extends UHCModule {
                 toExclude.addAll(team.getPlayers());
             }
             toExclude.add(player.getUniqueId());
+            toExclude.addAll(game.getSpectators().getPlayers());
 
             Player closestPlayer = findClosestPlayer(player.getLocation(), toExclude);
             if (closestPlayer == null) {
