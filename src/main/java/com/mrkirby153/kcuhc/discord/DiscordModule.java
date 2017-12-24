@@ -15,8 +15,12 @@ import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.OnlineStatus;
+import net.dv8tion.jda.core.Permission;
+import net.dv8tion.jda.core.entities.Channel;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.PermissionOverride;
+import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.ReadyEvent;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
@@ -33,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.security.auth.login.LoginException;
 
 public class DiscordModule extends UHCModule {
@@ -93,13 +98,14 @@ public class DiscordModule extends UHCModule {
                 e.printStackTrace();
                 this.uhc.getLogger().severe("[DISCORD] An error occurred when logging in");
             } catch (RateLimitedException e) {
-                Throwables.propagate(e);
+                Throwables.throwIfUnchecked(e);
             }
         });
         UHC.getCommandManager().registerCommand(command);
         this.nagTaskId = this.uhc.getServer().getScheduler()
             .scheduleSyncRepeatingTask(this.uhc, () -> {
-                if (this.uhc.getGame().getCurrentState() == GameState.WAITING && this.getMapper() != null) {
+                if (this.uhc.getGame().getCurrentState() == GameState.WAITING
+                    && this.getMapper() != null) {
                     Bukkit.getOnlinePlayers().stream()
                         .filter(p -> this.getMapper().getUser(p.getUniqueId()) == null)
                         .forEach(p -> {
@@ -193,14 +199,7 @@ public class DiscordModule extends UHCModule {
      * @param callback A callback called when everyone has been moved
      */
     public void moveEveryoneToLobby(Consumer<Void> callback) {
-        VoiceChannel lobbyChan = null;
-        // Attempt to find a channel named "general" or "lobby"
-        for (VoiceChannel c : this.getGuild().getVoiceChannels()) {
-            if (c.getName().equalsIgnoreCase("general") || c.getName().equalsIgnoreCase("lobby")) {
-                lobbyChan = c;
-                break;
-            }
-        }
+        VoiceChannel lobbyChan = getLobbyChannel();
         if (lobbyChan == null) {
             lobbyChan = (VoiceChannel) this.getGuild().getController().createVoiceChannel("Lobby")
                 .complete();
@@ -220,6 +219,24 @@ public class DiscordModule extends UHCModule {
         }
     }
 
+    /**
+     * Attempts to find a lobby/general channel
+     *
+     * @return The channel, or null if one doesn't exist
+     */
+    @Nullable
+    public VoiceChannel getLobbyChannel() {
+        VoiceChannel lobbyChan = null;
+        // Attempt to find a channel named "general" or "lobby"
+        for (VoiceChannel c : this.getGuild().getVoiceChannels()) {
+            if (c.getName().equalsIgnoreCase("general") || c.getName().equalsIgnoreCase("lobby")) {
+                lobbyChan = c;
+                break;
+            }
+        }
+        return lobbyChan;
+    }
+
     @EventHandler(ignoreCancelled = true)
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.ALIVE) {
@@ -231,12 +248,46 @@ public class DiscordModule extends UHCModule {
     }
 
     /**
+     * Gets the team's discord team object
+     *
+     * @param team The team
+     *
+     * @return The team object
+     */
+    public UHCTeamObject getTeamObject(UHCTeam team) {
+        return this.teams.get(team);
+    }
+
+    /**
      * Load configuration files
      */
     private void loadConfiguration() {
         FileConfiguration configuration = this.uhc.getConfig();
         this.apiToken = configuration.getString("discord.apiToken");
         this.guildId = configuration.getString("discord.guild");
+    }
+
+    /**
+     * Set the permissions for a channel
+     *
+     * @param channel The channel to set
+     * @param role    The role to set the permissions
+     * @param grant   The permissions to grant to the role
+     * @param deny    The permissions to deny to the role
+     */
+    public void setPermissions(Channel channel, Role role, Permission[] grant, Permission[] deny) {
+        PermissionOverride override = channel.getPermissionOverride(role);
+        if (grant == null) {
+            grant = new Permission[0];
+        }
+        if (deny == null) {
+            deny = new Permission[0];
+        }
+        if (override == null) {
+            channel.createPermissionOverride(role).setAllow(grant).setDeny(deny).queue();
+        } else {
+            override.getManagerUpdatable().grant(grant).deny(deny).update().queue();
+        }
     }
 
     private class EventListener extends ListenerAdapter {

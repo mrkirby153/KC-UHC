@@ -5,7 +5,6 @@ import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.PermissionOverride;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.entities.User;
 
@@ -33,58 +32,32 @@ public class UHCTeamObject extends DiscordObject<UHCTeamObject> {
         this.channelCategory = new ChannelCategoryObject(this.bot,
             "Team " + this.team.getTeamName());
 
-        this.role.create(role -> {
-            this.channelCategory.create(cat -> {
-                this.textChannel = new TextChannelObject(this.bot,
-                    "team " + this.team.getTeamName());
+        this.role.create(role -> this.channelCategory.create(cat -> {
+            // Set permissions for the public role
+            bot.setPermissions(cat, publicRole, null, new Permission[]{Permission.VIEW_CHANNEL});
+            bot.setPermissions(cat, role, new Permission[]{Permission.VIEW_CHANNEL}, null);
 
-                this.textChannel.create(textChan -> {
-                    textChan.getManager().setParent(cat).queue();
-                    // Set permissions for the public role
-                    PermissionOverride defaultRole = textChan.getPermissionOverride(publicRole);
-                    if (defaultRole == null) {
-                        textChan.createPermissionOverride(publicRole)
-                            .setDeny(Permission.MESSAGE_READ)
-                            .queue();
-                    } else {
-                        defaultRole.getManager().deny(Permission.MESSAGE_READ).queue();
-                    }
-                    // Set permissions for the team role
-                    PermissionOverride teamRole = textChan.getPermissionOverride(role);
-                    if (teamRole == null) {
-                        textChan.createPermissionOverride(role).setAllow(Permission.MESSAGE_READ)
-                            .queue();
-                    } else {
-                        teamRole.getManager().grant(Permission.MESSAGE_READ).queue();
-                    }
-                });
-
-                this.voiceChannel = new VoiceChannelObject(this.bot,
-                    "Team " + this.team.getTeamName());
-                this.voiceChannel.create(voiceChan -> {
-                    voiceChan.getManager().setParent(cat).queue();
-                    // Set permission for public
-                    PermissionOverride defaultRole = voiceChan.getPermissionOverride(publicRole);
-                    if (defaultRole == null) {
-                        voiceChan.createPermissionOverride(role).setDeny(Permission.VOICE_CONNECT)
-                            .queue();
-                    } else {
-                        defaultRole.getManager().deny(Permission.VOICE_CONNECT).queue();
-                    }
-
-                    PermissionOverride teamRole = voiceChan.getPermissionOverride(role);
-                    if (teamRole == null) {
-                        voiceChan.createPermissionOverride(role).setAllow(Permission.VOICE_CONNECT)
-                            .queue();
-                    } else {
-                        teamRole.getManager().grant(Permission.VOICE_CONNECT).queue();
-                    }
-                });
-                if (callback != null) {
-                    callback.accept(this);
-                }
+            this.textChannel = new TextChannelObject(this.bot, "team " + this.team.getTeamName());
+            this.textChannel.create(textChan -> {
+                textChan.getManager().setParent(cat).queue();
+                bot.setPermissions(textChan, publicRole, null,
+                    new Permission[]{Permission.VIEW_CHANNEL});
+                bot.setPermissions(textChan, role, new Permission[]{Permission.VIEW_CHANNEL}, null);
             });
-        });
+
+            this.voiceChannel = new VoiceChannelObject(this.bot, "Team " + this.team.getTeamName());
+            this.voiceChannel.create(voiceChan -> {
+                voiceChan.getManager().setParent(cat).queue();
+                bot.setPermissions(voiceChan, publicRole, null,
+                    new Permission[]{Permission.VIEW_CHANNEL});
+                bot.setPermissions(voiceChan, role, new Permission[]{Permission.VIEW_CHANNEL},
+                    null);
+            });
+
+            if (callback != null) {
+                callback.accept(this);
+            }
+        }));
     }
 
     public TeamRoleObject getRole() {
