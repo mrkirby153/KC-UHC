@@ -1,7 +1,9 @@
 package com.mrkirby153.kcuhc.game.team;
 
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.discord.DiscordModule;
 import com.mrkirby153.kcuhc.game.spectator.SpectatorInventory;
+import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import me.mrkirby153.kcutils.gui.Inventory;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.md_5.bungee.api.ChatColor;
@@ -42,6 +44,7 @@ public class SpectatorTeam extends ScoreboardTeam {
         if (openInventory != null && openInventory instanceof SpectatorInventory) {
             openInventory.close();
         }
+        ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> m.removeSpectatorRole(player));
     }
 
     @Override
@@ -59,5 +62,6 @@ public class SpectatorTeam extends ScoreboardTeam {
         player.setAllowFlight(true);
         player.setFlying(true);
         new SpectatorInventory(uhc, player);
+        ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> m.assignSpectatorRole(player));
     }
 }

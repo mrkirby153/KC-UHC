@@ -52,6 +52,10 @@ public class UHCTeamObject extends DiscordObject<UHCTeamObject> {
                     new Permission[]{Permission.VIEW_CHANNEL});
                 bot.setPermissions(voiceChan, role, new Permission[]{Permission.VIEW_CHANNEL},
                     null);
+                bot.spectatorRole.get()
+                    .ifPresent(spectatorRole -> bot.setPermissions(voiceChan, spectatorRole,
+                        new Permission[]{Permission.VOICE_CONNECT, Permission.VIEW_CHANNEL},
+                        new Permission[]{Permission.VOICE_SPEAK}));
             });
 
             if (callback != null) {

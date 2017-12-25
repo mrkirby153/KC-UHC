@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.mapper.PlayerMapper;
 import com.mrkirby153.kcuhc.discord.mapper.UHCBotLinkMapper;
+import com.mrkirby153.kcuhc.discord.objects.TeamRoleObject;
 import com.mrkirby153.kcuhc.discord.objects.UHCTeamObject;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
@@ -21,8 +22,12 @@ import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.PermissionOverride;
 import net.dv8tion.jda.core.entities.Role;
+import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.events.ReadyEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent;
 import net.dv8tion.jda.core.exceptions.RateLimitedException;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import org.bukkit.Bukkit;
@@ -30,11 +35,15 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -42,42 +51,40 @@ import javax.security.auth.login.LoginException;
 
 public class DiscordModule extends UHCModule {
 
+    /**
+     * The team role for the spectators
+     */
+    public TeamRoleObject spectatorRole;
     private UHC uhc;
-
     /**
      * The Bot's API token
      */
     private String apiToken;
-
     /**
      * The guild to run the game on
      */
     private String guildId;
-
     /**
      * Ready state of the robot
      */
     private boolean ready;
-
     /**
      * The main JDA instance
      */
     private JDA jda;
-
     /**
      * Maps the minecraft players to their discord users
      */
     private PlayerMapper mapper;
-
     private CommandDiscord command;
-
     /**
      * If the teams have already been created and everyone assigned
      */
     private boolean created;
     private Map<UHCTeam, UHCTeamObject> teams = new HashMap<>();
-
     private int nagTaskId;
+
+    private List<UUID> queuedSpectators = new ArrayList<>();
 
     @Inject
     public DiscordModule(UHC uhc) {
@@ -174,13 +181,54 @@ public class DiscordModule extends UHCModule {
         if (this.created) {
             return;
         }
-        this.uhc.getGame().getTeams().forEach((name, team) -> {
-            UHCTeamObject obj = new UHCTeamObject(this, team);
-            this.teams.put(team, obj);
-            new JoinTeamRunnable(this.uhc, team, obj, this);
-            obj.create();
+        this.spectatorRole = new TeamRoleObject(this, uhc.getGame().getSpectators());
+        spectatorRole.create(role -> {
+            queuedSpectators.stream().map(u -> getMapper().getUser(u)).filter(Objects::nonNull)
+                .map(u -> getGuild().getMember(u)).filter(Objects::nonNull).forEach(
+                member -> getGuild().getController().addRolesToMember(member, role).queue());
+            this.uhc.getGame().getTeams().forEach((name, team) -> {
+                UHCTeamObject obj = new UHCTeamObject(this, team);
+                this.teams.put(team, obj);
+                new JoinTeamRunnable(this.uhc, team, obj, this);
+                obj.create();
+            });
         });
         this.created = true;
+    }
+
+    /**
+     * Gives the user the spectator role if it exists. If not, queue them
+     *
+     * @param player The player to give the role to
+     */
+    public void assignSpectatorRole(Player player) {
+        if (this.spectatorRole == null || !this.spectatorRole.get().isPresent()) {
+            queuedSpectators.add(player.getUniqueId());
+        } else {
+            this.spectatorRole.get().ifPresent(role -> {
+                User user = this.getMapper().getUser(player.getUniqueId());
+                if (user != null) {
+                    getGuild().getController().addRolesToMember(getGuild().getMember(user), role)
+                        .queue();
+                }
+            });
+        }
+    }
+
+    /**
+     * Removes the spectator role from a player
+     *
+     * @param player The player to remove the role from
+     */
+    public void removeSpectatorRole(Player player) {
+        queuedSpectators.remove(player.getUniqueId());
+        this.spectatorRole.get().ifPresent(role -> {
+            User user = this.getMapper().getUser(player.getUniqueId());
+            if (user != null) {
+                getGuild().getController().removeRolesFromMember(getGuild().getMember(user), role)
+                    .queue();
+            }
+        });
     }
 
     /**
@@ -299,6 +347,78 @@ public class DiscordModule extends UHCModule {
             DiscordModule.this.uhc.getLogger()
                 .info("[DISCORD] Discord robot connected and initialized successfully!");
             DiscordModule.this.mapper = new UHCBotLinkMapper(DiscordModule.this);
+        }
+
+        @Override
+        public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
+            DiscordModule.this.spectatorRole.get().ifPresent(role -> {
+                if (!event.getMember().getRoles().contains(role)) {
+                    return;
+                }
+                UHCTeam team = getTeamFromChannel(event.getChannelJoined());
+                if (team == null) {
+                    return;
+                }
+                notifyJoin(team, event.getMember());
+            });
+
+        }
+
+        @Override
+        public void onGuildVoiceMove(GuildVoiceMoveEvent event) {
+            DiscordModule.this.spectatorRole.get().ifPresent(role -> {
+                if (!event.getMember().getRoles().contains(role)) {
+                    return;
+                }
+                UHCTeam joined = getTeamFromChannel(event.getChannelJoined());
+                UHCTeam left = getTeamFromChannel(event.getChannelLeft());
+                if (joined != null) {
+                    notifyJoin(joined, event.getMember());
+                }
+                if (left != null) {
+                    notifyLeave(left, event.getMember());
+                }
+            });
+        }
+
+        @Override
+        public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
+            DiscordModule.this.spectatorRole.get().ifPresent(role -> {
+                if (!event.getMember().getRoles().contains(role)) {
+                    return;
+                }
+                UHCTeam team = getTeamFromChannel(event.getChannelLeft());
+                if (team == null) {
+                    return;
+                }
+                notifyLeave(team, event.getMember());
+            });
+        }
+
+        private void notifyJoin(UHCTeam team, Member member) {
+            team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull)
+                .forEach(player -> player.spigot().sendMessage(Chat.INSTANCE
+                    .message("Discord", "{user} has joined your team's chat", "{user}",
+                        member.getEffectiveName())));
+        }
+
+        private void notifyLeave(UHCTeam team, Member member) {
+            team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull)
+                .forEach(player -> player.spigot().sendMessage(
+                    Chat.INSTANCE.message("Discord", "{user} has left your team's chat", "{user}",
+                        member.getEffectiveName())));
+        }
+
+        private UHCTeam getTeamFromChannel(VoiceChannel voiceChannel) {
+            for(Map.Entry<UHCTeam, UHCTeamObject> e : DiscordModule.this.teams.entrySet()){
+                if(e.getValue().getVoiceChannel().get().isPresent()){
+                    VoiceChannel chan = e.getValue().getVoiceChannel().get().get();
+                    if(chan.getIdLong() == voiceChannel.getIdLong()){
+                        return e.getKey();
+                    }
+                }
+            }
+            return null;
         }
     }
 }
