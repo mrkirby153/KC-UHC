@@ -236,6 +236,8 @@ public class DiscordModule extends UHCModule {
      */
     public void remove() {
         this.teams.forEach((team, obj) -> obj.delete());
+        this.spectatorRole.delete();
+        this.spectatorRole = null;
         this.teams.clear();
         this.created = false;
     }
