@@ -30,9 +30,9 @@ public class SpectatorTeam extends ScoreboardTeam {
     @Override
     public void removePlayer(Player player) {
         super.removePlayer(player);
-        Bukkit.getOnlinePlayers().forEach(p -> p.showPlayer(player));
+        Bukkit.getOnlinePlayers().forEach(p -> p.showPlayer(uhc, player));
         getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull)
-            .forEach(player::hidePlayer);
+            .forEach(p -> player.hidePlayer(uhc, p));
         player.removePotionEffect(PotionEffectType.INVISIBILITY);
         player.removePotionEffect(PotionEffectType.NIGHT_VISION);
         if (player.getGameMode() == GameMode.SURVIVAL) {
@@ -50,10 +50,10 @@ public class SpectatorTeam extends ScoreboardTeam {
     @Override
     public void addPlayer(Player player) {
         super.addPlayer(player);
-        Bukkit.getOnlinePlayers().forEach(p -> p.hidePlayer(player));
+        Bukkit.getOnlinePlayers().forEach(p -> p.hidePlayer(uhc, player));
         getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> {
-            player.showPlayer(p);
-            p.showPlayer(player);
+            player.showPlayer(uhc, p);
+            p.showPlayer(uhc, player);
         });
         player
             .addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 0));

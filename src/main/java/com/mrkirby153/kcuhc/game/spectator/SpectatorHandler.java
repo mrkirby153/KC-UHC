@@ -66,7 +66,7 @@ public class SpectatorHandler implements Listener {
         Bukkit.getServer().getScheduler().runTask(uhc, () -> {
             uhc.getGame().getSpectators().getPlayers().stream().map(Bukkit::getPlayer)
                 .filter(Objects::nonNull).forEach(e -> {
-                event.getPlayer().hidePlayer(e);
+                event.getPlayer().hidePlayer(uhc, e);
             });
             if (uhc.getGame().getCurrentState() == GameState.ALIVE) {
                 ScoreboardTeam team = uhc.getGame().getTeam(event.getPlayer());
