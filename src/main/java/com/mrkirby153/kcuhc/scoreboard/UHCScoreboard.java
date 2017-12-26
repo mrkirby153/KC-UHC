@@ -1,7 +1,10 @@
 package com.mrkirby153.kcuhc.scoreboard;
 
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
+import com.mrkirby153.kcuhc.module.ModuleRegistry;
+import com.mrkirby153.kcuhc.module.msc.prestige.PrestigeModule;
 import me.mrkirby153.kcutils.scoreboard.KirbyScoreboard;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.ChatColor;
@@ -10,6 +13,7 @@ import org.bukkit.scoreboard.Objective;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 public class UHCScoreboard extends KirbyScoreboard {
@@ -41,8 +45,14 @@ public class UHCScoreboard extends KirbyScoreboard {
     @NotNull
     public Set<ScoreboardTeam> getTeams() {
         HashSet<ScoreboardTeam> teams = new HashSet<>();
-        teams.addAll(game.getTeams().values());
-        teams.add(game.getSpectators());
+        if (game.getCurrentState() != GameState.ALIVE) {
+            Optional<PrestigeModule> mod = ModuleRegistry.INSTANCE
+                .getLoadedModule(PrestigeModule.class);
+            mod.ifPresent(prestigeModule -> teams.addAll(prestigeModule.getTeams().values()));
+        } else {
+            teams.addAll(game.getTeams().values());
+            teams.add(game.getSpectators());
+        }
         return teams;
     }
 }
