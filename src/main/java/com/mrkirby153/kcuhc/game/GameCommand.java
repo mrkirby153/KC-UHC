@@ -176,7 +176,7 @@ public class GameCommand extends BaseCommand {
         }
 
         @Subcommand("update")
-        public void newTime(CommandSender sender, Integer newTime) {
+        public void newTime(CommandSender sender, String newTime) {
             if (!ModuleRegistry.INSTANCE.loaded(WorldBorderModule.class)) {
                 sender
                     .sendMessage(Chat.INSTANCE.error("Worldborder is not loaded!").toLegacyText());
@@ -189,14 +189,19 @@ public class GameCommand extends BaseCommand {
                 return;
             }
             WorldBorderModule module = ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class);
-            module.updateSpeed(newTime);
+            long time = Time.INSTANCE.parse(newTime) / 1000;
+            if(time < 1){
+                sender.sendMessage(Chat.INSTANCE.error("Time must be greater than 1 second!").toLegacyText());
+                return;
+            }
+            module.updateSpeed((int) time);
         }
 
         @Subcommand("set")
-        public void setBorder(CommandSender sender, Integer start, Integer end, Integer time) {
+        public void setBorder(CommandSender sender, Integer start, Integer end, String time) {
             if (game.getCurrentState() != GameState.WAITING) {
                 sender.sendMessage(Chat.INSTANCE
-                    .error("You cannot change the worldborder while the game is in motion!")
+                    .error("You cannot change the worldborder while the game is running!")
                     .toLegacyText());
             }
             if (!ModuleRegistry.INSTANCE.loaded(WorldBorderModule.class)) {
@@ -207,7 +212,12 @@ public class GameCommand extends BaseCommand {
             WorldBorderModule module = ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class);
             module.setStartSize(start);
             module.setEndSize(end);
-            module.setDuration(time);
+            long parsedTime = Time.INSTANCE.parse(time) / 1000;
+            if(parsedTime < 1){
+                sender.sendMessage(Chat.INSTANCE.error("Time cannot be less than 1 second").toLegacyText());
+                return;
+            }
+            module.setDuration((int) parsedTime);
             sender.sendMessage(Chat.INSTANCE
                 .message("Worldborder", "Worldborder will move from {start} to {end} in {time}",
                     "{start}", module.getStartSize(),
