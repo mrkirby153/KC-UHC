@@ -6,6 +6,7 @@ import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.module.UHCModule;
+import com.mrkirby153.kcuhc.module.settings.TimeSetting;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.event.UpdateEvent;
@@ -27,7 +28,7 @@ public class PvPGraceModule extends UHCModule {
 
     private long graceUntil = 0;
 
-    private int GRACE_MINUTES = 5;
+    private TimeSetting graceTime = new TimeSetting("5m");
 
     private UHCGame game;
     private UHC uhc;
@@ -41,22 +42,12 @@ public class PvPGraceModule extends UHCModule {
         this.uhc = uhc;
     }
 
-    public int getGraceTime() {
-        return GRACE_MINUTES;
+    public long getGraceTime() {
+        return graceTime.getValue();
     }
 
     public long getGraceTimeRemaining() {
         return this.graceUntil - System.currentTimeMillis();
-    }
-
-    @Override
-    public void loadData(HashMap<String, String> data) {
-        GRACE_MINUTES = Integer.parseInt(data.get("pvp-grace-time"));
-    }
-
-    @Override
-    public void saveData(HashMap<String, String> data) {
-        data.put("pvp-grace-time", Integer.toString(GRACE_MINUTES));
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
@@ -71,7 +62,7 @@ public class PvPGraceModule extends UHCModule {
     @EventHandler(ignoreCancelled = true)
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.ALIVE) {
-            graceUntil = System.currentTimeMillis() + (1000 * 60 * GRACE_MINUTES);
+            graceUntil = System.currentTimeMillis() + graceTime.getValue();
             broadcast(Chat.INSTANCE.message("PvP", "PVP is disabled for {time}",
                 "{time}",
                 Time.INSTANCE.format(1, graceUntil - System.currentTimeMillis(), Time.TimeUnit.FIT))
@@ -89,13 +80,6 @@ public class PvPGraceModule extends UHCModule {
                 announcePvPGrace();
             }
         }
-    }
-
-    public void setGraceMinutes(int grace) {
-        if (game.getCurrentState() == GameState.ALIVE) {
-            return;
-        }
-        this.GRACE_MINUTES = grace;
     }
 
     private void announcePvPGrace() {

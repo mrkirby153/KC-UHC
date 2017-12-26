@@ -1,12 +1,15 @@
 package com.mrkirby153.kcuhc.module;
 
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.module.settings.ModuleSetting;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
+import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Abstract module for various game elements
@@ -126,10 +129,6 @@ public abstract class UHCModule implements Listener {
         return true;
     }
 
-    public void loadData(HashMap<String, String> data) {
-
-    }
-
     /**
      * Called when the module is loaded
      */
@@ -141,10 +140,6 @@ public abstract class UHCModule implements Listener {
      * Called when the module is unloaded
      */
     public void onUnload() {
-
-    }
-
-    public void saveData(HashMap<String, String> data) {
 
     }
 
@@ -164,5 +159,20 @@ public abstract class UHCModule implements Listener {
         }
         this.loaded = false;
         return true;
+    }
+
+    public final Map<String, ModuleSetting> getSettings() {
+        Map<String, ModuleSetting> map = new HashMap<>();
+        for (Field f : this.getClass().getDeclaredFields()) {
+            if (ModuleSetting.class.isAssignableFrom(f.getType())) {
+                f.setAccessible(true);
+                try {
+                    map.put(f.getName(), (ModuleSetting) f.get(this));
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return map;
     }
 }

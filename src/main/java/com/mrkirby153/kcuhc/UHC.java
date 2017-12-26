@@ -150,6 +150,14 @@ public class UHC extends JavaPlugin {
         manager.getCommandCompletions()
             .registerCompletion("presets", c -> ModuleRegistry.INSTANCE.getAvailablePresets());
 
+        manager.getCommandCompletions().registerCompletion("moduleSettings", c -> {
+           UHCModule mod =  c.getContextValue(UHCModule.class);
+           if(mod == null){
+               return new ArrayList<>();
+           } else {
+               return mod.getSettings().keySet();
+           }
+        });
         // Register resolvers
         manager.getCommandContexts()
             .registerContext(GameState.class, c -> GameState.valueOf(c.popFirstArg()));

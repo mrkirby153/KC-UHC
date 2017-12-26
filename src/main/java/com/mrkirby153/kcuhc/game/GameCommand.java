@@ -10,9 +10,7 @@ import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
-import com.mrkirby153.kcuhc.module.msc.HeightBuildingModule;
 import com.mrkirby153.kcuhc.module.msc.cornucopia.CornucopiaModule;
-import com.mrkirby153.kcuhc.module.player.PvPGraceModule;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
@@ -38,43 +36,6 @@ public class GameCommand extends BaseCommand {
     public GameCommand(UHCGame game, UHC uhc) {
         this.game = game;
         this.uhc = uhc;
-    }
-
-    @Subcommand("build-height")
-    public void buildHeight(CommandSender sender, @Optional Integer height) {
-        java.util.Optional<HeightBuildingModule> wbm = ModuleRegistry.INSTANCE
-            .getLoadedModule(HeightBuildingModule.class);
-        if (!wbm.isPresent()) {
-            sender
-                .sendMessage(Chat.INSTANCE.error("The height module is not loaded").toLegacyText());
-            return;
-        }
-        if (height == null) {
-            sender.sendMessage(
-                Chat.INSTANCE.message("Build Height", "The build height is set to {height} blocks",
-                    "{height}", wbm.get().getMaxBuildHeight()).toLegacyText());
-        } else {
-            wbm.get().setMaxBuildHeight(height);
-            sender.sendMessage(Chat.INSTANCE
-                .message("Build Height", "Set build height to {height} blocks", "{height}", height)
-                .toLegacyText());
-        }
-    }
-
-    @Subcommand("grace")
-    public void grace(CommandSender sender, @Optional Integer minutes) {
-        ModuleRegistry.INSTANCE.getLoadedModule(PvPGraceModule.class).ifPresent(mod -> {
-            if (minutes == null) {
-                sender.sendMessage(Chat.INSTANCE
-                    .message("Grace", "Grace is currently {time} minutes", "{time}",
-                        mod.getGraceTime()).toLegacyText());
-            } else {
-                mod.setGraceMinutes(minutes);
-                sender.sendMessage(
-                    Chat.INSTANCE.message("Grace", "Set grace to {time} minutes", "{time}", minutes)
-                        .toLegacyText());
-            }
-        });
     }
 
     @Subcommand("pregen|pregenerate")
@@ -195,36 +156,6 @@ public class GameCommand extends BaseCommand {
                 return;
             }
             module.updateSpeed((int) time);
-        }
-
-        @Subcommand("set")
-        public void setBorder(CommandSender sender, Integer start, Integer end, String time) {
-            if (game.getCurrentState() != GameState.WAITING) {
-                sender.sendMessage(Chat.INSTANCE
-                    .error("You cannot change the worldborder while the game is running!")
-                    .toLegacyText());
-            }
-            if (!ModuleRegistry.INSTANCE.loaded(WorldBorderModule.class)) {
-                sender
-                    .sendMessage(Chat.INSTANCE.error("Worldborder is not loaded!").toLegacyText());
-                return;
-            }
-            WorldBorderModule module = ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class);
-            module.setStartSize(start);
-            module.setEndSize(end);
-            long parsedTime = Time.INSTANCE.parse(time) / 1000;
-            if(parsedTime < 1){
-                sender.sendMessage(Chat.INSTANCE.error("Time cannot be less than 1 second").toLegacyText());
-                return;
-            }
-            module.setDuration((int) parsedTime);
-            sender.sendMessage(Chat.INSTANCE
-                .message("Worldborder", "Worldborder will move from {start} to {end} in {time}",
-                    "{start}", module.getStartSize(),
-                    "{end}", module.getEndSize(),
-                    "{time}",
-                    Time.INSTANCE.format(2, module.getDuration() * 1000, Time.TimeUnit.FIT))
-                .toLegacyText());
         }
     }
 

@@ -3,6 +3,7 @@ package com.mrkirby153.kcuhc.module;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.module.settings.SettingParseException;
 import org.bukkit.Bukkit;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,7 +17,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -211,9 +211,23 @@ public class ModuleRegistry {
         });
 
         JSONObject data = object.getJSONObject("settings");
-        HashMap<String, String> dataMap = new HashMap<>();
-        data.keySet().forEach(key -> dataMap.put(key, data.getString(key)));
-        loadedModules.forEach(m -> m.loadData(dataMap));
+        loadedModules.forEach(mod -> {
+            JSONObject modObject = data.optJSONObject(mod.getInternalName());
+            if (modObject == null) {
+                return;
+            }
+            mod.getSettings().forEach((key, setting) -> {
+                try {
+                    String d = modObject.optString(key);
+                    if (d == null) {
+                        return;
+                    }
+                    setting.set(d);
+                } catch (SettingParseException e) {
+                    // Ignore
+                }
+            });
+        });
     }
 
     /**
@@ -243,12 +257,19 @@ public class ModuleRegistry {
         JSONObject object = new JSONObject();
         loadedModules.forEach(m -> object.append("loaded-modules", m.getInternalName()));
         // Save module data
-        HashMap<String, String> data = new HashMap<>();
-        loadedModules.forEach(m -> m.saveData(data));
+        JSONObject settingsObject = new JSONObject();
 
-        JSONObject dataObj = new JSONObject();
-        data.forEach(dataObj::put);
-        object.put("settings", dataObj);
+        loadedModules.forEach(mod -> {
+            JSONObject modObject = new JSONObject();
+            mod.getSettings().forEach((key, val) -> {
+                System.out.println(mod.getInternalName() + "-" + key);
+                modObject.put(key, val.getInternal());
+            });
+            if (modObject.keySet().size() != 0) {
+                settingsObject.put(mod.getInternalName(), modObject);
+            }
+        });
+        object.put("settings", settingsObject);
 
         FileWriter writer = new FileWriter(new File(presetDirectory, presetName + ".json"));
         writer.write(object.toString(3));

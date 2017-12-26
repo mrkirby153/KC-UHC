@@ -6,6 +6,8 @@ import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.module.UHCModule;
+import com.mrkirby153.kcuhc.module.settings.IntegerSetting;
+import com.mrkirby153.kcuhc.module.settings.TimeSetting;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.protocollib.TitleTimings;
@@ -17,21 +19,18 @@ import org.bukkit.Sound;
 import org.bukkit.WorldBorder;
 import org.bukkit.event.EventHandler;
 
-import java.util.HashMap;
-
 public class WorldBorderModule extends UHCModule {
 
     private static final int LOBBY_SIZE = 60;
     private static final int DEFAULT_SIZE = 60000;
 
-    private int startSize = 100;
-    private int endSize = 50;
-
-    private int duration = 300; // Default to 5 minutes
-
     private UHC uhc;
-    
+
     private UHCGame game;
+
+    private TimeSetting time = new TimeSetting("5m");
+    private IntegerSetting start = new IntegerSetting(100);
+    private IntegerSetting end = new IntegerSetting(50);
 
     @Inject
     public WorldBorderModule(UHC uhc, UHCGame game) {
@@ -47,16 +46,7 @@ public class WorldBorderModule extends UHCModule {
      * @return The time, in seconds
      */
     public int getDuration() {
-        return duration;
-    }
-
-    /**
-     * Sets the duration of the border
-     *
-     * @param duration The duration
-     */
-    public void setDuration(int duration) {
-        this.duration = duration;
+        return (int) (time.getValue() / 1000);
     }
 
     /**
@@ -65,16 +55,7 @@ public class WorldBorderModule extends UHCModule {
      * @return The end size of the border
      */
     public int getEndSize() {
-        return endSize;
-    }
-
-    /**
-     * Sets the end size of the border
-     *
-     * @param endSize The end size of the border
-     */
-    public void setEndSize(int endSize) {
-        this.endSize = endSize;
+        return end.getValue();
     }
 
     /**
@@ -83,23 +64,7 @@ public class WorldBorderModule extends UHCModule {
      * @return The start size of the border
      */
     public int getStartSize() {
-        return startSize;
-    }
-
-    /**
-     * Sets the start size of the border
-     *
-     * @param startSize The size of the border
-     */
-    public void setStartSize(int startSize) {
-        this.startSize = startSize;
-    }
-
-    @Override
-    public void loadData(HashMap<String, String> data) {
-        startSize = Integer.parseInt(data.get("wb-start-size"));
-        endSize = Integer.parseInt(data.get("wb-end-size"));
-        duration = Integer.parseInt(data.get("wb-duration"));
+        return start.getValue();
     }
 
     @Override
@@ -113,13 +78,6 @@ public class WorldBorderModule extends UHCModule {
         this.game.getWorldBorder().setSize(DEFAULT_SIZE);
     }
 
-    @Override
-    public void saveData(HashMap<String, String> data) {
-        data.put("wb-start-size", Integer.toString(startSize));
-        data.put("wb-end-size", Integer.toString(endSize));
-        data.put("wb-duration", Integer.toString(duration));
-    }
-
     @EventHandler
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
@@ -127,10 +85,11 @@ public class WorldBorderModule extends UHCModule {
             this.game.getWorldBorder().setWarningDistance(0);
         }
         if (event.getTo() == GameState.ALIVE) {
-            this.game.getWorldBorder().setSize(startSize);
-            this.game.getWorldBorder().setSize(endSize, duration);
-            System.out
-                .println("Moving " + (startSize - endSize) + " blocks in " + duration + " seconds");
+            this.game.getWorldBorder().setSize(getStartSize());
+            this.game.getWorldBorder().setSize(getEndSize(), getDuration());
+            System.out.println(
+                "Moving " + (getStartSize() - getEndSize()) + " blocks in " + Time.INSTANCE
+                    .format(0, getDuration() * 1000));
             this.game.getWorldBorder().setWarningDistance(50);
         }
     }
@@ -158,12 +117,12 @@ public class WorldBorderModule extends UHCModule {
         Bukkit.getOnlinePlayers().forEach(p -> {
             p.spigot().sendMessage(Chat.INSTANCE.message("World Border",
                 "Alert! Moving from {startSize} to {endSize} in {duration}",
-                "{startSize}", size,
-                "{endSize}", endSize,
+                "{startSize}", Time.INSTANCE.trim(2, size),
+                "{endSize}", getEndSize(),
                 "{duration}", Time.INSTANCE.format(1, newDuration * 1000, Time.TimeUnit.FIT)));
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
         });
-        border.setSize(endSize, newDuration);
+        border.setSize(getEndSize(), newDuration);
     }
 
     public double[] worldborderLoc() {

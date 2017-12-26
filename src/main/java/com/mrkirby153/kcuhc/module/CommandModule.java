@@ -8,9 +8,15 @@ import co.aikar.commands.annotation.Subcommand;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.gui.ModuleGui;
+import com.mrkirby153.kcuhc.module.settings.ModuleSetting;
+import com.mrkirby153.kcuhc.module.settings.SettingParseException;
 import me.mrkirby153.kcutils.Chat;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.Map.Entry;
+import java.util.Optional;
 
 @CommandAlias("module")
 public class CommandModule extends BaseCommand {
@@ -45,5 +51,41 @@ public class CommandModule extends BaseCommand {
         sender.sendMessage(Chat.INSTANCE
             .message("Module", "Module {module} unloaded!", "{module}", module.getName())
             .toLegacyText());
+    }
+
+    @Subcommand("options|settings")
+    @CommandCompletion("@loadedModules @moduleSettings")
+    public void options(CommandSender sender, UHCModule module, @Default String setting,
+        @Default String value) {
+        if (setting.isEmpty()) {
+            sender.sendMessage(ChatColor.GOLD + "The following settings are available: ");
+            module.getSettings().forEach((name, s) -> sender
+                .sendMessage(ChatColor.GREEN + "   - " + name + " = " + s.toString()));
+            return;
+        }
+        Optional<Entry<String, ModuleSetting>> optSetting = module.getSettings().entrySet().stream()
+            .filter(s -> s.getKey().equalsIgnoreCase(setting)).findFirst();
+
+        if (!optSetting.isPresent()) {
+            sender.sendMessage(Chat.INSTANCE.error("That setting does not exist").toLegacyText());
+            return;
+        }
+        ModuleSetting moduleSetting = optSetting.get().getValue();
+
+        if (value.isEmpty()) {
+            sender.sendMessage(Chat.INSTANCE
+                .message("Module", "{key} = {value}", "{key}", setting, "{value}",
+                    moduleSetting.toString()).toLegacyText());
+            return;
+        }
+        try {
+            moduleSetting.set(value);
+        } catch (SettingParseException e) {
+            sender.sendMessage(Chat.INSTANCE.error(e.getMessage()).toLegacyText());
+            return;
+        }
+        sender.sendMessage(
+            Chat.INSTANCE.message("Module", "{key} set to {value}", "{key}", setting, "{value}",
+                moduleSetting.toString()).toLegacyText());
     }
 }

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.UHCModule;
+import com.mrkirby153.kcuhc.module.settings.IntegerSetting;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
 import me.mrkirby153.kcutils.Chat;
 import org.bukkit.Location;
@@ -11,13 +12,13 @@ import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockPlaceEvent;
 
-import java.util.HashMap;
 import java.util.Optional;
 
 public class HeightBuildingModule extends UHCModule {
 
     private static final int BUILD_RADIUS = 50;
-    private int MAX_BUILD_HEIGHT = 100;
+
+    private IntegerSetting height = new IntegerSetting(100);
 
     private UHCGame game;
 
@@ -27,24 +28,6 @@ public class HeightBuildingModule extends UHCModule {
             Material.IRON_DOOR);
         this.game = game;
         autoLoad = true;
-    }
-
-    public int getMaxBuildHeight() {
-        return this.MAX_BUILD_HEIGHT;
-    }
-
-    public void setMaxBuildHeight(int height) {
-        this.MAX_BUILD_HEIGHT = height;
-    }
-
-    @Override
-    public void loadData(HashMap<String, String> data) {
-        MAX_BUILD_HEIGHT = Integer.valueOf(data.get("max-build-height"));
-    }
-
-    @Override
-    public void saveData(HashMap<String, String> data) {
-        data.put("max-build-height", Integer.toString(MAX_BUILD_HEIGHT));
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -65,7 +48,7 @@ public class HeightBuildingModule extends UHCModule {
         center.setY(builtBlock.getBlockY());
 
         if (center.distanceSquared(builtBlock) <= Math.pow(buildRadius, 2)) {
-            if (builtBlock.getBlockY() >= MAX_BUILD_HEIGHT) {
+            if (builtBlock.getBlockY() >= height.getValue()) {
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(
                     Chat.INSTANCE.error("You cannot build this high near spawn").toLegacyText());
