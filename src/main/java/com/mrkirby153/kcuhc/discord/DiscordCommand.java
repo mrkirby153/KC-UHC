@@ -46,7 +46,7 @@ public class DiscordCommand extends BaseCommand {
     public void forceLink(CommandSender sender, OnlinePlayer player, String id) {
         module.playerMapper.forceLink(player.player, id);
         sender.sendMessage(Chat.INSTANCE
-            .message("Discord", "Forcibly linking {player} to {id}", player.player.getName(),
+            .message("Discord", "Forcibly linking {player} to {id}", "{player}", player.player.getName(),
                 "{id}", id).toLegacyText());
     }
 

@@ -24,12 +24,6 @@ public class UHCTeam extends ScoreboardTeam {
     @Override
     public void removePlayer(Player player) {
         super.removePlayer(player);
-        // TODO 7/8/2018: Fix switching teams not working while the game is running
-        if (game.getCurrentState() == GameState.ALIVE) {
-            ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(p -> {
-                p.getTeam(this).ifPresent(t -> t.leaveTeam(player));
-            });
-        }
     }
 
     @Override

@@ -33,7 +33,10 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -240,6 +243,9 @@ public class DiscordModule extends UHCModule {
         log(":shield:", "Initializing team `" + team.getTeamName() + "`");
         UHCTeamObject obj = new UHCTeamObject(team, this);
         this.teamObjectMap.put(team, obj);
+        System.out.println("Created team object " + team);
+        this.teamObjectMap
+            .forEach((key, value1) -> System.out.println("\t - " + key + ":" + value1));
         obj.create();
     }
 
@@ -249,11 +255,23 @@ public class DiscordModule extends UHCModule {
      * @param team The team to destroy
      */
     public void destroyTeam(UHCTeam team) {
-        UHCTeamObject obj = this.teamObjectMap.remove(team);
+        this.uhc.getLogger().info("[DISCORD] Destroying team " + team.getTeamName());
+        UHCTeamObject obj = null;
+        Iterator<Entry<UHCTeam, UHCTeamObject>> iterator = this.teamObjectMap.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Entry<UHCTeam, UHCTeamObject> entry = iterator.next();
+            if (entry.getKey().equals(team)) {
+                iterator.remove();
+                obj = entry.getValue();
+                break;
+            }
+        }
         if (obj != null) {
             log(":wastebasket:", "Destroying team `" + team.getTeamName() + "`");
             obj.delete();
         }
+        System.out.println("Removed team object " + team);
+        this.teamObjectMap.keySet().forEach(k -> System.out.println("\t - " + k));
     }
 
     /**
@@ -298,8 +316,12 @@ public class DiscordModule extends UHCModule {
      * @return An optional of the object
      */
     public Optional<UHCTeamObject> getTeam(UHCTeam team) {
-        UHCTeamObject value = this.teamObjectMap.get(team);
-        return Optional.ofNullable(value);
+        for (Map.Entry<UHCTeam, UHCTeamObject> e : this.teamObjectMap.entrySet()) {
+            if (e.getKey().equals(team)) {
+                return Optional.of(e.getValue());
+            }
+        }
+        return Optional.empty();
     }
 
     @EventHandler
