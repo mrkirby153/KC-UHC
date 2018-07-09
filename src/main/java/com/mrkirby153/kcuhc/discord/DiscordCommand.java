@@ -2,6 +2,7 @@ package com.mrkirby153.kcuhc.discord;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.contexts.OnlinePlayer;
 import com.mrkirby153.kcuhc.game.UHCGame;
@@ -43,6 +44,7 @@ public class DiscordCommand extends BaseCommand {
     }
 
     @Subcommand("forcelink")
+    @CommandCompletion("@players")
     public void forceLink(CommandSender sender, OnlinePlayer player, String id) {
         module.playerMapper.forceLink(player.player, id);
         sender.sendMessage(Chat.INSTANCE

@@ -9,12 +9,16 @@ import co.aikar.commands.annotation.Subcommand;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.msc.cornucopia.CornucopiaModule;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
+import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
+import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -22,6 +26,7 @@ import org.bukkit.entity.Player;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.UUID;
 
 @CommandAlias("game")
@@ -116,6 +121,35 @@ public class GameCommand extends BaseCommand {
         }
     }
 
+    @CommandAlias("coords")
+    public void coordCommand(Player player) {
+        Location location = player.getLocation();
+        ScoreboardTeam team = this.game.getTeam(player);
+        if (team instanceof SpectatorTeam) {
+            return;
+        }
+        if (uhc.getGame().getCurrentState() != GameState.ALIVE) {
+            player.spigot().sendMessage(
+                Chat.INSTANCE.error("You can only use this while the game is running"));
+            return;
+        }
+        if (team == null) {
+            player.spigot()
+                .sendMessage(Chat.INSTANCE.error("You cannot use that if you aren't on a team"));
+            return;
+        }
+        team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> {
+            if (p != player) {
+                p.spigot().sendMessage(Chat.INSTANCE
+                    .message("Coords", "{name} is at {location} ({distance} blocks away from you)",
+                        "{name}", player.getName(), "{location}", String
+                            .format("%.1f, %.1f, %.1f", location.getX(), location.getY(),
+                                location.getZ()), "{distance}",
+                        String.format("%.1f", location.distance(p.getLocation()))));
+            }
+        });
+    }
+
     @Subcommand("border")
     public class BorderCommands extends BaseCommand {
 
@@ -151,8 +185,9 @@ public class GameCommand extends BaseCommand {
             }
             WorldBorderModule module = ModuleRegistry.INSTANCE.getModule(WorldBorderModule.class);
             long time = Time.INSTANCE.parse(newTime) / 1000;
-            if(time < 1){
-                sender.sendMessage(Chat.INSTANCE.error("Time must be greater than 1 second!").toLegacyText());
+            if (time < 1) {
+                sender.sendMessage(
+                    Chat.INSTANCE.error("Time must be greater than 1 second!").toLegacyText());
                 return;
             }
             module.updateSpeed((int) time);
