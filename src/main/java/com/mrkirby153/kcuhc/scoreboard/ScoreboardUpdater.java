@@ -79,17 +79,14 @@ public class ScoreboardUpdater implements Listener {
                 scoreboard
                     .add("Players Online: " + ChatColor.GOLD + Bukkit.getOnlinePlayers().size());
                 ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(mod -> {
-                    if (mod.getMapper() != null) {
-                        finalScoreboard.add(" ");
-                        User u = mod.getMapper().getUser(player.getUniqueId());
-                        if (u != null) {
-                            finalScoreboard
-                                .add(new ElementHeadedText(ChatColor.GREEN + "Linked To",
-                                    ChatColor.GOLD + u.getName() + "#" + u.getDiscriminator()));
-                        } else {
-                            finalScoreboard.add(new ElementHeadedText(ChatColor.RED + "Unlinked",
-                                "Discord not linked!"));
-                        }
+                    finalScoreboard.add(" ");
+                    User u = mod.playerMapper.getUser(player.getUniqueId());
+                    if (u != null) {
+                        finalScoreboard.add(new ElementHeadedText(ChatColor.GREEN + "Linked to ",
+                            ChatColor.GOLD + u.getName() + "#" + u.getDiscriminator()));
+                    } else {
+                        finalScoreboard.add(new ElementHeadedText(ChatColor.RED + "Linked to",
+                            "Discord not linked!"));
                     }
                 });
                 scoreboard.add(" ");
@@ -179,7 +176,7 @@ public class ScoreboardUpdater implements Listener {
             if (tabList.getScore(p.getName()).getScore() == 0 && !p.isDead()) {
                 tabList.getScore(p.getName()).setScore((int) p.getHealth());
             }
-                belowName.getScore(p.getName()).setScore((int) (p.getHealth()+getAbsorption(p)));
+            belowName.getScore(p.getName()).setScore((int) (p.getHealth() + getAbsorption(p)));
         });
         scoreboard.draw();
         if (player.getScoreboard() != scoreboard.getBoard()) {

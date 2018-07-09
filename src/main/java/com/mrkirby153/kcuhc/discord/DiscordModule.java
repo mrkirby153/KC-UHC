@@ -1,426 +1,345 @@
 package com.mrkirby153.kcuhc.discord;
 
-import com.google.common.base.Throwables;
 import com.google.inject.Inject;
+import com.mrkirby153.botcore.command.CommandExecutor;
+import com.mrkirby153.botcore.command.CommandExecutor.MentionMode;
+import com.mrkirby153.botcore.shard.ShardManager;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.mapper.PlayerMapper;
 import com.mrkirby153.kcuhc.discord.mapper.UHCBotLinkMapper;
-import com.mrkirby153.kcuhc.discord.objects.TeamRoleObject;
 import com.mrkirby153.kcuhc.discord.objects.UHCTeamObject;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
-import me.mrkirby153.kcutils.Chat;
-import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.OnlineStatus;
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Channel;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.PermissionOverride;
 import net.dv8tion.jda.core.entities.Role;
+import net.dv8tion.jda.core.entities.TextChannel;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.entities.VoiceChannel;
-import net.dv8tion.jda.core.events.ReadyEvent;
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceMoveEvent;
-import net.dv8tion.jda.core.exceptions.RateLimitedException;
+import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.core.utils.PermissionUtil;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.PlayerDeathEvent;
 
-import java.util.ArrayList;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import javax.annotation.Nullable;
-import javax.security.auth.login.LoginException;
+
 
 public class DiscordModule extends UHCModule {
 
-    /**
-     * The team role for the spectators
-     */
-    public TeamRoleObject spectatorRole;
-    private UHC uhc;
-    /**
-     * The Bot's API token
-     */
-    private String apiToken;
-    /**
-     * The guild to run the game on
-     */
-    private String guildId;
-    /**
-     * Ready state of the robot
-     */
-    private boolean ready;
-    /**
-     * The main JDA instance
-     */
-    private JDA jda;
-    /**
-     * Maps the minecraft players to their discord users
-     */
-    private PlayerMapper mapper;
-    private CommandDiscord command;
-    /**
-     * If the teams have already been created and everyone assigned
-     */
-    private boolean created;
-    private Map<UHCTeam, UHCTeamObject> teams = new HashMap<>();
-    private int nagTaskId;
+    public Guild guild;
+    public Role adminRole;
+    public Role spectatorRole;
+    public TextChannel logChannel;
+    public JDA jda;
 
-    private List<UUID> queuedSpectators = new ArrayList<>();
+    public PlayerMapper playerMapper = new UHCBotLinkMapper(this);
+
+    private UHC uhc;
+    private String token;
+    private String guildId;
+    private String adminRoleId;
+    private ShardManager shardManager;
+    private CommandExecutor commandExecutor;
+
+    private DiscordChatCommands discordCommands;
+    private DiscordCommand discordMinecraftCommand;
+
+    private HashMap<UHCTeam, UHCTeamObject> teamObjectMap = new HashMap<>();
+
 
     @Inject
     public DiscordModule(UHC uhc) {
-        super("Discord", "Integrate Discord with the game", Material.NOTE_BLOCK);
+        super("Discord", "Integrate discord with the game", Material.NOTE_BLOCK);
         this.uhc = uhc;
-        this.command = new CommandDiscord(this);
     }
 
     @Override
     public void onLoad() {
         this.loadConfiguration();
-        uhc.getServer().getScheduler().runTaskAsynchronously(uhc, () -> {
-            try {
-                this.jda = new JDABuilder(AccountType.BOT).setToken(this.apiToken)
-                    .addEventListener(new EventListener()).setStatus(OnlineStatus.IDLE)
-                    .buildAsync();
-            } catch (LoginException e) {
-                e.printStackTrace();
-                this.uhc.getLogger().severe("[DISCORD] An error occurred when logging in");
-            } catch (RateLimitedException e) {
-                Throwables.throwIfUnchecked(e);
+        this.shardManager = new ShardManager(this.token, 1);
+        this.commandExecutor = new CommandExecutor("!", MentionMode.OPTIONAL, null,
+            this.shardManager);
+        this.commandExecutor.setAlertNoClearance(false);
+        this.commandExecutor.setAlertUnknownCommand(false);
+        this.commandExecutor.clearanceResolver = (user) -> {
+            if (user.getRoles().contains(adminRole)) {
+                return 100;
             }
-        });
-        UHC.getCommandManager().registerCommand(command);
-        this.nagTaskId = this.uhc.getServer().getScheduler()
-            .scheduleSyncRepeatingTask(this.uhc, () -> {
-                if (this.uhc.getGame().getCurrentState() == GameState.WAITING
-                    && this.getMapper() != null) {
-                    Bukkit.getOnlinePlayers().stream()
-                        .filter(p -> this.getMapper().getUser(p.getUniqueId()) == null)
-                        .forEach(p -> {
-                            p.spigot().sendMessage(Chat.INSTANCE.message("Discord",
-                                "Your discord and minecraft account aren't linked. Type {command} to begin the process",
-                                "{command}", "/discord link"));
-                            p.playSound(p.getLocation(), Sound.ENTITY_CHICKEN_EGG,
-                                SoundCategory.MASTER, 1F, 1F);
-                        });
-                }
-            }, 0L, 600L);
+            return 0;
+        };
+        this.commandExecutor.register(discordCommands = new DiscordChatCommands());
+        this.commandExecutor.register(this.playerMapper);
+
+        this.shardManager.addListener(new CommandEventListener());
+
+        UHC.getCommandManager()
+            .registerCommand(
+                this.discordMinecraftCommand = new DiscordCommand(uhc.getGame(), this));
+
+        this.uhc.getLogger().info("[DISCORD] Starting up...");
+        this.shardManager.startAllShards(false);
+        this.uhc.getLogger().info("Shards started up!");
+        this.jda = this.shardManager.getShard(0);
+
+        if (!this.verifyConfiguration()) {
+            this.uhc.getLogger()
+                .severe("[DISCORD] Could not verify configuration, loading will stop");
+            this.onUnload();
+            return;
+        }
+        this.log(":ballot_box_with_check:", "Initialized and ready!");
     }
 
     @Override
     public void onUnload() {
-        if (this.jda != null) {
-            this.jda.shutdown();
-            this.jda = null;
-        }
-        UHC.getCommandManager().unregisterCommand(command);
+        UHC.getCommandManager().unregisterCommand(this.discordMinecraftCommand);
+        this.log(":no_entry:", "Module unloading");
         ObjectRegistry.INSTANCE.delete();
-        this.uhc.getServer().getScheduler().cancelTask(this.nagTaskId);
+        this.guild = null;
+        this.adminRole = null;
+        this.logChannel = null;
+        this.shardManager.shutdownAll();
     }
 
-    /**
-     * Gets the ready state of the robot
-     *
-     * @return True if the robot is ready
-     */
-    public boolean isReady() {
-        return this.ready;
-    }
-
-    /**
-     * Gets the {@link JDA} instance in use
-     *
-     * @return The JDA instance
-     */
-    public JDA getJda() {
-        return this.jda;
-    }
-
-    /**
-     * Gets the {@link Guild} the game is running on
-     *
-     * @return The guild, or null
-     */
-    public Guild getGuild() {
-        return this.jda.getGuildById(this.guildId);
-    }
-
-    /**
-     * Gets the PlayerMapper currently in use to link a {@link java.util.UUID} to a {@link
-     * net.dv8tion.jda.core.entities.User}
-     *
-     * @return The mapper
-     */
-    public PlayerMapper getMapper() {
-        return mapper;
-    }
-
-    /**
-     * Create teams and move everyone
-     */
-    public void createTeams() {
-        if (this.created) {
-            return;
-        }
-        this.spectatorRole = new TeamRoleObject(this, uhc.getGame().getSpectators());
-        spectatorRole.create(role -> {
-            queuedSpectators.stream().map(u -> getMapper().getUser(u)).filter(Objects::nonNull)
-                .map(u -> getGuild().getMember(u)).filter(Objects::nonNull).forEach(
-                member -> getGuild().getController().addRolesToMember(member, role).queue());
-            this.uhc.getGame().getTeams().forEach((name, team) -> {
-                UHCTeamObject obj = new UHCTeamObject(this, team);
-                this.teams.put(team, obj);
-                new JoinTeamRunnable(this.uhc, team, obj, this);
-                obj.create();
-            });
-        });
-        this.created = true;
-    }
-
-    /**
-     * Gives the user the spectator role if it exists. If not, queue them
-     *
-     * @param player The player to give the role to
-     */
-    public void assignSpectatorRole(Player player) {
-        if (this.spectatorRole == null || !this.spectatorRole.get().isPresent()) {
-            queuedSpectators.add(player.getUniqueId());
-        } else {
-            this.spectatorRole.get().ifPresent(role -> {
-                User user = this.getMapper().getUser(player.getUniqueId());
-                if (user != null) {
-                    getGuild().getController().addRolesToMember(getGuild().getMember(user), role)
-                        .queue();
-                }
-            });
-        }
-    }
-
-    /**
-     * Removes the spectator role from a player
-     *
-     * @param player The player to remove the role from
-     */
-    public void removeSpectatorRole(Player player) {
-        queuedSpectators.remove(player.getUniqueId());
-        this.spectatorRole.get().ifPresent(role -> {
-            User user = this.getMapper().getUser(player.getUniqueId());
-            if (user != null) {
-                getGuild().getController().removeRolesFromMember(getGuild().getMember(user), role)
-                    .queue();
+    private boolean verifyConfiguration() {
+        try {
+            this.uhc.getLogger().info("[DISCORD] Verifying configuration");
+            JDA jda = this.shardManager.getShard(0);
+            this.guild = jda.getGuildById(this.guildId);
+            if (this.guild == null) {
+                this.uhc.getLogger().warning("[DISCORD] Bot is not in guild " + this.guildId);
+                return false;
             }
-        });
-    }
+            this.adminRole = this.guild.getRoleById(this.adminRoleId);
+            if (this.adminRole == null) {
+                this.uhc.getLogger()
+                    .warning("[DISCORD] Role " + this.adminRoleId + " does not exist!");
+                return false;
+            }
+            TextChannel match = this.guild.getTextChannels().stream()
+                .filter(chan -> chan.getName().equals("uhc-log")).findFirst().orElse(null);
+            if (match == null) {
+                this.uhc.getLogger().info("[DISCORD] Log channel doesn't exist, creating");
+                this.logChannel = (TextChannel) this.guild.getController()
+                    .createTextChannel("uhc-log")
+                    .complete();
+                this.uhc.getLogger().info("[DISCORD] Log channel created!");
+            } else {
+                this.logChannel = match;
+            }
+            this.uhc.getLogger().info("[DISCORD] Using text channel " + this.logChannel.getId());
 
-    /**
-     * Removes all the teams
-     */
-    public void remove() {
-        this.teams.forEach((team, obj) -> obj.delete());
-        this.spectatorRole.delete();
-        this.spectatorRole = null;
-        this.teams.clear();
-        this.created = false;
-    }
+            // Verify permissions
+            PermissionOverride defaultOverride = this.logChannel
+                .getPermissionOverride(this.guild.getPublicRole());
+            if (defaultOverride == null) {
+                this.logChannel.createPermissionOverride(this.guild.getPublicRole())
+                    .setDeny(Permission.MESSAGE_READ).queue();
+            } else {
+                if (!defaultOverride.getDenied().contains(Permission.MESSAGE_READ)) {
+                    defaultOverride.getManager().deny(Permission.MESSAGE_READ).queue();
+                }
+            }
 
-    /**
-     * Moves all online members from their channels into the lobby channel. <br/> If the lobby
-     * channel does not exist, it will be created
-     *
-     * @param callback A callback called when everyone has been moved
-     */
-    public void moveEveryoneToLobby(Consumer<Void> callback) {
-        VoiceChannel lobbyChan = getLobbyChannel();
-        if (lobbyChan == null) {
-            lobbyChan = (VoiceChannel) this.getGuild().getController().createVoiceChannel("Lobby")
-                .complete();
-        }
-        List<Member> members = this.getGuild().getMembers().stream()
-            .filter(m -> m.getVoiceState().inVoiceChannel()).collect(
-                Collectors.toList());
-        for (int i = 0; i < members.size(); i++) {
-            int finalI = i;
-            this.getGuild().getController().moveVoiceMember(members.get(i), lobbyChan).queue(v -> {
-                if (finalI >= members.size() - 1) {
-                    if (callback != null) {
-                        callback.accept(null);
+            PermissionOverride adminRole = this.logChannel.getPermissionOverride(this.adminRole);
+            if (adminRole == null) {
+                this.logChannel.createPermissionOverride(this.adminRole)
+                    .setAllow(Permission.MESSAGE_READ).queue();
+            } else {
+                if (!adminRole.getAllowed().contains(Permission.MESSAGE_READ)) {
+                    adminRole.getManager().grant(Permission.MESSAGE_READ).queue();
+                }
+            }
+
+            Member member = guild.getMember(this.shardManager.getShard(0).getSelfUser());
+            if (!PermissionUtil.checkPermission(this.logChannel, member, Permission.MESSAGE_WRITE,
+                Permission.MESSAGE_READ)) {
+                this.uhc.getLogger().info("[DISCORD] Bot cannot read and write, creating override");
+                PermissionOverride botOverride = this.logChannel.getPermissionOverride(member);
+                if (botOverride == null) {
+                    this.logChannel.createPermissionOverride(member)
+                        .setAllow(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
+                } else {
+                    if (!botOverride.getAllowed().contains(Permission.MESSAGE_READ) || !botOverride
+                        .getAllowed().contains(Permission.MESSAGE_WRITE)) {
+                        botOverride.getManager()
+                            .grant(Permission.MESSAGE_READ, Permission.MESSAGE_WRITE).queue();
                     }
                 }
-            });
+            }
+            this.initializeSpectatorRole();
+            this.uhc.getLogger().info("[DISCORD] Configuration verified");
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         }
     }
 
     /**
-     * Attempts to find a lobby/general channel
-     *
-     * @return The channel, or null if one doesn't exist
+     * Loads the configuration for this module
      */
-    @Nullable
-    public VoiceChannel getLobbyChannel() {
-        VoiceChannel lobbyChan = null;
-        // Attempt to find a channel named "general" or "lobby"
-        for (VoiceChannel c : this.getGuild().getVoiceChannels()) {
-            if (c.getName().equalsIgnoreCase("general") || c.getName().equalsIgnoreCase("lobby")) {
-                lobbyChan = c;
-                break;
+    private void loadConfiguration() {
+        FileConfiguration cfg = this.uhc.getConfig();
+        this.token = cfg.getString("discord.apiToken");
+        this.guildId = cfg.getString("discord.guild");
+        this.adminRoleId = cfg.getString("discord.adminRole");
+    }
+
+    /**
+     * Logs a message in the bot log
+     *
+     * @param emoji   The emoji to include
+     * @param message The message to log
+     */
+    public void log(String emoji, String message) {
+        if (this.logChannel == null) {
+            return;
+        }
+        String timestamp = new SimpleDateFormat("HH:mm:ss").format(System.currentTimeMillis());
+        this.logChannel.sendMessage(String.format("`[%s]` %s %s", timestamp, emoji, message))
+            .queue();
+    }
+
+    private void initializeSpectatorRole() {
+        Optional<Role> role = this.guild.getRolesByName("Spectators", true).stream().findFirst();
+        if (role.isPresent()) {
+            this.uhc.getLogger()
+                .info("[DISCORD] Using " + role.get().getId() + " as the spectator role");
+            this.spectatorRole = role.get();
+        } else {
+            this.spectatorRole = this.guild.getController().createRole().setName("Spectators")
+                .complete();
+        }
+    }
+
+    /**
+     * Creates the team
+     *
+     * @param team The team to create
+     */
+    public void createTeam(UHCTeam team) {
+        if (this.teamObjectMap.containsKey(team)) {
+            return; // We've already created it
+        }
+        log(":shield:", "Initializing team `" + team.getTeamName() + "`");
+        UHCTeamObject obj = new UHCTeamObject(team, this);
+        this.teamObjectMap.put(team, obj);
+        obj.create();
+    }
+
+    /**
+     * Destroys the team
+     *
+     * @param team The team to destroy
+     */
+    public void destroyTeam(UHCTeam team) {
+        UHCTeamObject obj = this.teamObjectMap.remove(team);
+        if (obj != null) {
+            log(":wastebasket:", "Destroying team `" + team.getTeamName() + "`");
+            obj.delete();
+        }
+    }
+
+    /**
+     * Adds a user to the spectator role
+     *
+     * @param uuid The user
+     */
+    public void addSpectator(UUID uuid) {
+        User u = playerMapper.getUser(uuid);
+        if (u != null) {
+            Member m = guild.getMember(u);
+            if (m != null) {
+                log(":crossed_swords:", "Assigning `" + u.getName() + "#" + u.getDiscriminator() +
+                    "` to the spectators team");
+                guild.getController().addSingleRoleToMember(m, this.spectatorRole).queue();
             }
         }
-        return lobbyChan;
     }
 
-    @EventHandler(ignoreCancelled = true)
-    public void onGameStateChange(GameStateChangeEvent event) {
-        if (event.getTo() == GameState.ALIVE) {
-            this.createTeams();
-        }
-        if (event.getTo() == GameState.ENDING) {
-            this.moveEveryoneToLobby(success -> this.remove());
+    /**
+     * Remove the users from the spectator role
+     *
+     * @param uuid The user
+     */
+    public void removeSpectator(UUID uuid) {
+        User u = playerMapper.getUser(uuid);
+        if (u != null) {
+            Member m = guild.getMember(u);
+            if (m != null) {
+                log(":crossed_swords:", "Removing `" + u.getName() + "#" + u.getDiscriminator() +
+                    "` from the spectators team");
+                guild.getController().removeSingleRoleFromMember(m, this.spectatorRole).queue();
+            }
         }
     }
 
     /**
-     * Gets the team's discord team object
+     * Gets the {@link UHCTeamObject} corresponding to the {@link UHCTeam}
      *
      * @param team The team
      *
-     * @return The team object
+     * @return An optional of the object
      */
-    public UHCTeamObject getTeamObject(UHCTeam team) {
-        return this.teams.get(team);
+    public Optional<UHCTeamObject> getTeam(UHCTeam team) {
+        UHCTeamObject value = this.teamObjectMap.get(team);
+        return Optional.ofNullable(value);
     }
 
-    /**
-     * Load configuration files
-     */
-    private void loadConfiguration() {
-        FileConfiguration configuration = this.uhc.getConfig();
-        this.apiToken = configuration.getString("discord.apiToken");
-        this.guildId = configuration.getString("discord.guild");
-    }
-
-    /**
-     * Set the permissions for a channel
-     *
-     * @param channel The channel to set
-     * @param role    The role to set the permissions
-     * @param grant   The permissions to grant to the role
-     * @param deny    The permissions to deny to the role
-     */
-    public void setPermissions(Channel channel, Role role, Permission[] grant, Permission[] deny) {
-        PermissionOverride override = channel.getPermissionOverride(role);
-        if (grant == null) {
-            grant = new Permission[0];
-        }
-        if (deny == null) {
-            deny = new Permission[0];
-        }
-        if (override == null) {
-            channel.createPermissionOverride(role).setAllow(grant).setDeny(deny).queue();
-        } else {
-            override.getManagerUpdatable().grant(grant).deny(deny).update().queue();
-        }
-    }
-
-    private class EventListener extends ListenerAdapter {
-
-        @Override
-        public void onReady(ReadyEvent event) {
-            DiscordModule.this.ready = true;
-            DiscordModule.this.jda.getPresence().setStatus(OnlineStatus.ONLINE);
-            DiscordModule.this.uhc.getLogger()
-                .info("[DISCORD] Discord robot connected and initialized successfully!");
-            DiscordModule.this.mapper = new UHCBotLinkMapper(DiscordModule.this);
-        }
-
-        @Override
-        public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
-            DiscordModule.this.spectatorRole.get().ifPresent(role -> {
-                if (!event.getMember().getRoles().contains(role)) {
-                    return;
-                }
-                UHCTeam team = getTeamFromChannel(event.getChannelJoined());
-                if (team == null) {
-                    return;
-                }
-                notifyJoin(team, event.getMember());
-            });
-
-        }
-
-        @Override
-        public void onGuildVoiceMove(GuildVoiceMoveEvent event) {
-            DiscordModule.this.spectatorRole.get().ifPresent(role -> {
-                if (!event.getMember().getRoles().contains(role)) {
-                    return;
-                }
-                UHCTeam joined = getTeamFromChannel(event.getChannelJoined());
-                UHCTeam left = getTeamFromChannel(event.getChannelLeft());
-                if (joined != null) {
-                    notifyJoin(joined, event.getMember());
-                }
-                if (left != null) {
-                    notifyLeave(left, event.getMember());
-                }
+    @EventHandler
+    public void onStateChange(GameStateChangeEvent event) {
+        log(":pushpin:", "Game state changing to `" + event.getTo() + "`");
+        if (event.getTo() == GameState.ALIVE) {
+            log(":information_source:", "Game is starting, moving everyone into team channels!");
+            this.teamObjectMap.forEach((team, teamObject) -> {
+                team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(
+                    teamObject::joinTeam);
             });
         }
-
-        @Override
-        public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
-            DiscordModule.this.spectatorRole.get().ifPresent(role -> {
-                if (!event.getMember().getRoles().contains(role)) {
-                    return;
-                }
-                UHCTeam team = getTeamFromChannel(event.getChannelLeft());
-                if (team == null) {
-                    return;
-                }
-                notifyLeave(team, event.getMember());
-            });
-        }
-
-        private void notifyJoin(UHCTeam team, Member member) {
-            team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull)
-                .forEach(player -> player.spigot().sendMessage(Chat.INSTANCE
-                    .message("Discord", "{user} has joined your team's chat", "{user}",
-                        member.getEffectiveName())));
-        }
-
-        private void notifyLeave(UHCTeam team, Member member) {
-            team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull)
-                .forEach(player -> player.spigot().sendMessage(
-                    Chat.INSTANCE.message("Discord", "{user} has left your team's chat", "{user}",
-                        member.getEffectiveName())));
-        }
-
-        private UHCTeam getTeamFromChannel(VoiceChannel voiceChannel) {
-            for(Map.Entry<UHCTeam, UHCTeamObject> e : DiscordModule.this.teams.entrySet()){
-                if(e.getValue().getVoiceChannel().get().isPresent()){
-                    VoiceChannel chan = e.getValue().getVoiceChannel().get().get();
-                    if(chan.getIdLong() == voiceChannel.getIdLong()){
-                        return e.getKey();
-                    }
-                }
+        if (event.getTo() == GameState.ENDING) {
+            log(":information_source:", "Game is ending, bringing everyone to `General`");
+            List<VoiceChannel> channels = this.guild.getVoiceChannelsByName("General", true);
+            VoiceChannel channel;
+            if (channels.size() > 0) {
+                channel = channels.get(0);
+            } else {
+                channel = (VoiceChannel) guild.getController().createVoiceChannel("General")
+                    .complete();
             }
-            return null;
+            guild.getMembers().stream().filter(m -> m.getVoiceState().inVoiceChannel())
+                .forEach(m -> guild.getController().moveVoiceMember(m, channel).queue());
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        log(":skull:", ChatColor.stripColor(event.getDeathMessage()));
+    }
+
+    private class CommandEventListener extends ListenerAdapter {
+
+        @Override
+        public void onMessageReceived(MessageReceivedEvent event) {
+            if (event.getAuthor() == event.getGuild().getSelfMember().getUser()) {
+                return; // Ignore messages from ourself
+            }
+            commandExecutor.execute(event.getMessage());
         }
     }
 }

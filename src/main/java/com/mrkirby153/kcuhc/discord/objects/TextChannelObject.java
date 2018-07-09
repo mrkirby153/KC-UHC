@@ -2,34 +2,46 @@ package com.mrkirby153.kcuhc.discord.objects;
 
 import com.mrkirby153.kcuhc.discord.DiscordModule;
 import com.mrkirby153.kcuhc.discord.ObjectRegistry;
+import net.dv8tion.jda.core.entities.Category;
 import net.dv8tion.jda.core.entities.TextChannel;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
-public class TextChannelObject extends DiscordObject<TextChannel> {
+public class TextChannelObject implements DiscordObject<TextChannel> {
 
     private String name;
+    private DiscordModule module;
+    private Category parent;
 
-    public TextChannelObject(DiscordModule module, String name) {
-        super(module);
-        this.name = name.replace(' ', '-');
+    private TextChannel channel;
+
+    public TextChannelObject(String name, DiscordModule module, Category parent) {
+        this.name = name.replaceAll("\\s", "-");
+        this.module = module;
+        this.parent = parent;
     }
 
     @Override
-    public void create(Consumer<TextChannel> callback) {
-        this.bot.getGuild().getController().createTextChannel(this.name).queue(chan -> {
-            set((TextChannel) chan);
-            ObjectRegistry.INSTANCE.registerForDelete(this);
-            if (callback != null) {
-                callback.accept((TextChannel) chan);
+    public void create(Consumer<TextChannel> consumer) {
+        module.guild.getController().createTextChannel(this.name).setParent(parent).queue(c -> {
+            this.channel = (TextChannel) c;
+            ObjectRegistry.INSTANCE.register(this);
+            if (consumer != null) {
+                consumer.accept((TextChannel) c);
             }
         });
     }
 
     @Override
+    public Optional<TextChannel> get() {
+        return Optional.ofNullable(channel);
+    }
+
+    @Override
     public void delete() {
-        get().ifPresent(chan -> chan.delete().queue());
-        set(null);
+        get().ifPresent(c -> c.delete().queue());
+        this.channel = null;
         ObjectRegistry.INSTANCE.unregister(this);
     }
 }

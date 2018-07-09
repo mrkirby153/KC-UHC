@@ -17,7 +17,7 @@ public class PrestigeTeam extends UHCTeam {
     private UHC uhc;
 
     public PrestigeTeam(UHC uhc, UUID player) {
-        super("prestige_" + player.toString(), ChatColor.WHITE);
+        super("prestige_" + player.toString(), ChatColor.WHITE, uhc.getGame());
         this.player = player;
         this.uhc = uhc;
         setShowPrefix(true);

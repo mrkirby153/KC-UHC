@@ -22,4 +22,12 @@ public interface PlayerMapper {
      * @param player The player to begin the process for
      */
     void createLink(Player player);
+
+    /**
+     * Forcibly creates a link between the two accounts
+     *
+     * @param player The player
+     * @param id The id of the account to link
+     */
+    void forceLink(Player player, String id);
 }

@@ -100,7 +100,7 @@ public class UHCGame implements Listener {
      * @return The created team
      */
     public UHCTeam createTeam(String name, ChatColor color) {
-        UHCTeam team = new UHCTeam(name, color);
+        UHCTeam team = new UHCTeam(name, color, this);
         this.teams.put(name.toLowerCase(), team);
         return team;
     }

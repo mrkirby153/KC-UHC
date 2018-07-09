@@ -3,133 +3,76 @@ package com.mrkirby153.kcuhc.discord.objects;
 import com.mrkirby153.kcuhc.discord.DiscordModule;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.core.entities.Channel;
+import net.dv8tion.jda.core.entities.GuildVoiceState;
 import net.dv8tion.jda.core.entities.Member;
+import net.dv8tion.jda.core.entities.PermissionOverride;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.managers.PermOverrideManager;
+import net.dv8tion.jda.core.requests.restaction.PermissionOverrideAction;
+import org.bukkit.entity.Player;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
-public class UHCTeamObject extends DiscordObject<UHCTeamObject> {
+public class UHCTeamObject implements DiscordObject<UHCTeamObject> {
 
     private ScoreboardTeam team;
+    private DiscordModule module;
 
     private TeamRoleObject role;
     private TextChannelObject textChannel;
     private VoiceChannelObject voiceChannel;
-    private ChannelCategoryObject channelCategory;
+    private ChannelCategoryObject category;
 
-    public UHCTeamObject(DiscordModule bot, ScoreboardTeam team) {
-        super(bot);
+    public UHCTeamObject(ScoreboardTeam team, DiscordModule module) {
         this.team = team;
+        this.module = module;
+    }
+
+
+    @Override
+    public void create(Consumer<UHCTeamObject> consumer) {
+        Role publicRole = this.module.guild.getPublicRole();
+        Role adminRole = this.module.adminRole;
+
+        this.category = new ChannelCategoryObject(this.module, "Team " + this.team.getTeamName());
+        this.role = new TeamRoleObject(this.module, this.team);
+        this.category.create(category -> {
+            // Let the admin role and the public role see the channel
+            createOverride(category, publicRole, null, new Permission[]{Permission.VIEW_CHANNEL});
+            createOverride(category, adminRole, new Permission[]{Permission.VIEW_CHANNEL}, null);
+            createOverride(category, module.spectatorRole,
+                new Permission[]{Permission.VIEW_CHANNEL},
+                new Permission[]{Permission.MESSAGE_WRITE, Permission.VOICE_SPEAK});
+
+            this.role.create(role -> {
+                createOverride(category, role, new Permission[]{Permission.VIEW_CHANNEL}, null);
+
+                this.textChannel = new TextChannelObject("team " + this.team.getTeamName(),
+                    this.module, category);
+                this.voiceChannel = new VoiceChannelObject("Team " + this.team.getTeamName(),
+                    this.module, category);
+
+                this.textChannel.create();
+                this.voiceChannel.create();
+            });
+        });
+        if (consumer != null) {
+            consumer.accept(this);
+        }
     }
 
     @Override
-    public void create(Consumer<UHCTeamObject> callback) {
-        Role publicRole = this.bot.getGuild().getPublicRole();
-        this.role = new TeamRoleObject(this.bot, this.team);
-
-        this.channelCategory = new ChannelCategoryObject(this.bot,
-            "Team " + this.team.getTeamName());
-
-        this.role.create(role -> this.channelCategory.create(cat -> {
-            // Set permissions for the public role
-            bot.setPermissions(cat, publicRole, null, new Permission[]{Permission.VIEW_CHANNEL});
-            bot.setPermissions(cat, role, new Permission[]{Permission.VIEW_CHANNEL}, null);
-
-            this.textChannel = new TextChannelObject(this.bot, "team " + this.team.getTeamName());
-            this.textChannel.create(textChan -> {
-                textChan.getManager().setParent(cat).queue();
-                bot.setPermissions(textChan, publicRole, null,
-                    new Permission[]{Permission.VIEW_CHANNEL});
-                bot.setPermissions(textChan, role, new Permission[]{Permission.VIEW_CHANNEL}, null);
-            });
-
-            this.voiceChannel = new VoiceChannelObject(this.bot, "Team " + this.team.getTeamName());
-            this.voiceChannel.create(voiceChan -> {
-                voiceChan.getManager().setParent(cat).queue();
-                bot.setPermissions(voiceChan, publicRole, null,
-                    new Permission[]{Permission.VIEW_CHANNEL});
-                bot.setPermissions(voiceChan, role, new Permission[]{Permission.VIEW_CHANNEL},
-                    null);
-                bot.spectatorRole.get()
-                    .ifPresent(spectatorRole -> bot.setPermissions(voiceChan, spectatorRole,
-                        new Permission[]{Permission.VOICE_CONNECT, Permission.VIEW_CHANNEL},
-                        new Permission[]{Permission.VOICE_SPEAK}));
-            });
-
-            if (callback != null) {
-                callback.accept(this);
-            }
-        }));
-    }
-
-    public TeamRoleObject getRole() {
-        return role;
-    }
-
-    public TextChannelObject getTextChannel() {
-        return textChannel;
-    }
-
-    public VoiceChannelObject getVoiceChannel() {
-        return voiceChannel;
-    }
-
-    /**
-     * Adds the user to the team
-     *
-     * @param user     The user to add
-     * @param consumer An optional callback
-     */
-    public void joinTeam(User user, Consumer<User> consumer) {
-        this.getRole().get().ifPresent(role -> {
-            Guild guild = this.bot.getGuild();
-            guild.getController().addRolesToMember(guild.getMember(user), role).queue(ignored -> {
-                if (consumer != null) {
-                    consumer.accept(user);
-                }
-            });
-        });
-    }
-
-    /**
-     * Removes the user from the team
-     *
-     * @param user     The user to remove
-     * @param callback An optional callback
-     */
-    public void leaveTeam(User user, Consumer<User> callback) {
-        this.getRole().get().ifPresent(role -> {
-            Guild guild = this.bot.getGuild();
-            guild.getController().removeRolesFromMember(guild.getMember(user), role)
-                .queue(ignored -> {
-                    if (callback != null) {
-                        callback.accept(user);
-                    }
-                });
-        });
-    }
-
-    /**
-     * Moves the user into the team voice channel
-     *
-     * @param user The user to move
-     */
-    public void moveToTeamChannel(User user) {
-        this.getVoiceChannel().get().ifPresent(chan -> {
-            Guild guild = this.bot.getGuild();
-            Member member = guild.getMember(user);
-            if (member.getVoiceState().inVoiceChannel()) {
-                guild.getController().moveVoiceMember(member, chan).queue();
-            }
-        });
+    public Optional<UHCTeamObject> get() {
+        return Optional.of(this);
     }
 
     @Override
     public void delete() {
-        if (this.role != null) {
-            this.role.delete();
+        if (this.category != null) {
+            this.category.delete();
         }
         if (this.textChannel != null) {
             this.textChannel.delete();
@@ -137,19 +80,76 @@ public class UHCTeamObject extends DiscordObject<UHCTeamObject> {
         if (this.voiceChannel != null) {
             this.voiceChannel.delete();
         }
-        if (this.channelCategory != null) {
-            this.channelCategory.delete();
+        if (this.role != null) {
+            this.role.delete();
         }
     }
 
     /**
-     * Checks if all parts of the team have been created
+     * Adds a user to the team
      *
-     * @return True if the text and voice channel as well as the role are all created
+     * @param player The player to add
      */
-    public boolean isCreated() {
-        return this.role != null && this.textChannel != null && this.voiceChannel != null
-            && this.role.get().isPresent() && this.textChannel.get().isPresent()
-            && this.voiceChannel.get().isPresent();
+    public void joinTeam(Player player) {
+        User u = this.module.playerMapper.getUser(player.getUniqueId());
+        if (u != null) {
+            Member m = this.module.guild.getMember(u);
+            if (m != null) {
+                module.log(":inbox_tray:",
+                    "Adding `" + u.getName() + "#" + u.getDiscriminator() + "` to team `"
+                        + this.team.getTeamName() + "`");
+                this.role.get().ifPresent(
+                    r -> this.module.guild.getController().addSingleRoleToMember(m, r).queue());
+
+                GuildVoiceState state = m.getVoiceState();
+                if (state.inVoiceChannel()) {
+                    this.voiceChannel.get().ifPresent(vc -> module.guild.getController().moveVoiceMember(m, vc).queue());
+                }
+            }
+        }
+    }
+
+    /**
+     * Removes a player from the team
+     *
+     * @param player The player to remove
+     */
+    public void leaveTeam(Player player) {
+        User u = this.module.playerMapper.getUser(player.getUniqueId());
+        if (u != null) {
+            Member m = this.module.guild.getMember(u);
+            if (m != null) {
+                module.log(":outbox_tray:",
+                    "Removing `" + u.getName() + "#" + u.getDiscriminator() + "` from team `"
+                        + this.team.getTeamName() + "`");
+                this.role.get().ifPresent(
+                    r -> this.module.guild.getController().removeSingleRoleFromMember(m, r)
+                        .queue());
+            }
+        }
+    }
+
+    private void createOverride(Channel c, Role role, Permission[] allow, Permission[] deny) {
+        PermissionOverride override = c.getPermissionOverride(role);
+        if (override == null) {
+            PermissionOverrideAction action =
+                c.createPermissionOverride(role);
+            if (allow != null) {
+                action = action.setAllow(allow);
+            }
+            if (deny != null) {
+                action = action.setDeny(deny);
+            }
+            action.queue();
+        } else {
+            PermOverrideManager manager = override.getManager();
+            if (allow != null) {
+                manager = manager.grant(allow);
+            }
+            if (deny != null) {
+                manager = manager.deny(deny);
+            }
+            manager.queue();
+        }
     }
 }

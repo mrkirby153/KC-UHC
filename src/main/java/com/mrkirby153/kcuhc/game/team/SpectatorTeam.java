@@ -44,7 +44,7 @@ public class SpectatorTeam extends ScoreboardTeam {
         if (openInventory != null && openInventory instanceof SpectatorInventory) {
             openInventory.close();
         }
-        ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> m.removeSpectatorRole(player));
+        ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> m.removeSpectator(player.getUniqueId()));
     }
 
     @Override
@@ -62,6 +62,6 @@ public class SpectatorTeam extends ScoreboardTeam {
         player.setAllowFlight(true);
         player.setFlying(true);
         new SpectatorInventory(uhc, player);
-        ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> m.assignSpectatorRole(player));
+        ModuleRegistry.INSTANCE.getLoadedModule(DiscordModule.class).ifPresent(m -> m.addSpectator(player.getUniqueId()));
     }
 }

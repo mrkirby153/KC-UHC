@@ -1,57 +1,27 @@
 package com.mrkirby153.kcuhc.discord.objects;
 
-import com.mrkirby153.kcuhc.discord.DiscordModule;
-import com.mrkirby153.kcuhc.discord.IDeletable;
+import com.mrkirby153.kcuhc.discord.Deletable;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 
-/**
- * Abstract class representing a discord object
- */
-public abstract class DiscordObject<T> implements IDeletable {
-
-    private T object;
-
-    protected DiscordModule bot;
-
-    public DiscordObject(DiscordModule bot) {
-        this.bot = bot;
-    }
+public interface DiscordObject<T> extends Deletable {
 
     /**
      * Creates the object
      *
-     * @param callback A callback to run when the creation is complete
+     * @param consumer A callback to run after the channel has been created
      */
-    public abstract void create(Consumer<T> callback);
+    void create(Consumer<T> consumer);
 
-    /**
-     * Creates the object
-     */
-    public void create() {
+    default void create() {
         this.create(null);
     }
 
     /**
-     * Returns the object
+     * Gets the object
      *
-     * @return The object or null if it hasn't been created
+     * @return An optional of the object
      */
-    public Optional<T> get() {
-        if (object == null) {
-            return Optional.empty();
-        } else {
-            return Optional.of(object);
-        }
-    }
-
-    /**
-     * Sets the object once it's been created
-     *
-     * @param object The object
-     */
-    protected void set(T object) {
-        this.object = object;
-    }
+    Optional<T> get();
 }
