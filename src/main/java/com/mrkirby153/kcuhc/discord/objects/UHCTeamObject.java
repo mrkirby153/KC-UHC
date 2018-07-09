@@ -43,9 +43,6 @@ public class UHCTeamObject implements DiscordObject<UHCTeamObject> {
             // Let the admin role and the public role see the channel
             createOverride(category, publicRole, null, new Permission[]{Permission.VIEW_CHANNEL});
             createOverride(category, adminRole, new Permission[]{Permission.VIEW_CHANNEL}, null);
-            createOverride(category, module.spectatorRole,
-                new Permission[]{Permission.VIEW_CHANNEL},
-                new Permission[]{Permission.MESSAGE_WRITE, Permission.VOICE_SPEAK});
 
             this.role.create(role -> {
                 createOverride(category, role, new Permission[]{Permission.VIEW_CHANNEL}, null);
