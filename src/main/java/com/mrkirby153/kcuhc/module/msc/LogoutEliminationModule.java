@@ -2,6 +2,8 @@ package com.mrkirby153.kcuhc.module.msc;
 
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.game.GameState;
+import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
@@ -69,6 +71,13 @@ public class LogoutEliminationModule extends UHCModule {
             p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
         });
         this.loggedOutPlayers.put(event.getPlayer().getUniqueId(), player);
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onGameStateChange(GameStateChangeEvent event) {
+        if(event.getTo() == GameState.ENDING || event.getTo() == GameState.ALIVE){
+            this.loggedOutPlayers.clear();
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
