@@ -49,6 +49,10 @@ public class UHCScoreboard extends KirbyScoreboard {
             Optional<PrestigeModule> mod = ModuleRegistry.INSTANCE
                 .getLoadedModule(PrestigeModule.class);
             mod.ifPresent(prestigeModule -> teams.addAll(prestigeModule.getTeams().values()));
+            if(!mod.isPresent()){
+                teams.addAll(game.getTeams().values());
+                teams.add(game.getSpectators());
+            }
         } else {
             teams.addAll(game.getTeams().values());
             teams.add(game.getSpectators());
