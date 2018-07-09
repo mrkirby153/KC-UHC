@@ -24,6 +24,7 @@ import org.bukkit.WorldBorder;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
+import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -238,6 +239,13 @@ public class UHCGame implements Listener {
             });
         }
         if (event.getTo() == GameState.ALIVE) {
+            // Butcher all the mobs
+            getUHCWorld().getEntities().forEach(m -> {
+                if (m instanceof Monster) {
+                    plugin.getLogger().info("butchered " + m.getType());
+                    m.remove();
+                }
+            });
             Bukkit.getOnlinePlayers().stream()
                 .filter(p -> !this.spectators.getPlayers().contains(p.getUniqueId()))
                 .filter(Player::isValid).forEach(p -> {
@@ -368,10 +376,11 @@ public class UHCGame implements Listener {
             event.setCancelled(true);
             Bukkit.getOnlinePlayers().forEach(p -> {
                 String[] parts = event.getMessage().split("\\|");
-                if(parts.length < 2)
+                if (parts.length < 2) {
                     p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
-                else
+                } else {
                     p.playSound(p.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1F, 1F);
+                }
                 p.sendMessage(
                     ChatColor.GREEN + "" + ChatColor.BOLD + "ANNOUNCEMENT> " + ChatColor.YELLOW
                         + event.getPlayer().getName() + " " + ChatColor.LIGHT_PURPLE + event
