@@ -51,17 +51,15 @@ public class DiscordModule extends UHCModule {
     public JDA jda;
 
     public PlayerMapper playerMapper = new UHCBotLinkMapper(this);
-
+    public boolean ready = false;
     private UHC uhc;
     private String token;
     private String guildId;
     private String adminRoleId;
     private ShardManager shardManager;
     private CommandExecutor commandExecutor;
-
     private DiscordChatCommands discordCommands;
     private DiscordCommand discordMinecraftCommand;
-
     private HashMap<UHCTeam, UHCTeamObject> teamObjectMap = new HashMap<>();
 
 
@@ -324,34 +322,70 @@ public class DiscordModule extends UHCModule {
         return Optional.empty();
     }
 
+    /**
+     * Creates all the team channels
+     */
+    public void createChannels() {
+        if (ready) {
+            return; // Don't create two at once
+        }
+        this.uhc.getGame().getTeams().values().forEach(this::createTeam);
+        this.ready = true;
+    }
+
+    /**
+     * Destroys all the team channels
+     */
+    public void destroyChannels() {
+        if (!ready) {
+            return;
+        }
+        this.uhc.getGame().getTeams().values().forEach(this::destroyTeam);
+        this.ready = false;
+    }
+
     @EventHandler
     public void onStateChange(GameStateChangeEvent event) {
         log(":pushpin:", "Game state changing to `" + event.getTo() + "`");
         if (event.getTo() == GameState.ALIVE) {
-            log(":information_source:", "Game is starting, moving everyone into team channels!");
-            this.teamObjectMap.forEach((team, teamObject) -> {
-                team.getPlayers().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(
-                    teamObject::joinTeam);
-            });
+            distributeUsers();
         }
         if (event.getTo() == GameState.ENDING) {
-            log(":information_source:", "Game is ending, bringing everyone to `General`");
-            List<VoiceChannel> channels = this.guild.getVoiceChannelsByName("General", true);
-            VoiceChannel channel;
-            if (channels.size() > 0) {
-                channel = channels.get(0);
-            } else {
-                channel = (VoiceChannel) guild.getController().createVoiceChannel("General")
-                    .complete();
-            }
-            guild.getMembers().stream().filter(m -> m.getVoiceState().inVoiceChannel())
-                .forEach(m -> guild.getController().moveVoiceMember(m, channel).queue());
+            bringEveryoneToLobby();
         }
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent event) {
         log(":skull:", ChatColor.stripColor(event.getDeathMessage()));
+    }
+
+    /**
+     * Sends everyone to the team channels
+     */
+    public void distributeUsers() {
+        if (!this.ready) {
+            log(":warning:", "Cannot distribute users, channels are not ready.");
+            return;
+        }
+        log(":information_source:", "Moving everyone into team channels");
+        this.teamObjectMap.forEach(
+            (team, teamObject) -> team.getPlayers().stream().map(Bukkit::getPlayer)
+                .filter(Objects::nonNull).forEach(teamObject::joinTeam));
+    }
+
+    private void bringEveryoneToLobby() {
+        log(":information_source:", "Bringing everyone to `General`");
+        List<VoiceChannel> channels = this.guild.getVoiceChannelsByName("General", true);
+        VoiceChannel channel;
+        if (channels.size() > 0) {
+            channel = channels.get(0);
+        } else {
+            channel = (VoiceChannel) guild.getController().createVoiceChannel("General")
+                .complete();
+        }
+        guild.getMembers().stream().filter(m -> m.getVoiceState().inVoiceChannel())
+            .forEach(m -> guild.getController().moveVoiceMember(m, channel).queue());
     }
 
     private class CommandEventListener extends ListenerAdapter {

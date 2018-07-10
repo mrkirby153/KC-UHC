@@ -48,25 +48,31 @@ public class DiscordCommand extends BaseCommand {
     public void forceLink(CommandSender sender, OnlinePlayer player, String id) {
         module.playerMapper.forceLink(player.player, id);
         sender.sendMessage(Chat.INSTANCE
-            .message("Discord", "Forcibly linking {player} to {id}", "{player}", player.player.getName(),
+            .message("Discord", "Forcibly linking {player} to {id}", "{player}",
+                player.player.getName(),
                 "{id}", id).toLegacyText());
     }
 
     @Subcommand("generate")
     public void generateTeamChannels(CommandSender sender) {
-        game.getTeams().values().forEach(team -> {
-            module.createTeam(team);
-        });
+        this.module.createChannels();
         sender.sendMessage(
             Chat.INSTANCE.message("Discord", "Generating team channels").toLegacyText());
     }
 
     @Subcommand("destroy")
     public void destroyAllTeamChannels(CommandSender sender) {
-        game.getTeams().values().forEach(team -> {
-            module.destroyTeam(team);
-        });
+        this.module.destroyChannels();
         sender.sendMessage(
             Chat.INSTANCE.message("Discord", "Destroying team channels").toLegacyText());
+    }
+
+    @Subcommand("distribute")
+    public void distributePlayers(CommandSender sender) {
+        if(!this.module.ready){
+            sender.sendMessage(Chat.INSTANCE.error("Cannot distribute players. Team channels have not been created").toString());
+        return;
+        }
+        this.module.distributeUsers();
     }
 }
