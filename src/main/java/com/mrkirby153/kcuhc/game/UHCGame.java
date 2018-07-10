@@ -2,7 +2,10 @@ package com.mrkirby153.kcuhc.game;
 
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.game.event.GameStartingEvent;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
+import com.mrkirby153.kcuhc.game.event.GameStoppingEvent;
+import com.mrkirby153.kcuhc.game.event.GameStoppingEvent.Reason;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
@@ -209,6 +212,41 @@ public class UHCGame implements Listener {
      */
     public HashMap<String, UHCTeam> getTeams() {
         return teams;
+    }
+
+    /**
+     * Starts the game
+     *
+     * @return True if the game was started successfully
+     */
+    public boolean start() {
+        this.plugin.getLogger().info("Starting game");
+        GameStartingEvent event = new GameStartingEvent();
+        Bukkit.getServer().getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            this.plugin.getLogger().info("Game start canceled");
+            return false;
+        }
+        this.setCurrentState(GameState.COUNTDOWN);
+        return true;
+    }
+
+    /**
+     * Abort the currently running game
+     */
+    public boolean abort() {
+        this.plugin.getLogger().info("!!! ABORTING GAME !!!");
+        if (currentState != GameState.ALIVE) {
+            return false; // Can't abort a game if it's not running :meowthinksmart:
+        }
+        GameStoppingEvent event = new GameStoppingEvent(Reason.ABORTED);
+        Bukkit.getServer().getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            this.plugin.getLogger().info("Game abort canceled");
+            return false;
+        }
+        this.stop("Nobody", Color.WHITE);
+        return true;
     }
 
     /**

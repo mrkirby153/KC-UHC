@@ -17,7 +17,6 @@ import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.Bukkit;
-import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
@@ -103,7 +102,10 @@ public class GameCommand extends BaseCommand {
 
     @Subcommand("start")
     public void startGame(CommandSender sender) {
-        this.game.setCurrentState(GameState.COUNTDOWN);
+        if(!this.game.start()){
+            sender.sendMessage(Chat.INSTANCE.error("Game start has been aborted").toLegacyText());
+            return;
+        }
         sender.sendMessage(Chat.INSTANCE.message("Game", "Started").toLegacyText());
         if (sender instanceof Player) {
             Player p = (Player) sender;
@@ -113,7 +115,10 @@ public class GameCommand extends BaseCommand {
 
     @Subcommand("stop")
     public void stopGame(CommandSender sender) {
-        this.game.stop("Nobody", Color.GREEN);
+        if(!this.game.abort()){
+            sender.sendMessage(Chat.INSTANCE.error("Game abort unsuccessful!").toLegacyText());
+            return;
+        }
         sender.sendMessage(Chat.INSTANCE.message("Game", "Stopped!").toLegacyText());
         if (sender instanceof Player) {
             Player p = (Player) sender;

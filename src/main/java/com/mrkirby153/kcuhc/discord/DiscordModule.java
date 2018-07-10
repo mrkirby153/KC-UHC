@@ -9,6 +9,7 @@ import com.mrkirby153.kcuhc.discord.mapper.PlayerMapper;
 import com.mrkirby153.kcuhc.discord.mapper.UHCBotLinkMapper;
 import com.mrkirby153.kcuhc.discord.objects.UHCTeamObject;
 import com.mrkirby153.kcuhc.game.GameState;
+import com.mrkirby153.kcuhc.game.event.GameStartingEvent;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
@@ -342,6 +343,14 @@ public class DiscordModule extends UHCModule {
         }
         this.uhc.getGame().getTeams().values().forEach(this::destroyTeam);
         this.ready = false;
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onGameStarting(GameStartingEvent event) {
+        if (!ready) {
+            log(":warning:", "Game start aborted. Team channels have not been created");
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
