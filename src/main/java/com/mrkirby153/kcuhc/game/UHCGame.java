@@ -34,6 +34,8 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.potion.PotionEffect;
@@ -405,6 +407,24 @@ public class UHCGame implements Listener {
                 }
             }
         }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        event.setJoinMessage(Chat.INSTANCE
+            .message("Join", "{player} joined!", "{player}", event.getPlayer().getName())
+            .toLegacyText());
+        if (getCurrentState() == GameState.WAITING) {
+            // Teleport the user to spawn
+            event.getPlayer().teleport(getUHCWorld().getSpawnLocation());
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        event.setQuitMessage(Chat.INSTANCE
+            .message("Leave", "{player} left!", "{player}", event.getPlayer().getName())
+            .toLegacyText());
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)

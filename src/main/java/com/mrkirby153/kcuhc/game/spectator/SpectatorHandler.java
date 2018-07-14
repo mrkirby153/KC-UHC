@@ -54,6 +54,7 @@ public class SpectatorHandler implements Listener {
                 uhc.getGame().getSpectators().getPlayers().stream()
                     .map(Bukkit::getPlayer).filter(Objects::nonNull).collect(Collectors.toList()));
             players.forEach(p -> uhc.getGame().getSpectators().removePlayer(p));
+            pendingSpectators.clear();
         }
     }
 
