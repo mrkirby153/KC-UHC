@@ -8,8 +8,13 @@ import co.aikar.commands.contexts.OnlinePlayer;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import me.mrkirby153.kcutils.Chat;
+import net.dv8tion.jda.core.entities.User;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.UUID;
 
 @CommandAlias("discord")
 public class DiscordCommand extends BaseCommand {
@@ -69,10 +74,32 @@ public class DiscordCommand extends BaseCommand {
 
     @Subcommand("distribute")
     public void distributePlayers(CommandSender sender) {
-        if(!this.module.ready){
-            sender.sendMessage(Chat.INSTANCE.error("Cannot distribute players. Team channels have not been created").toString());
-        return;
+        if (!this.module.ready) {
+            sender.sendMessage(Chat.INSTANCE
+                .error("Cannot distribute players. Team channels have not been created")
+                .toString());
+            return;
         }
         this.module.distributeUsers();
+    }
+
+    @Subcommand("linked")
+    public void linkedPlayers(CommandSender sender) {
+        HashMap<UUID, String> linkedUsers = new HashMap<>();
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            User u = this.module.playerMapper.getUser(player.getUniqueId());
+            if (u != null) {
+                linkedUsers.put(player.getUniqueId(), u.getName() + "#" + u.getDiscriminator());
+            } else {
+                linkedUsers.put(player.getUniqueId(), "Unlinked");
+            }
+        });
+        sender.sendMessage(
+            Chat.INSTANCE.message("Discord", "The following users are linked:").toLegacyText());
+        linkedUsers.forEach((uuid, name) -> {
+            Player p = Bukkit.getPlayer(uuid);
+            sender.sendMessage(
+                Chat.INSTANCE.message(p.getName(), "{account}", "{account}", name).toLegacyText());
+        });
     }
 }
