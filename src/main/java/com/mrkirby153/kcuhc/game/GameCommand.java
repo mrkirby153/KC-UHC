@@ -102,7 +102,7 @@ public class GameCommand extends BaseCommand {
 
     @Subcommand("start")
     public void startGame(CommandSender sender) {
-        if(!this.game.start()){
+        if (!this.game.start()) {
             sender.sendMessage(Chat.INSTANCE.error("Game start has been aborted").toLegacyText());
             return;
         }
@@ -115,7 +115,7 @@ public class GameCommand extends BaseCommand {
 
     @Subcommand("stop")
     public void stopGame(CommandSender sender) {
-        if(!this.game.abort()){
+        if (!this.game.abort()) {
             sender.sendMessage(Chat.INSTANCE.error("Game abort unsuccessful!").toLegacyText());
             return;
         }
