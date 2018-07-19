@@ -130,7 +130,7 @@ public class UHCGame implements Listener {
             new GenerationTask(plugin, this.getUHCWorld(), minX, maxX, minZ, maxZ, Void -> {
                 this.generating = false;
                 Bukkit.getServer().getOnlinePlayers().forEach(p -> {
-                    p.sendMessage(Chat.INSTANCE.message("Pregeneration", "Pregeneration complete!")
+                    p.sendMessage(Chat.message("Pregeneration", "Pregeneration complete!")
                         .toLegacyText());
                     p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
                 });
@@ -272,7 +272,7 @@ public class UHCGame implements Listener {
                     return;
                 }
                 Bukkit.getOnlinePlayers().forEach(p -> {
-                    p.spigot().sendMessage(Chat.INSTANCE
+                    p.spigot().sendMessage(Chat
                         .message("Game", "Starting in {time} seconds", "{time}", time));
                     p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
                 });
@@ -411,7 +411,7 @@ public class UHCGame implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent event) {
-        event.setJoinMessage(Chat.INSTANCE
+        event.setJoinMessage(Chat
             .message("Join", "{player} joined!", "{player}", event.getPlayer().getName())
             .toLegacyText());
         if (getCurrentState() == GameState.WAITING) {
@@ -422,7 +422,7 @@ public class UHCGame implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerQuit(PlayerQuitEvent event) {
-        event.setQuitMessage(Chat.INSTANCE
+        event.setQuitMessage(Chat
             .message("Leave", "{player} left!", "{player}", event.getPlayer().getName())
             .toLegacyText());
     }

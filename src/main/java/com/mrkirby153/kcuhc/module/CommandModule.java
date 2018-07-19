@@ -35,7 +35,7 @@ public class CommandModule extends BaseCommand {
     public void loadModule(CommandSender sender, UHCModule module) {
         ModuleRegistry.INSTANCE.load(module);
         sender.sendMessage(
-            Chat.INSTANCE.message("Module", "Module {module} loaded!", "{module}", module.getName())
+            Chat.message("Module", "Module {module} loaded!", "{module}", module.getName())
                 .toLegacyText());
     }
 
@@ -48,7 +48,7 @@ public class CommandModule extends BaseCommand {
     @CommandCompletion("@loadedModules")
     public void unloadModule(CommandSender sender, UHCModule module) {
         ModuleRegistry.INSTANCE.unload(module);
-        sender.sendMessage(Chat.INSTANCE
+        sender.sendMessage(Chat
             .message("Module", "Module {module} unloaded!", "{module}", module.getName())
             .toLegacyText());
     }
@@ -67,13 +67,13 @@ public class CommandModule extends BaseCommand {
             .filter(s -> s.getKey().equalsIgnoreCase(setting)).findFirst();
 
         if (!optSetting.isPresent()) {
-            sender.sendMessage(Chat.INSTANCE.error("That setting does not exist").toLegacyText());
+            sender.sendMessage(Chat.error("That setting does not exist").toLegacyText());
             return;
         }
         ModuleSetting moduleSetting = optSetting.get().getValue();
 
         if (value.isEmpty()) {
-            sender.sendMessage(Chat.INSTANCE
+            sender.sendMessage(Chat
                 .message("Module", "{key} = {value}", "{key}", setting, "{value}",
                     moduleSetting.toString()).toLegacyText());
             return;
@@ -81,11 +81,11 @@ public class CommandModule extends BaseCommand {
         try {
             moduleSetting.set(value);
         } catch (SettingParseException e) {
-            sender.sendMessage(Chat.INSTANCE.error(e.getMessage()).toLegacyText());
+            sender.sendMessage(Chat.error(e.getMessage()).toLegacyText());
             return;
         }
         sender.sendMessage(
-            Chat.INSTANCE.message("Module", "{key} set to {value}", "{key}", setting, "{value}",
+            Chat.message("Module", "{key} set to {value}", "{key}", setting, "{value}",
                 moduleSetting.toString()).toLegacyText());
     }
 }

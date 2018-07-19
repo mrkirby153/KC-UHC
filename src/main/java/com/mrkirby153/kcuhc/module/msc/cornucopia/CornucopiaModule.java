@@ -107,7 +107,7 @@ public class CornucopiaModule extends UHCModule {
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, SoundCategory.MASTER, 1F,
                 1F);
             player.sendMessage(
-                Chat.INSTANCE.message("Game", "A cornucopia has spawned at ({x}, {y}, {z})",
+                Chat.message("Game", "A cornucopia has spawned at ({x}, {y}, {z})",
                     "{x}", randomSpawn.getBlockX(), "{y}", randomSpawn.getBlockY(), "{z}",
                     randomSpawn.getBlockZ()).toLegacyText());
         });

@@ -97,11 +97,11 @@ public class SpectatorHandler implements Listener {
             .map(Bukkit::getPlayer).filter(Objects::nonNull)
             .filter(p -> p.getGameMode() == GameMode.SPECTATOR)
             .forEach(p -> {
-                TextComponent component = Chat.INSTANCE.formattedChat("Type ", ChatColor.GREEN);
+                TextComponent component = Chat.formattedChat("Type ", ChatColor.GREEN);
                 component.addExtra(
-                    Chat.INSTANCE.formattedChat("/spectate", ChatColor.GOLD, Chat.Style.BOLD));
+                    Chat.formattedChat("/spectate", ChatColor.GOLD, Chat.Style.BOLD));
                 component.addExtra(
-                    Chat.INSTANCE.formattedChat(" to return to survival", ChatColor.GREEN));
+                    Chat.formattedChat(" to return to survival", ChatColor.GREEN));
                 uhc.protocolLibManager.sendActionBar(p, component);
             });
         uhc.getGame().getSpectators().getPlayers().stream()

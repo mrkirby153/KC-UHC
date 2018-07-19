@@ -68,7 +68,7 @@ public class SpectatorGui extends Gui<UHC> {
                         if (finalPlayer instanceof Player) {
                             p.teleport(((Player) finalPlayer).getLocation());
                             p.sendMessage(
-                                Chat.INSTANCE.message("Spectate", "Teleported to {player}",
+                                Chat.message("Spectate", "Teleported to {player}",
                                     "{player}", finalPlayer.getName()).toLegacyText());
                         }
                     });

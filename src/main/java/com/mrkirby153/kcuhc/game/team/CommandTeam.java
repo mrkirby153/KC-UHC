@@ -37,7 +37,7 @@ public class CommandTeam extends BaseCommand {
     public void createTeam(CommandSender sender, String name, ChatColor color) {
         uhc.getGame().createTeam(name, color);
         sender.sendMessage(
-            Chat.INSTANCE.message("Team", "Created team {team}!", "{team}", name).toLegacyText());
+            Chat.message("Team", "Created team {team}!", "{team}", name).toLegacyText());
     }
 
     @Subcommand("delete")
@@ -45,7 +45,7 @@ public class CommandTeam extends BaseCommand {
     public void deleteTeam(CommandSender sender, UHCTeam team) {
         uhc.getGame().deleteTeam(team);
         sender.sendMessage(
-            Chat.INSTANCE.message("Team", "Team {team} removed!", "{team}", team.getTeamName())
+            Chat.message("Team", "Team {team} removed!", "{team}", team.getTeamName())
                 .toLegacyText());
     }
 
@@ -60,7 +60,7 @@ public class CommandTeam extends BaseCommand {
         String s = teams.toString();
         String substring = s.substring(0, Math.max(0, s.length() - 2));
         sender.sendMessage(
-            Chat.INSTANCE.message("Team", "Teams: {teams}", "{teams}", substring).toLegacyText());
+            Chat.message("Team", "Teams: {teams}", "{teams}", substring).toLegacyText());
     }
 
     @Subcommand("join")
@@ -72,16 +72,16 @@ public class CommandTeam extends BaseCommand {
             }
             team.addPlayer(player.player);
             player.player.spigot().sendMessage(
-                Chat.INSTANCE.message("Team", "You have been assigned to {team} by {assignee}",
+                Chat.message("Team", "You have been assigned to {team} by {assignee}",
                     "{team}", team.getTeamName(), "{assignee}", sender.getName()));
-            sender.sendMessage(Chat.INSTANCE.message("Team", "Assigned {player} to {team}",
+            sender.sendMessage(Chat.message("Team", "Assigned {player} to {team}",
                 "{player}", player.player.getName(), "{team}", team.getTeamName()).toLegacyText());
         } else {
             if (uhc.getGame().getTeam(sender) != null) {
                 uhc.getGame().getTeam(sender).removePlayer(sender);
             }
             team.addPlayer(sender);
-            sender.spigot().sendMessage(Chat.INSTANCE
+            sender.spigot().sendMessage(Chat
                 .message("Team", "You have joined team {team}", "{team}", team.getTeamName()));
         }
     }
@@ -91,15 +91,15 @@ public class CommandTeam extends BaseCommand {
         ScoreboardTeam currentTeam = uhc.getGame().getTeam(sender);
         if (uhc.getGame().getCurrentState() == GameState.ALIVE) {
             sender.spigot().sendMessage(
-                Chat.INSTANCE.error("You cannot change teams while the game is running!"));
+                Chat.error("You cannot change teams while the game is running!"));
             return;
         }
         if (currentTeam == null) {
-            sender.spigot().sendMessage(Chat.INSTANCE.error("You are not on a team!"));
+            sender.spigot().sendMessage(Chat.error("You are not on a team!"));
             return;
         }
         currentTeam.removePlayer(sender);
-        sender.spigot().sendMessage(Chat.INSTANCE
+        sender.spigot().sendMessage(Chat
             .message("Team", "You have left team {team}", "{team}", currentTeam.getTeamName()));
     }
 
@@ -145,7 +145,7 @@ public class CommandTeam extends BaseCommand {
             usedColors.add(color);
         }
         sender.spigot().sendMessage(
-            Chat.INSTANCE.message("Team", "Created {teamSize} teams with {players} players",
+            Chat.message("Team", "Created {teamSize} teams with {players} players",
                 "{teamSize}", teamsRequired, "{players}", teamSize));
     }
 
@@ -153,11 +153,11 @@ public class CommandTeam extends BaseCommand {
     public void showTeam(Player sender) {
         ScoreboardTeam team = uhc.getGame().getTeam(sender);
         if (team == null) {
-            sender.spigot().sendMessage(Chat.INSTANCE.message("Team", "You are not on a team!"));
+            sender.spigot().sendMessage(Chat.message("Team", "You are not on a team!"));
             return;
         }
         sender.spigot().sendMessage(
-            Chat.INSTANCE.message("Team", "You are on team {team}", "{team}", team.getTeamName()));
+            Chat.message("Team", "You are on team {team}", "{team}", team.getTeamName()));
     }
 
     @Subcommand("swap")
@@ -176,7 +176,7 @@ public class CommandTeam extends BaseCommand {
             p2Team.removePlayer(player2.player);
             p2Team.addPlayer(player1.player);
         }
-        sender.spigot().sendMessage(Chat.INSTANCE
+        sender.spigot().sendMessage(Chat
             .message("Team", "Swapping the teams of {p1} and {p2}", "{p1}",
                 player1.player.getName(),
                 "{p2}", player2.player.getName()));
@@ -208,7 +208,7 @@ public class CommandTeam extends BaseCommand {
             blueTeam.addPlayer(p);
         }
 
-        player.spigot().sendMessage(Chat.INSTANCE
+        player.spigot().sendMessage(Chat
             .message("Team", "Created two teams with {players} on each team", "{players}",
                 playersPerTeam));
     }

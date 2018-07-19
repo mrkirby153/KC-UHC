@@ -78,7 +78,7 @@ public class PlayerTrackerModule extends UHCModule {
         }
         if (item.getType() == Material.COMPASS) {
             if (!cooldown.check(player.getUniqueId())) {
-                player.spigot().sendMessage(Chat.INSTANCE
+                player.spigot().sendMessage(Chat
                     .message("Cooldown", "You can use this again in {time}", "{time}", Time.INSTANCE
                         .format(1, cooldown.getTimeLeft(player.getUniqueId()), TimeUnit.FIT)));
                 return;
@@ -95,7 +95,7 @@ public class PlayerTrackerModule extends UHCModule {
 
             Player closestPlayer = findClosestPlayer(player.getLocation(), toExclude);
             if (closestPlayer == null) {
-                player.spigot().sendMessage(Chat.INSTANCE.error("Could not find a player"));
+                player.spigot().sendMessage(Chat.error("Could not find a player"));
                 this.targets.remove(player);
                 this.resetCompass(player);
                 player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1F, 2F);
@@ -103,7 +103,7 @@ public class PlayerTrackerModule extends UHCModule {
                 double distance = Time.INSTANCE
                     .trim(1, player.getLocation().distance(closestPlayer.getLocation()));
                 player.spigot().sendMessage(
-                    Chat.INSTANCE.message("", "Located {player} {distance} blocks away",
+                    Chat.message("", "Located {player} {distance} blocks away",
                         "{player}", closestPlayer.getName(), "{distance}", distance));
                 targets.put(player, closestPlayer);
                 player.playSound(player.getLocation(), Sound.ENTITY_ARROW_HIT_PLAYER, 1F, 0.5F);

@@ -117,7 +117,7 @@ public class GenerationTask implements Runnable {
     private void broadcastProgress() {
         if (percentDone() < 100) {
             Bukkit.getServer().broadcastMessage(
-                Chat.INSTANCE
+                Chat
                     .message("Pregeneration", "{percent} complete ({generated}/{total} chunks)",
                         "{percent}", String.format("%.2f", percentDone()) + "%",
                         "{generated}", generatedChunks,

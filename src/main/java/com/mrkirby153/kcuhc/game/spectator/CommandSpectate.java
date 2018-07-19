@@ -35,16 +35,16 @@ public class CommandSpectate extends BaseCommand {
             if (uhc.spectatorHandler.pendingSpectators.contains(player.getUniqueId())) {
                 uhc.spectatorHandler.pendingSpectators.remove(player.getUniqueId());
                 player.spigot().sendMessage(
-                    Chat.INSTANCE.message("Spectate", "You are no longer spectating this round"));
+                    Chat.message("Spectate", "You are no longer spectating this round"));
             } else {
                 uhc.spectatorHandler.pendingSpectators.add(player.getUniqueId());
                 player.spigot().sendMessage(
-                    Chat.INSTANCE.message("Spectate", "You are spectating this round"));
+                    Chat.message("Spectate", "You are spectating this round"));
             }
             player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
         } else {
             if (!uhc.getGame().isSpectator(player)) {
-                player.spigot().sendMessage(Chat.INSTANCE.error("You are not a spectator."));
+                player.spigot().sendMessage(Chat.error("You are not a spectator."));
                 return;
             }
             player.setGameMode(GameMode.SURVIVAL);

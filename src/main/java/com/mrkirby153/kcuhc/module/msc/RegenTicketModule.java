@@ -74,7 +74,7 @@ public class RegenTicketModule extends UHCModule {
             return;
         }
         player.spigot()
-            .sendMessage(Chat.INSTANCE.formattedChat("You have been given a regen ticket."
+            .sendMessage(Chat.formattedChat("You have been given a regen ticket."
                     + " This ticket will restore you to full health. However, once PvP damage is given or delt, it is removed",
                 net.md_5.bungee.api.ChatColor.GREEN, Style.BOLD));
         player.getInventory().addItem(createRegenTicket(player));
@@ -88,7 +88,7 @@ public class RegenTicketModule extends UHCModule {
             InventoryType topInv = event.getView().getTopInventory().getType();
             if (topInv != InventoryType.PLAYER && topInv != InventoryType.CRAFTING) {
                 event.getWhoClicked().sendMessage(
-                    Chat.INSTANCE.error("You cannot move your regen ticket out of your inventory")
+                    Chat.error("You cannot move your regen ticket out of your inventory")
                         .toLegacyText());
                 event.setCancelled(true);
             }
@@ -103,20 +103,20 @@ public class RegenTicketModule extends UHCModule {
             if (isTicket(stack)) {
                 if (!canUse(event.getPlayer(), stack)) {
                     event.getPlayer().spigot().sendMessage(
-                        Chat.INSTANCE.error("You cannot use someone else's regen ticket!"));
+                        Chat.error("You cannot use someone else's regen ticket!"));
                     return;
                 }
                 Player clicker = event.getPlayer();
                 if (clicker.getHealth() >= clicker.getAttribute(Attribute.GENERIC_MAX_HEALTH)
                     .getValue()) {
                     event.getPlayer().spigot().sendMessage(
-                        Chat.INSTANCE.error("You cannot use this while you have full health!"));
+                        Chat.error("You cannot use this while you have full health!"));
                     return;
                 }
                 double target = clicker.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue() - 4;
                 if (clicker.getHealth() >= target) {
                     if (!clicker.isSneaking()) {
-                        event.getPlayer().spigot().sendMessage(Chat.INSTANCE.message("Error",
+                        event.getPlayer().spigot().sendMessage(Chat.message("Error",
                             "It is advised to wait until you have less than {hearts} hearts before using this."
                                 +
                                 " If you wish to do so anyways, sneak and try again",
@@ -156,7 +156,7 @@ public class RegenTicketModule extends UHCModule {
         if (isTicket(event.getItemDrop().getItemStack())) {
             if (canUse(event.getPlayer(), event.getItemDrop().getItemStack())) {
                 event.getPlayer().sendMessage(
-                    Chat.INSTANCE.error("You cannot drop your regen ticket").toLegacyText());
+                    Chat.error("You cannot drop your regen ticket").toLegacyText());
                 event.setCancelled(true);
             }
         }
@@ -204,7 +204,7 @@ public class RegenTicketModule extends UHCModule {
         inventory.remove(regenTicket);
         if (!heal) {
             player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1, 1);
-            player.spigot().sendMessage(Chat.INSTANCE
+            player.spigot().sendMessage(Chat
                 .formattedChat("Your regen ticket has been removed!",
                     net.md_5.bungee.api.ChatColor.RED, Chat.Style.BOLD));
         } else {
@@ -217,7 +217,7 @@ public class RegenTicketModule extends UHCModule {
             player.setExhaustion(3.8F);
             player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_VILLAGER_CURE, 1, 1);
             player.sendMessage(
-                Chat.INSTANCE.message("", "You have restored {health} health and {hunger} hunger",
+                Chat.message("", "You have restored {health} health and {hunger} hunger",
                     "{health}", (int) healAmount, "{hunger}", healed).toLegacyText());
             player.getWorld().spawnParticle(Particle.FIREWORKS_SPARK, player.getLocation(), 300);
         }

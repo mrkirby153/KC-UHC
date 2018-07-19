@@ -44,7 +44,7 @@ public class LogoutEliminationModule extends UHCModule {
         if (loggedOutPlayers.containsKey(event.getPlayer().getUniqueId())) {
             loggedOutPlayers.remove(event.getPlayer().getUniqueId());
             Bukkit.getOnlinePlayers().forEach(p -> {
-                p.sendMessage(Chat.INSTANCE.message("Login", "{player} has rejoined!",
+                p.sendMessage(Chat.message("Login", "{player} has rejoined!",
                     "{player}", event.getPlayer().getName()).toLegacyText());
                 p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
             });
@@ -63,7 +63,7 @@ public class LogoutEliminationModule extends UHCModule {
             eliminationTime);
         Bukkit.getOnlinePlayers().forEach(p -> {
             p.sendMessage(
-                Chat.INSTANCE.message("Logout", "{player} has logged out, {time} to rejoin",
+                Chat.message("Logout", "{player} has logged out, {time} to rejoin",
                     "{player}", event.getPlayer().getName(),
                     "{time}", Time.INSTANCE
                         .format(1, eliminationTime - System.currentTimeMillis(), Time.TimeUnit.FIT))
@@ -90,7 +90,7 @@ public class LogoutEliminationModule extends UHCModule {
                 if (team != null) {
                     team.removePlayer(uuid);
                     Bukkit.getOnlinePlayers().forEach(p -> {
-                        p.sendMessage(Chat.INSTANCE.message("Game",
+                        p.sendMessage(Chat.message("Game",
                             "{player} has been offline for too long and has been eliminated!",
                             "{player}", player.name).toLegacyText());
                         p.playSound(p.getLocation(), Sound.ENTITY_LIGHTNING_THUNDER, 1F, 1F);

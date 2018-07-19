@@ -100,7 +100,7 @@ public class WorldBorderModule extends UHCModule {
     public void resolveStalemate() {
         this.game.getWorldBorder().setSize(1, 60 * 10);
         Bukkit.getOnlinePlayers().forEach(p -> {
-            p.sendMessage(Chat.INSTANCE.message("Stalemate",
+            p.sendMessage(Chat.message("Stalemate",
                 "Stalemate detected! Worldborder shrinking to one block over 10 minutes")
                 .toLegacyText());
             p.playSound(p.getLocation(), Sound.ENTITY_WITHER_DEATH, 1F, 1F);
@@ -115,7 +115,7 @@ public class WorldBorderModule extends UHCModule {
         double size = border.getSize();
         border.setSize(size); // Reset the border to its current position
         Bukkit.getOnlinePlayers().forEach(p -> {
-            p.spigot().sendMessage(Chat.INSTANCE.message("World Border",
+            p.spigot().sendMessage(Chat.message("World Border",
                 "Alert! Moving from {startSize} to {endSize} in {duration}",
                 "{startSize}", Time.INSTANCE.trim(2, size),
                 "{endSize}", getEndSize(),

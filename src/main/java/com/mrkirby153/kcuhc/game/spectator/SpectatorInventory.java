@@ -32,7 +32,7 @@ public class SpectatorInventory extends Inventory<UHC> {
                 (player1, clickType) -> {
                     if (clickType == ClickType.RIGHT) {
                         player1.setGameMode(GameMode.SPECTATOR);
-                        player1.spigot().sendMessage(Chat.INSTANCE.message("Spectator",
+                        player1.spigot().sendMessage(Chat.message("Spectator",
                             "You have entered vanilla spectator mode. Type {spec} to return to survival",
                             "{spec}", "/spectate"));
                         build();
@@ -46,7 +46,7 @@ public class SpectatorInventory extends Inventory<UHC> {
                         p.setGameMode(GameMode.SURVIVAL);
                         p.setAllowFlight(true);
                         p.setFlying(true);
-                        p.spigot().sendMessage(Chat.INSTANCE
+                        p.spigot().sendMessage(Chat
                             .message("Spectator", "You have returned to survival mode."));
                         build();
                     }

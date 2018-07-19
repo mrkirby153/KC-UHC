@@ -30,7 +30,7 @@ public class DiscordCommand extends BaseCommand {
     @Subcommand("create")
     public void createTeam(CommandSender sender, UHCTeam team) {
         this.module.createTeam(team);
-        sender.sendMessage(Chat.INSTANCE
+        sender.sendMessage(Chat
             .message("Discord", "Initializing team {team}", "{team}", team.getTeamName())
             .toLegacyText());
     }
@@ -39,7 +39,7 @@ public class DiscordCommand extends BaseCommand {
     public void destroyTeam(CommandSender sender, UHCTeam team) {
         this.module.destroyTeam(team);
         sender.sendMessage(
-            Chat.INSTANCE.message("Discord", "Destroying team {team}", "{team}", team.getTeamName())
+            Chat.message("Discord", "Destroying team {team}", "{team}", team.getTeamName())
                 .toLegacyText());
     }
 
@@ -52,7 +52,7 @@ public class DiscordCommand extends BaseCommand {
     @CommandCompletion("@players")
     public void forceLink(CommandSender sender, OnlinePlayer player, String id) {
         module.playerMapper.forceLink(player.player, id);
-        sender.sendMessage(Chat.INSTANCE
+        sender.sendMessage(Chat
             .message("Discord", "Forcibly linking {player} to {id}", "{player}",
                 player.player.getName(),
                 "{id}", id).toLegacyText());
@@ -62,20 +62,20 @@ public class DiscordCommand extends BaseCommand {
     public void generateTeamChannels(CommandSender sender) {
         this.module.createChannels();
         sender.sendMessage(
-            Chat.INSTANCE.message("Discord", "Generating team channels").toLegacyText());
+            Chat.message("Discord", "Generating team channels").toLegacyText());
     }
 
     @Subcommand("destroy")
     public void destroyAllTeamChannels(CommandSender sender) {
         this.module.destroyChannels();
         sender.sendMessage(
-            Chat.INSTANCE.message("Discord", "Destroying team channels").toLegacyText());
+            Chat.message("Discord", "Destroying team channels").toLegacyText());
     }
 
     @Subcommand("distribute")
     public void distributePlayers(CommandSender sender) {
         if (!this.module.ready) {
-            sender.sendMessage(Chat.INSTANCE
+            sender.sendMessage(Chat
                 .error("Cannot distribute players. Team channels have not been created")
                 .toString());
             return;
@@ -95,11 +95,11 @@ public class DiscordCommand extends BaseCommand {
             }
         });
         sender.sendMessage(
-            Chat.INSTANCE.message("Discord", "The following users are linked:").toLegacyText());
+            Chat.message("Discord", "The following users are linked:").toLegacyText());
         linkedUsers.forEach((uuid, name) -> {
             Player p = Bukkit.getPlayer(uuid);
             sender.sendMessage(
-                Chat.INSTANCE.message(p.getName(), "{account}", "{account}", name).toLegacyText());
+                Chat.message(p.getName(), "{account}", "{account}", name).toLegacyText());
         });
     }
 }

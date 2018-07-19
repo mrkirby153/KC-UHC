@@ -78,13 +78,13 @@ public class UHCBotLinkMapper implements PlayerMapper {
         }
 
         String command = String.format("!uhcbot link %s", code);
-        BaseComponent component = Chat.INSTANCE.message("Discord",
+        BaseComponent component = Chat.message("Discord",
             "To link your minecraft account to discord, run this command on the discord {discord}: {command} ",
             "{discord}", this.discordModule.guild.getName(), "{command}", command);
 
-        BaseComponent suggest = Chat.INSTANCE.formattedChat("[COPY]", ChatColor.AQUA);
+        BaseComponent suggest = Chat.formattedChat("[COPY]", ChatColor.AQUA);
         suggest.setHoverEvent(new HoverEvent(Action.SHOW_TEXT, new BaseComponent[]{
-            Chat.INSTANCE.formattedChat(
+            Chat.formattedChat(
                 "Click to copy the command to your chat box for easy copying", ChatColor.WHITE)
         }));
         suggest.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, command));
@@ -103,7 +103,7 @@ public class UHCBotLinkMapper implements PlayerMapper {
         User user = member.getUser();
         this.uuidToDiscordMap.put(player.getUniqueId(), id);
         player.spigot()
-            .sendMessage(Chat.INSTANCE.message("Discord", "Your account has been linked to {user}",
+            .sendMessage(Chat.message("Discord", "Your account has been linked to {user}",
                 "{user}", user.getName() + "#" + user.getDiscriminator()));
     }
 
@@ -129,7 +129,7 @@ public class UHCBotLinkMapper implements PlayerMapper {
         Player p = Bukkit.getPlayer(uuid);
         if (p != null) {
             p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, SoundCategory.MASTER, 1F, 1F);
-            p.spigot().sendMessage(Chat.INSTANCE.message("Discord",
+            p.spigot().sendMessage(Chat.message("Discord",
                 "Your minecraft account was linked to the discord account {user}", "{user}",
                 context.getAuthor().getName() + "#" + context.getAuthor().getDiscriminator()));
             discordModule

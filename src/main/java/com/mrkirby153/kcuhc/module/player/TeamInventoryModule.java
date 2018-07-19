@@ -79,11 +79,11 @@ public class TeamInventoryModule extends UHCModule {
         }
         if (game.getTeam(player) instanceof SpectatorTeam) {
             player.spigot()
-                .sendMessage(Chat.INSTANCE.error("Spectators do not have a team inventory!"));
+                .sendMessage(Chat.error("Spectators do not have a team inventory!"));
             return null;
         }
         if (game.getTeam(player) == null) {
-            player.spigot().sendMessage(Chat.INSTANCE.error("You are not on a team!"));
+            player.spigot().sendMessage(Chat.error("You are not on a team!"));
             return null;
         }
         return null;
@@ -129,12 +129,12 @@ public class TeamInventoryModule extends UHCModule {
             // TODO: 7/27/2017 Add restriction to running game
             if (!ModuleRegistry.INSTANCE.loaded(TeamInventoryModule.class)) {
                 player.sendMessage(
-                    Chat.INSTANCE.error("Team inventories are not enabled").toLegacyText());
+                    Chat.error("Team inventories are not enabled").toLegacyText());
                 return;
             }
             if (uhc.getGame().getCurrentState() != GameState.ALIVE) {
                 player.sendMessage(
-                    Chat.INSTANCE.error("You cannot open the team inventory before the game starts")
+                    Chat.error("You cannot open the team inventory before the game starts")
                         .toLegacyText());
                 return;
             }

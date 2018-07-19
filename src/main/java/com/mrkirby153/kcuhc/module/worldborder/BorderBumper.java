@@ -76,7 +76,7 @@ public class BorderBumper extends UHCModule {
         bumpVector.setY(0.1879);
         player.setVelocity(bumpVector);
         player.sendMessage(
-            Chat.INSTANCE.message("Stay inside the worldborder".toUpperCase()).toLegacyText());
+            Chat.message("Stay inside the worldborder".toUpperCase()).toLegacyText());
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BASS, 1F, 1F);
     }
 
@@ -111,7 +111,7 @@ public class BorderBumper extends UHCModule {
         POSITIVE_Z,
         NEGATIVE_Z,
         POSITIVE_X,
-        NEGATIVE_X;
+        NEGATIVE_X
     }
 
 

@@ -51,7 +51,7 @@ public class HeightBuildingModule extends UHCModule {
             if (builtBlock.getBlockY() >= height.getValue()) {
                 event.setCancelled(true);
                 event.getPlayer().sendMessage(
-                    Chat.INSTANCE.error("You cannot build this high near spawn").toLegacyText());
+                    Chat.error("You cannot build this high near spawn").toLegacyText());
             }
         }
     }

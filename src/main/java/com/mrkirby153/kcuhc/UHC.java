@@ -176,7 +176,7 @@ public class UHC extends JavaPlugin {
             UHCTeam team = this.game.getTeam(name);
             if (team == null) {
                 c.getSender().sendMessage(
-                    Chat.INSTANCE
+                    Chat
                         .message("Error", "There is no team by the name of {team}", "{team}", name)
                         .toLegacyText());
                 throw new InvalidCommandArgument(false);
@@ -188,7 +188,7 @@ public class UHC extends JavaPlugin {
             UHCModule mod = ModuleRegistry.INSTANCE.getModuleByName(internalName);
             if (mod == null) {
                 c.getSender().sendMessage(
-                    Chat.INSTANCE.message("Error", "There is no module by the name of {module}",
+                    Chat.message("Error", "There is no module by the name of {module}",
                         "{module}", internalName
                     ).toLegacyText());
                 throw new InvalidCommandArgument(false);
