@@ -32,8 +32,7 @@ public class Utilities {
 
             Object property = constructSignedProperty("textures", new String(data));
             Reflections
-                .invoke(profileProperties, "put", new Class[]{Object.class, Object.class},
-                    "textures", property);
+                .invoke(profileProperties, "put", "textures", property);
 
             Reflections.set(meta, "profile", gameProfile);
         } catch (Exception e) {
