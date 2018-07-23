@@ -272,6 +272,10 @@ public class UHCGame implements Listener {
                     return;
                 }
                 Bukkit.getOnlinePlayers().forEach(p -> {
+                    if (time <= 5) {
+                        ChatColor color = time <= 3 ? ChatColor.RED : ChatColor.YELLOW;
+                        p.sendTitle(color + "" + time, "", 5, 21, 5);
+                    }
                     p.spigot().sendMessage(Chat
                         .message("Game", "Starting in {time} seconds", "{time}", time));
                     p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
