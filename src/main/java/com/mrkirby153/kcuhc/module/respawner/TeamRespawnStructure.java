@@ -3,6 +3,9 @@ package com.mrkirby153.kcuhc.module.respawner;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
@@ -10,13 +13,15 @@ import org.bukkit.block.data.type.WallSign;
 
 public class TeamRespawnStructure {
 
-    private static final int RESPAWN_TIME_TICKS = 300;
-    private static final int COOLDOWN_TIME_TICKS = 300;
+    private static final int RESPAWN_TIME_TICKS = 120 * 20;
+    private static final int COOLDOWN_TIME_TICKS = 300 * 20;
 
     private Location center;
     private long ticksRemaining = -1L;
     private long totalTicks = -1L;
     private Phase phase = Phase.DEACTIVATED;
+    private double t = 0.0;
+    public double r = 1;
 
     public TeamRespawnStructure(Location location) {
         this.center = location;
@@ -102,12 +107,16 @@ public class TeamRespawnStructure {
     }
 
     public void tick() {
+        updateParticles();
         if (this.ticksRemaining != -1) {
             this.ticksRemaining--;
         }
         setAllSignTexts(getStatusMessage());
         switch (this.phase) {
             case RESPAWNING:
+                if (this.ticksRemaining <= 60) {
+                    this.r -= (3) / 60.0;
+                }
                 if (this.ticksRemaining <= 0) {
                     // TODO: 2019-05-05 Actually respawn the team
                     System.out.println("Respawn structure hit 0 ticks! Respawning team");
@@ -115,6 +124,8 @@ public class TeamRespawnStructure {
                     this.setTicksLeft(COOLDOWN_TIME_TICKS);
                     this.deactivateBeacon();
                     this.center.clone().add(0, 2, 0).getBlock().setType(Material.AIR);
+                    this.center.getWorld().playSound(this.center, Sound.ENTITY_ZOMBIE_VILLAGER_CURE, SoundCategory.MASTER, 1.0F, 1.0F);
+                    this.center.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, this.center.clone().add(0, 2, 0), 1, 0, 0, 0, 0);
                 }
             case RECHARGING:
                 if (this.ticksRemaining <= 0) {
@@ -123,6 +134,36 @@ public class TeamRespawnStructure {
                     this.center.clone().add(0, 2, 0).getBlock().setType(Material.CHEST);
                 }
         }
+    }
+
+    double bounds = 0;
+
+    private void displayParticles(double x, double y, double z) {
+        if (bounds < 1.5) {
+            bounds += 0.1;
+            System.out.println(bounds);
+        }
+        for (double y1 = y - bounds; y1 <= y + bounds; y1 += 0.2) {
+            this.center.add(x, y1, z);
+            this.center.getWorld().spawnParticle(Particle.FLAME, this.center, 50, 0, 0, 0, 0.0);
+            this.center.subtract(x, y1, z);
+        }
+    }
+
+    private void updateParticles() {
+        // Display a circling ring
+        if (this.phase != Phase.RESPAWNING) {
+            t = 0;
+            bounds = 0;
+            return;
+        }
+        t += Math.PI / 8;
+        double x = r * Math.cos(t);
+        double z = r * Math.sin(t);
+        double y = 2.25;
+        x -= 0.25;
+        z += 0.25;
+        displayParticles(x, y, z);
     }
 
     private void setSignText(Location l, String[] text) {
@@ -169,6 +210,7 @@ public class TeamRespawnStructure {
         this.activateBeacon();
         this.setTicksLeft(RESPAWN_TIME_TICKS);
         this.phase = Phase.RESPAWNING;
+        this.r = 3;
         System.out.println("Respawn structure started respawn!");
     }
 

@@ -49,6 +49,14 @@ public class RespawnerCommand extends BaseCommand {
     @Subcommand("phase")
     public void respawnerPhase(CommandSender sender, Phase phase) {
         this.module.structure.setPhase(phase);
-        sender.sendMessage(Chat.message("Respawner", "Set state to {state}", "{state}", phase).toLegacyText());
+        sender.sendMessage(
+            Chat.message("Respawner", "Set state to {state}", "{state}", phase).toLegacyText());
+    }
+
+    @Subcommand("ticks")
+    public void respawnerTicks(CommandSender sender, int ticks) {
+        this.module.structure.setTicksLeft(ticks);
+        sender.sendMessage(
+            Chat.message("Respawner", "Set ticks to {ticks}", "{ticks}", ticks).toLegacyText());
     }
 }

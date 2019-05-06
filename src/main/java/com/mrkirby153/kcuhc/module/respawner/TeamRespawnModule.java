@@ -7,6 +7,7 @@ import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
+import org.bukkit.scheduler.BukkitTask;
 
 public class TeamRespawnModule extends UHCModule {
 
@@ -14,21 +15,32 @@ public class TeamRespawnModule extends UHCModule {
 
     public TeamRespawnStructure structure;
 
+    private UHC plugin;
+    private BukkitTask bt;
+
     @Inject
     public TeamRespawnModule(UHC uhc) {
         super("Team Respawn", "Creates a structure to respawn teammates", Material.NETHER_STAR);
-        respawnerCommand = new RespawnerCommand(this);
+        UHC.getCommandManager().registerCommand(respawnerCommand = new RespawnerCommand(this));
+
+        this.plugin = uhc;
     }
 
     @Override
     public void onLoad() {
         System.out.println("Loading");
-        UHC.getCommandManager().registerCommand(respawnerCommand, true);
+        bt = this.plugin.getServer().getScheduler().runTaskTimer(this.plugin, () -> {
+            if (structure != null) {
+                structure.tick();
+            }
+        }, 0, 2);
     }
 
     @Override
     public void onUnload() {
-        UHC.getCommandManager().unregisterCommand(respawnerCommand);
+        if (bt != null) {
+            bt.cancel();
+        }
     }
 
     @EventHandler
