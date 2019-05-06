@@ -41,7 +41,7 @@ public class CommandSpectate extends BaseCommand {
                 player.spigot().sendMessage(
                     Chat.message("Spectate", "You are spectating this round"));
             }
-            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 1F);
         } else {
             if (!uhc.getGame().isSpectator(player)) {
                 player.spigot().sendMessage(Chat.error("You are not a spectator."));

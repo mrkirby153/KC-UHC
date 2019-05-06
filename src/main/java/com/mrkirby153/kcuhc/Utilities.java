@@ -19,32 +19,32 @@ public class Utilities {
     public static final UUID HEAD_UUID = UUID.fromString("1e1eb54b-65e9-49f3-91cf-c11be6fdc401");
 
     public static ItemStack getGoldenHead() {
-        ItemStack item = new ItemFactory(Material.SKULL_ITEM).data(3)
-            .name(ChatColor.GOLD + "" + ChatColor.BOLD + "Golden Head").construct();
+        ItemStack item = new ItemFactory(Material.PLAYER_HEAD).name(ChatColor.GOLD + "" + ChatColor.BOLD + "Golden Head").construct();
         SkullMeta meta = (SkullMeta) item.getItemMeta();
+        if(meta != null) {
+            try {
+                Object gameProfile = getGameProfile(HEAD_UUID);
+                byte[] data = Base64.getEncoder().encode(
+                    String.format("{textures:{SKIN:{url:\"%s\"}}}", GOLDEN_HEAD_URL).getBytes());
 
-        try {
-            Object gameProfile = getGameProfile(HEAD_UUID);
-            byte[] data = Base64.getEncoder().encode(
-                String.format("{textures:{SKIN:{url:\"%s\"}}}", GOLDEN_HEAD_URL).getBytes());
+                Object profileProperties = Reflections.invoke(gameProfile, "getProperties");
 
-            Object profileProperties = Reflections.invoke(gameProfile, "getProperties");
+                Object property = constructSignedProperty("textures", new String(data));
+                Reflections
+                    .invoke(profileProperties, "put", "textures", property);
 
-            Object property = constructSignedProperty("textures", new String(data));
-            Reflections
-                .invoke(profileProperties, "put", "textures", property);
-
-            Reflections.set(meta, "profile", gameProfile);
-        } catch (Exception e) {
-            meta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "$$ ERROR $$");
-            ArrayList<String> lore = new ArrayList<>();
-            lore.add("An error occurred when creating this head: ");
-            lore.add(ChatColor.RED + e.getClass().getCanonicalName());
-            lore.add(ChatColor.GOLD + e.getMessage());
-            meta.setLore(lore);
-            e.printStackTrace();
+                Reflections.set(meta, "profile", gameProfile);
+            } catch (Exception e) {
+                meta.setDisplayName(ChatColor.RED + "" + ChatColor.BOLD + "$$ ERROR $$");
+                ArrayList<String> lore = new ArrayList<>();
+                lore.add("An error occurred when creating this head: ");
+                lore.add(ChatColor.RED + e.getClass().getCanonicalName());
+                lore.add(ChatColor.GOLD + e.getMessage());
+                meta.setLore(lore);
+                e.printStackTrace();
+            }
+            item.setItemMeta(meta);
         }
-        item.setItemMeta(meta);
         return item;
     }
 

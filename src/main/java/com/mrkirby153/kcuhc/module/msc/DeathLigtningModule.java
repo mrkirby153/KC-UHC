@@ -9,7 +9,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 public class DeathLigtningModule extends UHCModule {
 
     public DeathLigtningModule() {
-        super("Death Lightning", "Spawns a fake lightning bolt on death", Material.GOLD_SWORD);
+        super("Death Lightning", "Spawns a fake lightning bolt on death", Material.GOLDEN_SWORD);
         autoLoad = true;
     }
 

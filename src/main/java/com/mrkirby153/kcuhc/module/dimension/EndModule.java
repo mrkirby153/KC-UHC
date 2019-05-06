@@ -11,7 +11,7 @@ import org.bukkit.event.player.PlayerPortalEvent;
 public class EndModule extends UHCModule {
 
     public EndModule() {
-        super("Disable End", "Disables the end", Material.EYE_OF_ENDER);
+        super("Disable End", "Disables the end", Material.ENDER_EYE);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

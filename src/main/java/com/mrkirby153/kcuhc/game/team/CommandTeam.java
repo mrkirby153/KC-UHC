@@ -12,8 +12,8 @@ import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

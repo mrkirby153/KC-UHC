@@ -3,3 +3,4 @@ version: ${project.version}
 author: mrkirby153
 main: com.mrkirby153.kcuhc.UHC
 depend: [ProtocolLib]
+api-version: '1.13'

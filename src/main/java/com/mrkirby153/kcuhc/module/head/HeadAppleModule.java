@@ -12,7 +12,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
-import org.bukkit.SkullType;
 import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -25,7 +24,6 @@ import org.bukkit.inventory.Recipe;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import org.bukkit.material.MaterialData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -53,8 +51,7 @@ public class HeadAppleModule extends UHCModule {
             Utilities.getGoldenHead())
             .shape("GGG", "GHG", "GGG")
             .setIngredient('G', Material.GOLD_INGOT)
-            .setIngredient('H',
-                new MaterialData(Material.SKULL_ITEM, (byte) SkullType.PLAYER.ordinal()));
+            .setIngredient('H', Material.PLAYER_HEAD);
     }
 
     @EventHandler
@@ -99,13 +96,9 @@ public class HeadAppleModule extends UHCModule {
     }
 
     private boolean isHeadApple(ItemStack item) {
-        if (item.getType() != Material.SKULL_ITEM) {
+        if (item.getType() != Material.PLAYER_HEAD) {
             return false;
         }
-        if (item.getDurability() != 3) {
-            return false;
-        }
-
         SkullMeta meta = (SkullMeta) item.getItemMeta();
 
         Object gameProfile = Reflections.get(meta, "profile");
@@ -133,8 +126,8 @@ public class HeadAppleModule extends UHCModule {
                 // Get player head
                 ItemStack playerHead = event.getInventory().getMatrix()[4];
                 String playerName = null;
-                if (playerHead.getType() == Material.SKULL_ITEM) {
-                    playerName = ((SkullMeta) playerHead.getItemMeta()).getOwner();
+                if (playerHead.getType() == Material.PLAYER_HEAD) {
+                    playerName = ((SkullMeta) playerHead.getItemMeta()).getOwningPlayer().getName();
                 }
                 ItemStack output = event.getInventory().getResult();
                 ItemMeta meta = output.getItemMeta();

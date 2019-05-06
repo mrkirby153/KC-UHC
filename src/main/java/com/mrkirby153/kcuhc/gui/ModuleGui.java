@@ -27,7 +27,7 @@ public class ModuleGui extends Gui<UHC> {
         List<UHCModule> uhcModules = new ArrayList<>(ModuleRegistry.INSTANCE.availableModules());
         uhcModules.sort(Comparator.comparing(UHCModule::getName));
         for (UHCModule module : uhcModules) {
-            ItemFactory factory = new ItemFactory(module.getGuiItem()).data(module.getDamage());
+            ItemFactory factory = new ItemFactory(module.getGuiItem());
             if (module.isLoaded()) {
                 factory.glowing();
             }
@@ -46,14 +46,14 @@ public class ModuleGui extends Gui<UHC> {
                 if (clickType == ClickType.LEFT || clickType == ClickType.SHIFT_LEFT) {
                     if (!ModuleRegistry.INSTANCE.loaded(module.getClass())) {
                         ModuleRegistry.INSTANCE.load(module);
-                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 2F);
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 2F);
                         build();
                     }
                 }
                 if (clickType == ClickType.RIGHT || clickType == ClickType.SHIFT_RIGHT) {
                     if (ModuleRegistry.INSTANCE.loaded(module.getClass())) {
                         ModuleRegistry.INSTANCE.unload(module);
-                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 2F);
+                        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 2F);
                         build();
                     }
                 }

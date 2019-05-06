@@ -5,7 +5,7 @@ import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
-import net.md_5.bungee.api.ChatColor;
+import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.entity.Player;
 

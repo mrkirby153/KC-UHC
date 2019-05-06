@@ -104,7 +104,7 @@ public class CornucopiaModule extends UHCModule {
         this.cornucopiaStructure.restore();
         this.cornucopiaStructure.placeAll(randomSpawn);
         Bukkit.getOnlinePlayers().forEach(player -> {
-            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_PLING, SoundCategory.MASTER, 1F,
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, SoundCategory.MASTER, 1F,
                 1F);
             player.sendMessage(
                 Chat.message("Game", "A cornucopia has spawned at ({x}, {y}, {z})",

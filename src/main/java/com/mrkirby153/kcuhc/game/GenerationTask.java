@@ -123,7 +123,7 @@ public class GenerationTask implements Runnable {
                         "{generated}", generatedChunks,
                         "{total}", (int) totalChunks).toLegacyText());
             Bukkit.getOnlinePlayers()
-                .forEach(p -> p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F));
+                .forEach(p -> p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 1F, 1F));
         }
     }
 

@@ -5,7 +5,6 @@ import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.gui.Inventory;
 import org.bukkit.ChatColor;
-import org.bukkit.DyeColor;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -39,8 +38,8 @@ public class SpectatorInventory extends Inventory<UHC> {
                     }
                 });
         } else {
-            addItem(hotbarSlot(3), new ItemFactory(Material.WOOL).data(DyeColor.RED.getWoolData())
-                    .name("Return to Survival" + ChatColor.GREEN + "(Right Click)").construct(),
+            addItem(hotbarSlot(3), new ItemFactory(Material.RED_WOOL)
+                    .name("Return to Survival" + ChatColor.GREEN + " (Right Click)").construct(),
                 (p, clickType) -> {
                     if (clickType == ClickType.RIGHT) {
                         p.setGameMode(GameMode.SURVIVAL);

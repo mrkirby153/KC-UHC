@@ -109,7 +109,7 @@ public class GameCommand extends BaseCommand {
         sender.sendMessage(Chat.message("Game", "Started").toLegacyText());
         if (sender instanceof Player) {
             Player p = (Player) sender;
-            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 1F);
         }
     }
 
@@ -122,7 +122,7 @@ public class GameCommand extends BaseCommand {
         sender.sendMessage(Chat.message("Game", "Stopped!").toLegacyText());
         if (sender instanceof Player) {
             Player p = (Player) sender;
-            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 1F);
         }
     }
 

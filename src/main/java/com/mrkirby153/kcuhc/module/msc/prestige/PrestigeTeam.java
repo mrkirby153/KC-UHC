@@ -5,8 +5,8 @@ import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -24,7 +24,6 @@ public class PrestigeTeam extends UHCTeam {
     }
 
     public void update() {
-        setPrefixFormat("[%s] ");
         if (!getPlayers().contains(player)) {
             addPlayer(player);
         }
@@ -34,8 +33,7 @@ public class PrestigeTeam extends UHCTeam {
         }
         ModuleRegistry.INSTANCE.getLoadedModule(PrestigeModule.class).ifPresent(mod -> {
             setPrefixColor(ChatColor.WHITE);
-            setPrefix(mod.getPrestigeMap().getOrDefault(player, 0) + "" + ChatColor.GOLD + "⭐"
-                + ChatColor.RESET);
+            setPrefix(mod.getPrestigeMap().getOrDefault(player, 0) + "" + ChatColor.GOLD + "⭐" + ChatColor.WHITE);
         });
         ScoreboardTeam team = uhc.getGame().getTeam(p);
         if (team == null || team instanceof SpectatorTeam) {

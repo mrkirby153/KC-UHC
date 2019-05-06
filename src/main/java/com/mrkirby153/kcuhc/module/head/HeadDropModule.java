@@ -12,17 +12,19 @@ import org.bukkit.inventory.meta.SkullMeta;
 public class HeadDropModule extends UHCModule {
 
     public HeadDropModule() {
-        super("Drop Player Heads", "Player Heads will be dropped on death", Material.SKULL_ITEM, 3);
+        super("Drop Player Heads", "Player Heads will be dropped on death", Material.PLAYER_HEAD);
     }
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         Player dead = event.getEntity();
         Location playerLoc = dead.getLocation();
-        ItemStack head = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD, 1);
         SkullMeta skullMeta = (SkullMeta) head.getItemMeta();
-        skullMeta.setOwner(dead.getName());
-        head.setItemMeta(skullMeta);
+        if (skullMeta != null) {
+            skullMeta.setOwningPlayer(dead);
+            head.setItemMeta(skullMeta);
+        }
         playerLoc.getWorld().dropItemNaturally(playerLoc, head);
     }
 }

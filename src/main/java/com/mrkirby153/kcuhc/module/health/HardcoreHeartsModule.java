@@ -18,7 +18,7 @@ public class HardcoreHeartsModule extends UHCModule {
 
     @Inject
     public HardcoreHeartsModule(UHC uhc) {
-        super("Hardcore Hearts", "Show hardcore hearts", Material.DOUBLE_PLANT, 4);
+        super("Hardcore Hearts", "Show hardcore hearts", Material.ROSE_BUSH);
         this.uhc = uhc;
     }
 

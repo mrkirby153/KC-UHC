@@ -203,7 +203,7 @@ public class RegenTicketModule extends UHCModule {
         PlayerInventory inventory = player.getInventory();
         inventory.remove(regenTicket);
         if (!heal) {
-            player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_DOOR_WOOD, 1, 1);
+            player.playSound(player.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, 1, 1);
             player.spigot().sendMessage(Chat
                 .formattedChat("Your regen ticket has been removed!",
                     net.md_5.bungee.api.ChatColor.RED, Chat.Style.BOLD));

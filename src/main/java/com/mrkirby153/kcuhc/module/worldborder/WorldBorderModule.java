@@ -120,7 +120,7 @@ public class WorldBorderModule extends UHCModule {
                 "{startSize}", Time.INSTANCE.trim(2, size),
                 "{endSize}", getEndSize(),
                 "{duration}", Time.INSTANCE.format(1, newDuration * 1000, Time.TimeUnit.FIT)));
-            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
+            p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 1F);
         });
         border.setSize(getEndSize(), newDuration);
     }

@@ -11,7 +11,6 @@ import me.mrkirby153.kcutils.paginate.Paginator;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.lang.WordUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.attribute.Attribute;
@@ -45,8 +44,7 @@ public class SpectatorGui extends Gui<UHC> {
         int row = 0;
         for (UHCTeam team : teams) {
             getInventory().setItem(row * 9,
-                new ItemFactory(Material.WOOL)
-                    .data(getDye(team).getWoolData())
+                new ItemFactory(getWool(team))
                     .name(team.getColor() + WordUtils.capitalizeFully(team.getTeamName()))
                     .construct());
             int column = 1;
@@ -108,13 +106,12 @@ public class SpectatorGui extends Gui<UHC> {
     }
 
     private ItemStack createOfflinePlayer(String name) {
-        return new ItemFactory(Material.SKULL_ITEM).name(name)
+        return new ItemFactory(Material.SKELETON_SKULL).name(name)
             .lore("", ChatColor.RED + "" + ChatColor.BOLD + "OFFLINE").construct();
     }
 
     private ItemStack createPlayerHead(Player player) {
-        ItemStack itemStack = new ItemFactory(Material.SKULL_ITEM)
-            .data(3)
+        ItemStack itemStack = new ItemFactory(Material.PLAYER_HEAD)
             .name(player.getName())
             .lore(ChatColor.GREEN + "Health: " + ChatColor.RESET + (int) player.getHealth() + "/"
                     + (int) player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue(),
@@ -124,47 +121,42 @@ public class SpectatorGui extends Gui<UHC> {
                     .getName()).construct();
 
         SkullMeta meta = (SkullMeta) itemStack.getItemMeta();
-        meta.setOwner(player.getName());
-        itemStack.setItemMeta(meta);
+        if (meta != null) {
+            meta.setOwningPlayer(player);
+            itemStack.setItemMeta(meta);
+        }
         return itemStack;
     }
 
-    private DyeColor getDye(UHCTeam team) {
+    private Material getWool(UHCTeam team) {
         switch (team.getColor()) {
             case BLACK:
-                return DyeColor.BLACK;
+                return Material.BLACK_WOOL;
             case DARK_BLUE:
-                return DyeColor.BLUE;
             case BLUE:
-                return DyeColor.CYAN;
-            case DARK_GREEN:
-                return DyeColor.GREEN;
-            case GREEN:
-                return DyeColor.LIME;
             case DARK_AQUA:
-                return DyeColor.BLUE;
+                return Material.BLUE_WOOL;
+            case DARK_GREEN:
+                return Material.GREEN_WOOL;
+            case GREEN:
+                return Material.LIME_WOOL;
             case DARK_RED:
-                return DyeColor.RED;
-            case DARK_PURPLE:
-                return DyeColor.MAGENTA;
-            case GOLD:
-                return DyeColor.YELLOW;
-            case GRAY:
-                return DyeColor.SILVER;
-            case DARK_GRAY:
-                return DyeColor.GRAY;
-            case AQUA:
-                return DyeColor.CYAN;
             case RED:
-                return DyeColor.RED;
+                return Material.RED_WOOL;
+            case DARK_PURPLE:
             case LIGHT_PURPLE:
-                return DyeColor.MAGENTA;
+                return Material.MAGENTA_WOOL;
+            case GOLD:
             case YELLOW:
-                return DyeColor.YELLOW;
-            case WHITE:
-                return DyeColor.WHITE;
+                return Material.YELLOW_WOOL;
+            case GRAY:
+                return Material.LIGHT_GRAY_WOOL;
+            case DARK_GRAY:
+                return Material.GRAY_WOOL;
+            case AQUA:
+                return Material.CYAN_WOOL;
             default:
-                return DyeColor.WHITE;
+                return Material.WHITE_WOOL;
         }
     }
 }

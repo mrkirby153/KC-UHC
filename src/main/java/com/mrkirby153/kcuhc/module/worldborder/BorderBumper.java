@@ -22,7 +22,7 @@ public class BorderBumper extends UHCModule {
 
     public BorderBumper() {
         super("Worldborder Bumper", "Bump players back inside the worldborder",
-            Material.PISTON_BASE);
+            Material.PISTON);
     }
 
     /**
@@ -77,7 +77,7 @@ public class BorderBumper extends UHCModule {
         player.setVelocity(bumpVector);
         player.sendMessage(
             Chat.message("Stay inside the worldborder".toUpperCase()).toLegacyText());
-        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BASS, 1F, 1F);
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1F, 1F);
     }
 
     @EventHandler

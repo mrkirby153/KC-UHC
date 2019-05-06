@@ -22,8 +22,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 
-import java.util.HashMap;
-
 public class PvPGraceModule extends UHCModule {
 
     private long graceUntil = 0;
@@ -88,7 +86,7 @@ public class PvPGraceModule extends UHCModule {
         double minuteusRemaining = Math.floor(secondsRemaining / 60D);
         if (secondsRemaining <= 0) {
             broadcast(Chat.message("PvP", "PVP has been enabled!").toLegacyText(),
-                Sound.ENTITY_ENDERDRAGON_GROWL);
+                Sound.ENTITY_ENDER_DRAGON_GROWL);
             return;
         }
         if (minuteusRemaining >= 1) {

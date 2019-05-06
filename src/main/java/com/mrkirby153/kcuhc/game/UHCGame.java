@@ -16,8 +16,8 @@ import me.mrkirby153.kcutils.event.UpdateType;
 import me.mrkirby153.kcutils.flags.WorldFlags;
 import me.mrkirby153.kcutils.protocollib.TitleTimings;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
-import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
@@ -132,7 +132,7 @@ public class UHCGame implements Listener {
                 Bukkit.getServer().getOnlinePlayers().forEach(p -> {
                     p.sendMessage(Chat.message("Pregeneration", "Pregeneration complete!")
                         .toLegacyText());
-                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
+                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 1F, 1F);
                 });
             });
         });
@@ -278,7 +278,7 @@ public class UHCGame implements Listener {
                     }
                     p.spigot().sendMessage(Chat
                         .message("Game", "Starting in {time} seconds", "{time}", time));
-                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_HAT, 1F, 1F);
+                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 1F, 1F);
                 });
             });
         }
@@ -439,7 +439,7 @@ public class UHCGame implements Listener {
             Bukkit.getOnlinePlayers().forEach(p -> {
                 String[] parts = event.getMessage().split("\\|");
                 if (parts.length < 2) {
-                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_PLING, 1F, 1F);
+                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1F, 1F);
                 } else {
                     p.playSound(p.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1F, 1F);
                 }
