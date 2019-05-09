@@ -108,6 +108,7 @@ public class TeamRespawnStructure {
 
     public void tick() {
         updateParticles();
+        updateIdleParticles();
         if (this.ticksRemaining != -1) {
             this.ticksRemaining--;
         }
@@ -141,7 +142,6 @@ public class TeamRespawnStructure {
     private void displayParticles(double x, double y, double z) {
         if (bounds < 1.5) {
             bounds += 0.1;
-            System.out.println(bounds);
         }
         for (double y1 = y - bounds; y1 <= y + bounds; y1 += 0.2) {
             this.center.add(x, y1, z);
@@ -164,6 +164,14 @@ public class TeamRespawnStructure {
         x -= 0.25;
         z += 0.25;
         displayParticles(x, y, z);
+    }
+
+    private void updateIdleParticles() {
+        if(this.phase != Phase.IDLE)
+            return;
+        this.center.add(0.10, 2, 0.25);
+        this.center.getWorld().spawnParticle(Particle.PORTAL, this.center, 10, 0.25, 0.25, 0.25, 0.0);
+        this.center.subtract(0.10, 2, 0.25);
     }
 
     private void setSignText(Location l, String[] text) {
