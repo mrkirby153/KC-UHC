@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.module.respawner;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -10,25 +11,36 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.WallSign;
+import org.bukkit.inventory.Inventory;
 
 public class TeamRespawnStructure {
 
+    public static final int STRUCTURE_SIZE = 1;
+    public static final int STRUCTURE_HEIGHT = 2;
+
     private static final int RESPAWN_TIME_TICKS = 120 * 20;
     private static final int COOLDOWN_TIME_TICKS = 300 * 20;
-
+    public double r = 1;
+    double bounds = 0;
     private Location center;
     private long ticksRemaining = -1L;
     private long totalTicks = -1L;
     private Phase phase = Phase.DEACTIVATED;
     private double t = 0.0;
-    public double r = 1;
+    private Inventory inventory = Bukkit.createInventory(null, 9, "Team Respawner");
 
     public TeamRespawnStructure(Location location) {
         this.center = location;
+
+        // Fill the slots
     }
 
     public boolean isActive() {
         return phase == Phase.RESPAWNING;
+    }
+
+    public Inventory getInventory() {
+        return this.inventory;
     }
 
     public void setBeaconBase(Material material) {
@@ -125,8 +137,11 @@ public class TeamRespawnStructure {
                     this.setTicksLeft(COOLDOWN_TIME_TICKS);
                     this.deactivateBeacon();
                     this.center.clone().add(0, 2, 0).getBlock().setType(Material.AIR);
-                    this.center.getWorld().playSound(this.center, Sound.ENTITY_ZOMBIE_VILLAGER_CURE, SoundCategory.MASTER, 1.0F, 1.0F);
-                    this.center.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, this.center.clone().add(0, 2, 0), 1, 0, 0, 0, 0);
+                    this.center.getWorld().playSound(this.center, Sound.ENTITY_ZOMBIE_VILLAGER_CURE,
+                        SoundCategory.MASTER, 1.0F, 1.0F);
+                    this.center.getWorld()
+                        .spawnParticle(Particle.EXPLOSION_HUGE, this.center.clone().add(0, 2, 0), 1,
+                            0, 0, 0, 0);
                 }
             case RECHARGING:
                 if (this.ticksRemaining <= 0) {
@@ -136,8 +151,6 @@ public class TeamRespawnStructure {
                 }
         }
     }
-
-    double bounds = 0;
 
     private void displayParticles(double x, double y, double z) {
         if (bounds < 1.5) {
@@ -167,10 +180,12 @@ public class TeamRespawnStructure {
     }
 
     private void updateIdleParticles() {
-        if(this.phase != Phase.IDLE)
+        if (this.phase != Phase.IDLE) {
             return;
+        }
         this.center.add(0.10, 2, 0.25);
-        this.center.getWorld().spawnParticle(Particle.PORTAL, this.center, 10, 0.25, 0.25, 0.25, 0.0);
+        this.center.getWorld()
+            .spawnParticle(Particle.PORTAL, this.center, 10, 0.25, 0.25, 0.25, 0.0);
         this.center.subtract(0.10, 2, 0.25);
     }
 
@@ -224,6 +239,10 @@ public class TeamRespawnStructure {
 
     public void setPhase(Phase phase) {
         this.phase = phase;
+    }
+
+    public Location getCenter() {
+        return this.center;
     }
 
     public enum Phase {

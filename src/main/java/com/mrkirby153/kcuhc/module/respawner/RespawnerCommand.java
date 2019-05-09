@@ -3,6 +3,7 @@ package com.mrkirby153.kcuhc.module.respawner;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.Subcommand;
+import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.module.respawner.TeamRespawnStructure.Phase;
 import me.mrkirby153.kcutils.Chat;
 import org.bukkit.Location;
@@ -13,15 +14,19 @@ import org.bukkit.entity.Player;
 public class RespawnerCommand extends BaseCommand {
 
     private TeamRespawnModule module;
+    private UHC plugin;
 
-    public RespawnerCommand(TeamRespawnModule module) {
+    public RespawnerCommand(UHC plugin, TeamRespawnModule module) {
         this.module = module;
+        this.plugin = plugin;
     }
 
 
     @Subcommand("init")
     public void initializeStructure(Player sender) {
         Location l = sender.getLocation().subtract(0, 1, 0);
+        plugin.getConfig().set("modules.respawn.location", l);
+        plugin.saveConfig();
         this.module.structure = new TeamRespawnStructure(l);
         this.module.structure.buildStructure();
         sender.sendMessage(Chat.message("Respawner", "Structure initialized").toLegacyText());
