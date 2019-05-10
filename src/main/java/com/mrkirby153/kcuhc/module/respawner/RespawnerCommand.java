@@ -2,6 +2,7 @@ package com.mrkirby153.kcuhc.module.respawner;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
 import com.mrkirby153.kcuhc.UHC;
@@ -29,12 +30,13 @@ public class RespawnerCommand extends BaseCommand {
         Location l = sender.getLocation().subtract(0, 1, 0);
         plugin.getConfig().set("modules.respawn.location", l);
         plugin.saveConfig();
-        this.module.structure = new TeamRespawnStructure(l);
+        this.module.structure = new TeamRespawnStructure(this.plugin, l);
         this.module.structure.buildStructure();
         sender.sendMessage(Chat.message("Respawner", "Structure initialized").toLegacyText());
     }
 
     @Subcommand("vial")
+    @CommandCompletion("@players")
     public void soulVial(Player sender, OnlinePlayer target) {
         ItemStack is = SoulVialHandler.getInstance().getSoulVial(target.player);
         sender.getInventory().addItem(is);

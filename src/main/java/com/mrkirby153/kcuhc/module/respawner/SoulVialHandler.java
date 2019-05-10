@@ -1,6 +1,10 @@
 package com.mrkirby153.kcuhc.module.respawner;
 
+import com.google.inject.Inject;
+import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import me.mrkirby153.kcutils.ItemFactory;
+import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -16,15 +20,18 @@ public class SoulVialHandler {
     private static SoulVialHandler instance;
 
     private HashMap<ItemStack, UUID> soulVials = new HashMap<>();
+    private HashMap<ItemStack, UHCTeam> soulVialTeams = new HashMap<>();
+    private UHC plugin;
 
     // Private constructor
-    private SoulVialHandler() {
-
+    @Inject
+    private SoulVialHandler(UHC plugin) {
+        this.plugin = plugin;
     }
 
     public static SoulVialHandler getInstance() {
         if (instance == null) {
-            instance = new SoulVialHandler();
+            instance = UHC.injector.getInstance(SoulVialHandler.class);
         }
         return instance;
     }
@@ -34,6 +41,10 @@ public class SoulVialHandler {
             .name(ChatColor.GREEN + "Soul Vial: " + ChatColor.YELLOW + "(" + player.getName() + ")")
             .lore("Place this in a teammate respawner to revive this teammate").construct();
         this.soulVials.put(stack, player.getUniqueId());
+        ScoreboardTeam team = this.plugin.getGame().getTeam(player);
+        if (team instanceof UHCTeam) {
+            this.soulVialTeams.put(stack, (UHCTeam) team);
+        }
         return stack;
     }
 
@@ -43,10 +54,16 @@ public class SoulVialHandler {
 
     public void clearSoulVials() {
         this.soulVials.clear();
+        this.soulVialTeams.clear();
     }
 
     public void useSoulVial(ItemStack stack) {
         this.soulVials.remove(stack);
+        this.soulVialTeams.remove(stack);
+    }
+
+    public UHCTeam getTeam(ItemStack stack) {
+        return this.soulVialTeams.get(stack);
     }
 
     @Nullable

@@ -1,6 +1,10 @@
 package com.mrkirby153.kcuhc.module.respawner;
 
+import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
+import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import me.mrkirby153.kcutils.ItemFactory;
+import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -38,9 +42,16 @@ public class TeamRespawnStructure {
     private double t = 0.0;
     private Inventory inventory = Bukkit.createInventory(null, 9, "Team Respawner");
     private List<WeakReference<Player>> observers = new ArrayList<>();
+    private UHC plugin;
 
-    public TeamRespawnStructure(Location location) {
+    public TeamRespawnStructure(UHC plugin, Location location) {
         this.center = location;
+        this.center.setPitch(0);
+        this.center.setYaw(0);
+        this.center.setX(this.center.getBlockX());
+        this.center.setY(this.center.getBlockY());
+        this.center.setZ(this.center.getBlockZ());
+        this.plugin = plugin;
 
         // Fill the slots
     }
@@ -137,6 +148,7 @@ public class TeamRespawnStructure {
     public void tick() {
         updateParticles();
         updateIdleParticles();
+        checkRespawnItem();
         if (this.ticksRemaining != -1) {
             this.ticksRemaining--;
         }
@@ -147,7 +159,7 @@ public class TeamRespawnStructure {
                     this.r -= (3) / 60.0;
                 }
                 if (this.ticksRemaining <= 0) {
-                    // TODO: 2019-05-05 Actually respawn the team
+                    doRespawn();
                     System.out.println("Respawn structure hit 0 ticks! Respawning team");
                     this.phase = Phase.RECHARGING;
                     this.setTicksLeft(COOLDOWN_TIME_TICKS);
@@ -190,8 +202,8 @@ public class TeamRespawnStructure {
         double x = r * Math.cos(t);
         double z = r * Math.sin(t);
         double y = 2.25;
-        x -= 0.25;
-        z += 0.25;
+        x += 0.5;
+        z += 0.5;
         displayParticles(x, y, z);
     }
 
@@ -199,10 +211,10 @@ public class TeamRespawnStructure {
         if (this.phase != Phase.IDLE) {
             return;
         }
-        this.center.add(0.10, 2, 0.25);
+        this.center.add(0.5, 2, 0.5);
         this.center.getWorld()
             .spawnParticle(Particle.PORTAL, this.center, 10, 0.25, 0.25, 0.25, 0.0);
-        this.center.subtract(0.10, 2, 0.25);
+        this.center.subtract(0.5, 2, 0.5);
     }
 
     private void setSignText(Location l, String[] text) {
@@ -277,6 +289,40 @@ public class TeamRespawnStructure {
     public List<Player> getObservers() {
         return this.observers.stream().map(WeakReference::get).filter(Objects::nonNull).collect(
             Collectors.toList());
+    }
+
+    private void checkRespawnItem() {
+        if (this.phase != Phase.IDLE) {
+            return;
+        }
+        ItemStack is = this.inventory.getItem(4);
+        if (SoulVialHandler.getInstance().isSoulVial(is)) {
+            getObservers().forEach(Player::closeInventory);
+            startRespawn();
+        }
+    }
+
+    private void doRespawn() {
+        ItemStack vial = this.inventory.getItem(4);
+        Player p = SoulVialHandler.getInstance().getSoulVialContents(vial);
+        if (p == null) {
+            System.out.println("Attempting to respawn a player that no longer exists!");
+            return;
+        }
+        UHCTeam team = SoulVialHandler.getInstance().getTeam(vial);
+        ScoreboardTeam current = this.plugin.getGame().getTeam(p);
+        if (current instanceof SpectatorTeam) {
+            current.removePlayer(p);
+            System.out.println("Removing player from spectators team");
+        }
+        if (team != null) {
+            System.out.println("Re-Adding " + p.getName() + " to " + team.getTeamName());
+            team.addPlayer(p);
+        } else {
+            System.out.println("Not adding to team as they weren't a part of one");
+        }
+        p.teleport(this.center.clone().add(0, 2, 0));
+        this.inventory.setItem(4, null); // Remove the item
     }
 
     public enum Phase {

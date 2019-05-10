@@ -13,7 +13,10 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -23,6 +26,8 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
+
+import javax.annotation.Nullable;
 
 public class TeamRespawnModule extends UHCModule {
 
@@ -52,7 +57,7 @@ public class TeamRespawnModule extends UHCModule {
             .getObject("modules.respawn.location", Location.class);
         if (this.location != null) {
             this.plugin.getLogger().info("[RESPAWNER] Loading respawn at " + this.location);
-            this.structure = new TeamRespawnStructure(this.location);
+            this.structure = new TeamRespawnStructure(this.plugin, this.location);
             this.structure.buildStructure();
         }
     }
@@ -128,7 +133,7 @@ public class TeamRespawnModule extends UHCModule {
             event.setCancelled(true);
         }
          // Prevent Shift clicking
-        if(event.isShiftClick() && event.getInventory().equals(this.structure.getInventory())) {
+        if(event.isShiftClick() && event.getInventory().equals(this.structure.getInventory()) && !SoulVialHandler.getInstance().isSoulVial(event.getCurrentItem())) {
             event.setCancelled(true);
         }
     }
@@ -151,14 +156,33 @@ public class TeamRespawnModule extends UHCModule {
         SoulVialHandler.getInstance().clearSoulVials();
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onPlayerDeath(PlayerDeathEvent event) {
         Player player = event.getEntity();
         ItemStack soulVial = SoulVialHandler.getInstance().getSoulVial(player);
         player.getLocation().getWorld().dropItem(player.getLocation(), soulVial);
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onBlockExplode(BlockExplodeEvent event) {
+        StructureLocation loc = this.getStructureBounds();
+        if(loc != null) {
+            event.blockList().removeIf(b -> loc.in(b.getLocation().toVector()));
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onEntityExplode(EntityExplodeEvent event) {
+        StructureLocation loc = this.getStructureBounds();
+        if(loc != null) {
+            event.blockList().removeIf(b -> loc.in(b.getLocation().toVector()));
+        }
+    }
+
+    @Nullable
     private StructureLocation getStructureBounds() {
+        if(this.structure == null)
+            return null;
         Location center = this.structure.getCenter();
         int minX, maxX, minY, maxY, minZ, maxZ;
         minX = center.getBlockX() - TeamRespawnStructure.STRUCTURE_SIZE;
@@ -183,6 +207,10 @@ public class TeamRespawnModule extends UHCModule {
             this.maxX = maxX;
             this.maxY = maxY;
             this.maxZ = maxZ;
+        }
+
+        public boolean in(Vector v) {
+            return v.isInAABB(min(), max());
         }
 
         public Vector min() {
