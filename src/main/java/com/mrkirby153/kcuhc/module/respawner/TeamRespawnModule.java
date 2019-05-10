@@ -19,6 +19,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
@@ -113,11 +114,21 @@ public class TeamRespawnModule extends UHCModule {
         if (event.getSource().equals(this.structure.getInventory())) {
             event.setCancelled(true);
         }
+        if(event.getDestination().equals(this.structure.getInventory()) && !SoulVialHandler.getInstance().isSoulVial(event.getItem()))
+            event.setCancelled(true);
     }
+
+
+
 
     @EventHandler(ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getInventory().equals(this.structure.getInventory())) {
+        Inventory ci = event.getClickedInventory();
+        if (ci != null && ci.equals(this.structure.getInventory()) && !SoulVialHandler.getInstance().isSoulVial(event.getCursor())) {
+            event.setCancelled(true);
+        }
+         // Prevent Shift clicking
+        if(event.isShiftClick() && event.getInventory().equals(this.structure.getInventory())) {
             event.setCancelled(true);
         }
     }

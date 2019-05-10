@@ -3,12 +3,14 @@ package com.mrkirby153.kcuhc.module.respawner;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.bukkit.contexts.OnlinePlayer;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.module.respawner.TeamRespawnStructure.Phase;
 import me.mrkirby153.kcutils.Chat;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 @CommandAlias("respawner")
 public class RespawnerCommand extends BaseCommand {
@@ -30,6 +32,14 @@ public class RespawnerCommand extends BaseCommand {
         this.module.structure = new TeamRespawnStructure(l);
         this.module.structure.buildStructure();
         sender.sendMessage(Chat.message("Respawner", "Structure initialized").toLegacyText());
+    }
+
+    @Subcommand("vial")
+    public void soulVial(Player sender, OnlinePlayer target) {
+        ItemStack is = SoulVialHandler.getInstance().getSoulVial(target.player);
+        sender.getInventory().addItem(is);
+        sender.sendMessage(Chat.message("Respawner", "Given you a soul vial for {name}", "{name}",
+            target.player.getName()).toLegacyText());
     }
 
     @Subcommand("activate-beacon")
