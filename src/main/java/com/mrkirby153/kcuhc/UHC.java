@@ -121,7 +121,7 @@ public class UHC extends JavaPlugin {
         spectatorHandler = injector.getInstance(SpectatorHandler.class);
 
         registerCommands();
-        ModuleRegistry.INSTANCE.loadAll();
+        ModuleRegistry.INSTANCE.loadAll(this);
 
     }
 

@@ -7,7 +7,6 @@ import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Subcommand;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
-import com.mrkirby153.kcuhc.gui.ModuleGui;
 import com.mrkirby153.kcuhc.module.settings.ModuleSetting;
 import com.mrkirby153.kcuhc.module.settings.SettingParseException;
 import me.mrkirby153.kcutils.Chat;
@@ -22,12 +21,10 @@ import java.util.Optional;
 public class CommandModule extends BaseCommand {
 
     private UHC uhc;
-    private ModuleGui gui;
 
     @Inject
     public CommandModule(UHC uhc) {
         this.uhc = uhc;
-        this.gui = new ModuleGui(uhc);
     }
 
     @Subcommand("load")
@@ -41,7 +38,8 @@ public class CommandModule extends BaseCommand {
 
     @Default
     public void showGui(Player player) {
-        gui.open(player);
+//        gui.open(player);
+        ModuleRegistry.INSTANCE.openGui(player);
     }
 
     @Subcommand("unload")

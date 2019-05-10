@@ -3,8 +3,10 @@ package com.mrkirby153.kcuhc.module;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.gui.ModuleGui;
 import com.mrkirby153.kcuhc.module.settings.SettingParseException;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -37,6 +39,8 @@ public class ModuleRegistry {
 
     private HashSet<UHCModule> loadedModules = new HashSet<>();
     private HashSet<UHCModule> availableModules = new HashSet<>();
+
+    private ModuleGui gui;
 
     /**
      * Sets the folder where presets are saved
@@ -154,7 +158,7 @@ public class ModuleRegistry {
     /**
      * Loads all modules
      */
-    public void loadAll() {
+    public void loadAll(UHC plugin) {
         Reflections reflections = new Reflections("com.mrkirby153.kcuhc");
         Set<Class<? extends UHCModule>> modules = reflections.getSubTypesOf(UHCModule.class);
 
@@ -184,6 +188,7 @@ public class ModuleRegistry {
         // Load all modules set to autoload
         availableModules.stream().filter(UHCModule::autoLoad).filter(m -> !loaded(m.getClass()))
             .forEach(this::load);
+        this.gui = new ModuleGui(plugin);
     }
 
     /**
@@ -324,5 +329,9 @@ public class ModuleRegistry {
         if (module.unload()) {
             loadedModules.remove(module);
         }
+    }
+
+    public void openGui(Player player) {
+        this.gui.open(player);
     }
 }
