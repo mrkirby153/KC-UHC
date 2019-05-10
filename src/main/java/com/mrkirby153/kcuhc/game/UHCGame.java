@@ -422,6 +422,7 @@ public class UHCGame implements Listener {
             // Teleport the user to spawn
             event.getPlayer().teleport(getUHCWorld().getSpawnLocation());
         }
+        event.getPlayer().updateCommands(); // Ensure the command list is up-to-date
     }
 
     @EventHandler(ignoreCancelled = true)

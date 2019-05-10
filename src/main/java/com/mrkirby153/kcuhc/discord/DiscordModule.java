@@ -68,6 +68,9 @@ public class DiscordModule extends UHCModule {
     public DiscordModule(UHC uhc) {
         super("Discord", "Integrate discord with the game", Material.NOTE_BLOCK);
         this.uhc = uhc;
+        UHC.getCommandManager()
+            .registerCommand(
+                this.discordMinecraftCommand = new DiscordCommand(uhc.getGame(), this));
     }
 
     @Override
@@ -89,9 +92,7 @@ public class DiscordModule extends UHCModule {
 
         this.shardManager.addListener(new CommandEventListener());
 
-        UHC.getCommandManager()
-            .registerCommand(
-                this.discordMinecraftCommand = new DiscordCommand(uhc.getGame(), this));
+
 
         this.uhc.getLogger().info("[DISCORD] Starting up...");
         this.shardManager.startAllShards(false);
@@ -109,7 +110,6 @@ public class DiscordModule extends UHCModule {
 
     @Override
     public void onUnload() {
-        UHC.getCommandManager().unregisterCommand(this.discordMinecraftCommand);
         this.log(":no_entry:", "Module unloading");
         ObjectRegistry.INSTANCE.delete();
         this.guild = null;

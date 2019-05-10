@@ -120,9 +120,9 @@ public class UHC extends JavaPlugin {
 
         spectatorHandler = injector.getInstance(SpectatorHandler.class);
 
+        registerCommands();
         ModuleRegistry.INSTANCE.loadAll();
 
-        registerCommands();
     }
 
     private void registerCommands() {
