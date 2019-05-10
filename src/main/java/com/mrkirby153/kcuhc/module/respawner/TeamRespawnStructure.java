@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.module.respawner;
 
+import me.mrkirby153.kcutils.ItemFactory;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -11,7 +12,15 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.WallSign;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class TeamRespawnStructure {
 
@@ -28,6 +37,7 @@ public class TeamRespawnStructure {
     private Phase phase = Phase.DEACTIVATED;
     private double t = 0.0;
     private Inventory inventory = Bukkit.createInventory(null, 9, "Team Respawner");
+    private List<WeakReference<Player>> observers = new ArrayList<>();
 
     public TeamRespawnStructure(Location location) {
         this.center = location;
@@ -40,6 +50,12 @@ public class TeamRespawnStructure {
     }
 
     public Inventory getInventory() {
+        int[] filledSlots = {0, 1, 2, 3, 5, 6, 7, 8};
+        for (int i : filledSlots) {
+            ItemStack s = new ItemFactory(Material.GRAY_STAINED_GLASS_PANE)
+                .name(ChatColor.GOLD + "" + ChatColor.BOLD + "Insert a soul vial").construct();
+            this.inventory.setItem(i, s);
+        }
         return this.inventory;
     }
 
@@ -237,12 +253,30 @@ public class TeamRespawnStructure {
         System.out.println("Respawn structure started respawn!");
     }
 
+    public Location getCenter() {
+        return this.center;
+    }
+
+    public Phase getPhase() {
+        return this.phase;
+    }
+
     public void setPhase(Phase phase) {
         this.phase = phase;
     }
 
-    public Location getCenter() {
-        return this.center;
+    public void removeObserver(Player player) {
+        this.observers.removeIf(wr -> wr.get() == player);
+    }
+
+    public void addObserver(Player player) {
+        WeakReference<Player> wr = new WeakReference<>(player);
+        this.observers.add(wr);
+    }
+
+    public List<Player> getObservers() {
+        return this.observers.stream().map(WeakReference::get).filter(Objects::nonNull).collect(
+            Collectors.toList());
     }
 
     public enum Phase {

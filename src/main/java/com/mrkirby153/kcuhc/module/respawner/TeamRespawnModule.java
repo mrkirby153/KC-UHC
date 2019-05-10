@@ -11,9 +11,15 @@ import me.mrkirby153.kcutils.event.UpdateType;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
@@ -92,11 +98,34 @@ public class TeamRespawnModule extends UHCModule {
         if (event.getClickedBlock() != null && event.getClickedBlock().getLocation().toVector()
             .isInAABB(structure.min(), structure.max())) {
             event.setCancelled(true);
-            if (event.getClickedBlock().getType() == Material.CHEST) {
+            if (event.getClickedBlock().getType() == Material.CHEST
+                && this.structure.getPhase() == Phase.IDLE) {
                 event.getPlayer().playSound(event.getClickedBlock().getLocation(),
                     Sound.BLOCK_CHEST_LOCKED, 1.0F, 1.0F);
                 event.getPlayer().openInventory(this.structure.getInventory());
+                this.structure.addObserver(event.getPlayer());
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onInventoryMoveItem(InventoryMoveItemEvent event) {
+        if (event.getSource().equals(this.structure.getInventory())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getInventory().equals(this.structure.getInventory())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (event.getInventory().equals(this.structure.getInventory())) {
+            this.structure.removeObserver((Player) event.getPlayer());
         }
     }
 
@@ -108,6 +137,14 @@ public class TeamRespawnModule extends UHCModule {
     @EventHandler(ignoreCancelled = true)
     public void onGameStopping(GameStoppingEvent event) {
         this.structure.setPhase(Phase.DEACTIVATED);
+        SoulVialHandler.getInstance().clearSoulVials();
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
+        ItemStack soulVial = SoulVialHandler.getInstance().getSoulVial(player);
+        player.getLocation().getWorld().dropItem(player.getLocation(), soulVial);
     }
 
     private StructureLocation getStructureBounds() {
