@@ -19,6 +19,7 @@ import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.player.TeamInventoryModule;
 import com.mrkirby153.kcuhc.player.UHCPlayer;
 import com.mrkirby153.kcuhc.scoreboard.ScoreboardUpdater;
+import com.mrkirby153.kcuhc.tablist.TabListHandler;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.command.CommandManager;
 import me.mrkirby153.kcutils.cooldown.CooldownManager;
@@ -46,6 +47,7 @@ public class UHC extends JavaPlugin {
     public ProtocolLib protocolLibManager;
     public SpectatorHandler spectatorHandler;
     public CooldownManager cooldownManager;
+    public TabListHandler tabListHandler;
     private UpdateEventHandler tickEventHandler;
     private ScoreboardUpdater scoreboardUpdater;
     private UHCGame game;
@@ -110,6 +112,8 @@ public class UHC extends JavaPlugin {
 
         this.cooldownManager = new CooldownManager(this);
         this.cooldownManager.load();
+
+        this.tabListHandler = new TabListHandler(this);
 
         // Initialize the game
         game = new UHCGame(this);
