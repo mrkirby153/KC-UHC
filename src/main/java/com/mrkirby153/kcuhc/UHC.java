@@ -7,6 +7,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.mrkirby153.kcuhc.game.GameCommand;
 import com.mrkirby153.kcuhc.game.GameState;
+import com.mrkirby153.kcuhc.game.MotdListener;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.spectator.CommandSpectate;
 import com.mrkirby153.kcuhc.game.spectator.SpectatorHandler;
@@ -123,6 +124,7 @@ public class UHC extends JavaPlugin {
         registerCommands();
         ModuleRegistry.INSTANCE.loadAll(this);
 
+        getServer().getPluginManager().registerEvents(new MotdListener(this), this);
     }
 
     private void registerCommands() {
