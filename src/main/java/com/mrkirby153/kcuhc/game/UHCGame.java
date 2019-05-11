@@ -431,12 +431,14 @@ public class UHCGame implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         // Join the spectator team
-        Bukkit.getServer().getScheduler().runTask(plugin, () -> {
-            if (getTeam(event.getPlayer()) != null) {
-                getTeam(event.getPlayer()).removePlayer(event.getPlayer());
-            }
-            this.spectators.addPlayer(event.getPlayer());
-        });
+        if (this.getCurrentState() == GameState.ALIVE) {
+            Bukkit.getServer().getScheduler().runTask(plugin, () -> {
+                if (getTeam(event.getPlayer()) != null) {
+                    getTeam(event.getPlayer()).removePlayer(event.getPlayer());
+                }
+                this.spectators.addPlayer(event.getPlayer());
+            });
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
