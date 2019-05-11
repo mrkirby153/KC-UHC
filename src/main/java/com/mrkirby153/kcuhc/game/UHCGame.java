@@ -444,14 +444,17 @@ public class UHCGame implements Listener {
                 } else {
                     p.playSound(p.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1F, 1F);
                 }
-                p.sendMessage(
-                    ChatColor.GREEN + "" + ChatColor.BOLD + "ANNOUNCEMENT> " + ChatColor.YELLOW
-                        + event.getPlayer().getName() + " " + ChatColor.LIGHT_PURPLE + event
-                        .getMessage());
+
                 if (!plugin.protocolLibManager.isErrored() && parts.length == 2) {
                     plugin.protocolLibManager
                         .title(p, ChatColor.RED + parts[0].trim(), ChatColor.GOLD + parts[1].trim(),
                             new TitleTimings(20, 120, 10));
+                    p.sendMessage(ChatColor.RED +""+ ChatColor.BOLD + parts[0].trim()+": " + ChatColor.GOLD + parts[1].trim());
+                } else {
+                    p.sendMessage(
+                        ChatColor.GREEN + "" + ChatColor.BOLD + "ANNOUNCEMENT> " + ChatColor.YELLOW
+                            + event.getPlayer().getName() + " " + ChatColor.LIGHT_PURPLE + event
+                            .getMessage());
                 }
             });
         }
