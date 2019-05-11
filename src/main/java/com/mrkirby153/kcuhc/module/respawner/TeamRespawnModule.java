@@ -14,6 +14,7 @@ import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -93,7 +94,7 @@ public class TeamRespawnModule extends UHCModule {
         }
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (this.structure == null) {
             return; // Structure does not exist in the world
@@ -105,11 +106,18 @@ public class TeamRespawnModule extends UHCModule {
             .isInAABB(structure.min(), structure.max())) {
             event.setCancelled(true);
             if (event.getClickedBlock().getType() == Material.CHEST
-                && this.structure.getPhase() == Phase.IDLE) {
+                && this.structure.getPhase() == Phase.IDLE && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 event.getPlayer().playSound(event.getClickedBlock().getLocation(),
                     Sound.BLOCK_CHEST_LOCKED, 1.0F, 1.0F);
                 event.getPlayer().openInventory(this.structure.getInventory());
                 this.structure.addObserver(event.getPlayer());
+            }
+        }
+        // TODO 5/10/2019: Prevent soul vials from being thrown
+        if (event.getAction() == Action.RIGHT_CLICK_AIR
+            || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            if (SoulVialHandler.getInstance().isSoulVial(event.getItem())) {
+                event.setCancelled(true);
             }
         }
     }
@@ -119,21 +127,23 @@ public class TeamRespawnModule extends UHCModule {
         if (event.getSource().equals(this.structure.getInventory())) {
             event.setCancelled(true);
         }
-        if(event.getDestination().equals(this.structure.getInventory()) && !SoulVialHandler.getInstance().isSoulVial(event.getItem()))
+        if (event.getDestination().equals(this.structure.getInventory()) && !SoulVialHandler
+            .getInstance().isSoulVial(event.getItem())) {
             event.setCancelled(true);
+        }
     }
-
-
 
 
     @EventHandler(ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
         Inventory ci = event.getClickedInventory();
-        if (ci != null && ci.equals(this.structure.getInventory()) && !SoulVialHandler.getInstance().isSoulVial(event.getCursor())) {
+        if (ci != null && ci.equals(this.structure.getInventory()) && !SoulVialHandler.getInstance()
+            .isSoulVial(event.getCursor())) {
             event.setCancelled(true);
         }
-         // Prevent Shift clicking
-        if(event.isShiftClick() && event.getInventory().equals(this.structure.getInventory()) && !SoulVialHandler.getInstance().isSoulVial(event.getCurrentItem())) {
+        // Prevent Shift clicking
+        if (event.isShiftClick() && event.getInventory().equals(this.structure.getInventory())
+            && !SoulVialHandler.getInstance().isSoulVial(event.getCurrentItem())) {
             event.setCancelled(true);
         }
     }
@@ -166,7 +176,7 @@ public class TeamRespawnModule extends UHCModule {
     @EventHandler(ignoreCancelled = true)
     public void onBlockExplode(BlockExplodeEvent event) {
         StructureLocation loc = this.getStructureBounds();
-        if(loc != null) {
+        if (loc != null) {
             event.blockList().removeIf(b -> loc.in(b.getLocation().toVector()));
         }
     }
@@ -174,15 +184,16 @@ public class TeamRespawnModule extends UHCModule {
     @EventHandler(ignoreCancelled = true)
     public void onEntityExplode(EntityExplodeEvent event) {
         StructureLocation loc = this.getStructureBounds();
-        if(loc != null) {
+        if (loc != null) {
             event.blockList().removeIf(b -> loc.in(b.getLocation().toVector()));
         }
     }
 
     @Nullable
     private StructureLocation getStructureBounds() {
-        if(this.structure == null)
+        if (this.structure == null) {
             return null;
+        }
         Location center = this.structure.getCenter();
         int minX, maxX, minY, maxY, minZ, maxZ;
         minX = center.getBlockX() - TeamRespawnStructure.STRUCTURE_SIZE;

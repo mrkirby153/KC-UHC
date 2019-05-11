@@ -3,6 +3,7 @@ package com.mrkirby153.kcuhc.module.respawner;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
+import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.Bukkit;
@@ -112,7 +113,7 @@ public class TeamRespawnStructure {
 
     private String[] getStatusMessage() {
         String[] lines = new String[4];
-        lines[1] = "Team Respawner";
+        lines[1] = "Soul Monument";
         switch (this.phase) {
             case DEACTIVATED:
                 lines[2] = ChatColor.GRAY + "DEACTIVATED";
@@ -133,6 +134,8 @@ public class TeamRespawnStructure {
                 }
                 s.append("]");
                 lines[2] = s.toString();
+                Player p = SoulVialHandler.getInstance().getSoulVialContents(this.inventory.getItem(4));
+                lines[3] = p != null? p.getName() : "";
                 break;
             case RECHARGING:
                 lines[2] = getTimeRemaining();
@@ -321,8 +324,11 @@ public class TeamRespawnStructure {
         } else {
             System.out.println("Not adding to team as they weren't a part of one");
         }
-        p.teleport(this.center.clone().add(0, 2, 0));
+        p.teleport(this.center.clone().add(0.5, 2, 0.5));
         this.inventory.setItem(4, null); // Remove the item
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            player.spigot().sendMessage(Chat.message("Respawn", "{player} has been respawned", "{player}", p.getName()));
+        });
     }
 
     public enum Phase {
