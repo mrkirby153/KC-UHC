@@ -414,6 +414,18 @@ public class UHCGame implements Listener {
                 .computeIfAbsent(killer.getUniqueId(), uuid -> 0L);
             this.killCount.put(killer.getUniqueId(), ++count);
         }
+        String deathMessage = event.getDeathMessage();
+        if (deathMessage != null) {
+            deathMessage = deathMessage.replace(event.getEntity().getName(), "{entity}");
+            String k = "";
+            if (killer != null) {
+                k = killer.getName();
+                deathMessage = deathMessage.replace(killer.getName(), "{killer}");
+            }
+            event.setDeathMessage(
+                Chat.message("Death", deathMessage, "{entity}", event.getEntity().getName(),
+                    "{killer}", k).toLegacyText());
+        }
     }
 
     @EventHandler(ignoreCancelled = true)
