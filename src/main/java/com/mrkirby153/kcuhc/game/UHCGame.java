@@ -43,6 +43,8 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * The main game class
@@ -89,6 +91,10 @@ public class UHCGame implements Listener {
      * The name of the world that the UHC game will take place in
      */
     private String uhcWorld = "world";
+
+    private long initialPlayers = 0;
+
+    private Map<UUID, Long> killCount = new HashMap<>();
 
     @Inject
     public UHCGame(UHC plugin) {
@@ -317,6 +323,8 @@ public class UHCGame implements Listener {
             Arrays.stream(WorldFlags.values())
                 .forEach(f -> plugin.flagModule.set(this.getUHCWorld(), f, true, false));
             this.startTime = System.currentTimeMillis();
+            this.initialPlayers = this.teams.values().stream().mapToLong(t -> t.getPlayers().size())
+                .sum();
         }
         if (event.getTo() == GameState.ENDING) {
             // Teleport everyone to the center
@@ -361,6 +369,29 @@ public class UHCGame implements Listener {
     }
 
     /**
+     * Gets the initial players in the game
+     *
+     * @return The initial amount of players
+     */
+    public long getInitialPlayers() {
+        return this.initialPlayers;
+    }
+
+    /**
+     * Gets a player's kills
+     *
+     * @param player The player
+     *
+     * @return The amount of kills
+     */
+    public long getKills(Player player) {
+        if (this.killCount == null) {
+            this.killCount = new HashMap<>();
+        }
+        return this.killCount.getOrDefault(player.getUniqueId(), 0L);
+    }
+
+    /**
      * Gets the world border for the UHC world
      *
      * @return The world border
@@ -373,6 +404,15 @@ public class UHCGame implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
         if (getTeam(event.getEntity()) != null) {
             getTeam(event.getEntity()).removePlayer(event.getEntity());
+        }
+        Player killer = event.getEntity().getKiller();
+        if (killer != null) {
+            if (this.killCount == null) {
+                this.killCount = new HashMap<>();
+            }
+            long count = this.killCount
+                .computeIfAbsent(killer.getUniqueId(), uuid -> 0L);
+            this.killCount.put(killer.getUniqueId(), ++count);
         }
     }
 
@@ -449,7 +489,8 @@ public class UHCGame implements Listener {
                     plugin.protocolLibManager
                         .title(p, ChatColor.RED + parts[0].trim(), ChatColor.GOLD + parts[1].trim(),
                             new TitleTimings(20, 120, 10));
-                    p.sendMessage(ChatColor.RED +""+ ChatColor.BOLD + parts[0].trim()+": " + ChatColor.GOLD + parts[1].trim());
+                    p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + parts[0].trim() + ": "
+                        + ChatColor.GOLD + parts[1].trim());
                 } else {
                     p.sendMessage(
                         ChatColor.GREEN + "" + ChatColor.BOLD + "ANNOUNCEMENT> " + ChatColor.YELLOW

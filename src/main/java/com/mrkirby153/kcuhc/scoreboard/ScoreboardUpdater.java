@@ -5,7 +5,6 @@ import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.DiscordModule;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
-import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.player.PvPGraceModule;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
@@ -13,12 +12,10 @@ import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.Time.TimeUnit;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
-import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import me.mrkirby153.kcutils.scoreboard.items.ElementHeadedText;
 import net.dv8tion.jda.core.entities.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -102,57 +99,20 @@ public class ScoreboardUpdater implements Listener {
                     }
                 });
                 scoreboard.add(" ");
-                // Teams alive
-                ScoreboardTeam team = game.getTeam(player);
-                if (team != null && !(team instanceof SpectatorTeam)) {
-                    // Display the members
-                    if (team.getPlayers().size() > 5) {
-                        scoreboard.add(
-                            ChatColor.GREEN + "Teammates Alive: " + ChatColor.WHITE + team
-                                .getPlayers().size());
-                    } else {
-                        team.getPlayers().stream().map(Bukkit::getOfflinePlayer)
-                            .sorted((o1, o2) -> {
-                                if (o1 instanceof Player && !(o2 instanceof Player)) {
-                                    return 1;
-                                } else if (!(o1 instanceof Player) && o2 instanceof Player) {
-                                    return -1;
-                                } else {
-                                    return o1.getName().compareTo(o2.getName());
-                                }
-                            }).forEach(p -> {
-                            if (p instanceof Player) {
-                                Player pl = (Player) p;
-                                double healthPercent =
-                                    pl.getHealth() / pl.getAttribute(Attribute.GENERIC_MAX_HEALTH)
-                                        .getValue();
-                                ChatColor nameColor;
-                                if (healthPercent < .25) {
-                                    nameColor = ChatColor.RED;
-                                } else if (healthPercent < 0.5) {
-                                    nameColor = ChatColor.GOLD;
-                                } else if (healthPercent < 0.75) {
-                                    nameColor = ChatColor.YELLOW;
-                                } else {
-                                    nameColor = ChatColor.GREEN;
-                                }
-                                float abs = this.getAbsorption(pl);
-                                finalScoreboard.add(
-                                    nameColor + p.getName() + " " + ChatColor.RED + (int) (pl
-                                        .getHealth() + abs));
-                            } else {
-                                finalScoreboard.add(ChatColor.GRAY + p.getName());
-                            }
-                        });
-                    }
-                    scoreboard.add(" ");
-                }
                 long aliveTeamCount = this.game.getTeams().values().stream()
                     .filter(t -> t.getPlayers().size() > 0).count();
+                long totalTeams = this.game.getTeams().size();
+                long alivePlayers = this.game.getTeams().values().stream()
+                    .mapToLong(t -> t.getPlayers().size()).sum();
 
+                scoreboard.add(ChatColor.GREEN + "Players Alive: " + ChatColor.RED + alivePlayers
+                    + ChatColor.GRAY + "/" + ChatColor.WHITE + this.game.getInitialPlayers());
                 scoreboard
                     .add(
-                        ChatColor.DARK_PURPLE + "Teams Alive: " + ChatColor.WHITE + aliveTeamCount);
+                        ChatColor.GREEN + "Teams Alive: " + ChatColor.RED + aliveTeamCount
+                            + ChatColor.GRAY + "/" + ChatColor.WHITE + totalTeams);
+                scoreboard.add(" ");
+                scoreboard.add(ChatColor.GRAY + "Kills: " + ChatColor.WHITE+this.game.getKills(player));
                 scoreboard.add(" ");
                 ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class)
                     .ifPresent(worldBorderModule -> {

@@ -52,12 +52,12 @@ public class TabListHandler implements Listener {
         String header = ChatColor.GOLD + "" + ChatColor.BOLD + "  Kirbycraft Ultra Hardcore  \n";
         String footer =
             "\n" + ChatColor.GRAY + "Time: " + ChatColor.WHITE + Time.INSTANCE.now()
-                + ChatColor.GRAY + " \n Players: " + ChatColor.WHITE + Bukkit.getOnlinePlayers()
-                .size();
+                + ChatColor.GRAY + " \n";
         if (uhc.getGame().getCurrentState() == GameState.ALIVE) {
-            long c = uhc.getGame().getTeams().values().stream().map(e -> e.getPlayers().size())
-                .count();
-            footer += ChatColor.GRAY + " | Remaining: " + ChatColor.WHITE + c;
+            long initialPlayers = this.uhc.getGame().getInitialPlayers();
+            long alivePlayers = this.uhc.getGame().getTeams().values().stream()
+                .mapToLong(t -> t.getPlayers().size()).sum();
+            footer += "Players: " + ChatColor.WHITE + alivePlayers + "/" + initialPlayers + ChatColor.GRAY + " | Kills: " + ChatColor.WHITE + this.uhc.getGame().getKills(player);
         }
         Object cp = Reflections.invoke(player, "getHandle");
         int ping = Reflections.get(cp, "ping");
