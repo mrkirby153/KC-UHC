@@ -1,6 +1,7 @@
 package com.mrkirby153.kcuhc.game.spectator;
 
 import com.mrkirby153.kcuhc.game.UHCGame;
+import me.mrkirby153.kcutils.Chat;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,6 +13,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityTargetEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -20,10 +22,19 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.event.vehicle.VehicleEntityCollisionEvent;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Disallow pretty much everything to spectators
  */
 public class SpectatorListener implements Listener {
+
+    public static final List<String> COMMAND_WHITELIST = new ArrayList<>();
+
+    static {
+        COMMAND_WHITELIST.add("spectate");
+    }
 
     private UHCGame game;
 
@@ -139,5 +150,20 @@ public class SpectatorListener implements Listener {
         }
     }
 
-
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
+        if (!event.getMessage().startsWith("/")) {
+            return; // This isn't a command
+        }
+        if (game.isSpectator(event.getPlayer()) && !event.getPlayer().isOp()) {
+            String commandName = event.getMessage().substring(1);
+            if (commandName.contains(" ")) {
+                commandName = commandName.split(" ")[0];
+            }
+            if(!COMMAND_WHITELIST.contains(commandName.toLowerCase())) {
+                event.setCancelled(true);
+                event.getPlayer().sendMessage(Chat.message("Game", "You cannot use that command as a spectator").toLegacyText());
+            }
+        }
+    }
 }

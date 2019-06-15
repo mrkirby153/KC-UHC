@@ -11,6 +11,7 @@ import com.mrkirby153.kcuhc.game.MotdListener;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.spectator.CommandSpectate;
 import com.mrkirby153.kcuhc.game.spectator.SpectatorHandler;
+import com.mrkirby153.kcuhc.game.spectator.SpectatorListener;
 import com.mrkirby153.kcuhc.game.team.CommandTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.CommandModule;
@@ -164,6 +165,9 @@ public class UHC extends JavaPlugin {
                return mod.getSettings().keySet();
            }
         });
+
+        manager.getCommandCompletions().registerCompletion("spectatorCommands", c -> SpectatorListener.COMMAND_WHITELIST);
+
         // Register resolvers
         manager.getCommandContexts()
             .registerContext(GameState.class, c -> GameState.valueOf(c.popFirstArg()));

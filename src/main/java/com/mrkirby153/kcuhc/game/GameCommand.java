@@ -9,6 +9,7 @@ import co.aikar.commands.annotation.Subcommand;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.game.spectator.SpectatorListener;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.msc.cornucopia.CornucopiaModule;
@@ -199,6 +200,39 @@ public class GameCommand extends BaseCommand {
         }
     }
 
+    @Subcommand("spectator-commands")
+    public class SpectatorWhitelistCommands extends BaseCommand {
+
+        @Default
+        public void list(CommandSender sender) {
+            StringBuilder sb = new StringBuilder();
+            SpectatorListener.COMMAND_WHITELIST.forEach(c -> sb.append(c).append(", "));
+
+            String s = sb.toString().substring(0, sb.toString().length() - 2);
+            sender.sendMessage(Chat.message("Spectator",
+                "The following commands are whitelisted for spectators: {commands}", "{commands}",
+                s).toLegacyText());
+        }
+
+        @Subcommand("add")
+        public void addCommand(CommandSender sender, String command) {
+            if (!SpectatorListener.COMMAND_WHITELIST.contains(command.toLowerCase())) {
+                SpectatorListener.COMMAND_WHITELIST.add(command.toLowerCase());
+            }
+            sender.sendMessage(
+                Chat.message("Spectator", "{command} was added to the whitelist", "{command}",
+                    command).toLegacyText());
+        }
+
+        @Subcommand("remove")
+        @CommandCompletion("@spectatorCommands")
+        public void removeCommand(CommandSender sender, String command) {
+            SpectatorListener.COMMAND_WHITELIST.remove(command.toLowerCase());
+            sender.sendMessage(
+                Chat.message("Spectator", "{command} was removed from the whitelist", "{command}",
+                    command).toLegacyText());
+        }
+    }
 
     @Subcommand("preset")
     public class PresetCommands extends BaseCommand {
