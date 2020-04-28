@@ -23,3 +23,5 @@ testServer/
 development.ppk
 classes/
 src/main/resources/rebel.xml
+.gradle/
+build/
