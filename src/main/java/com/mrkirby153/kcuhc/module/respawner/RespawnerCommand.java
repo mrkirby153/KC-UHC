@@ -27,7 +27,7 @@ public class RespawnerCommand extends BaseCommand {
 
     @Subcommand("init")
     public void initializeStructure(Player sender) {
-        Location l = sender.getLocation().subtract(0, 1, 0);
+        Location l = sender.getLocation().subtract(0, 1, 0).getBlock().getLocation();
         plugin.getConfig().set("modules.respawn.location", l);
         plugin.saveConfig();
         this.module.structure = new TeamRespawnStructure(this.plugin, l);
