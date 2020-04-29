@@ -330,7 +330,7 @@ public class UHCGame implements Listener {
             // Teleport everyone to the center
             Location toTeleport = this.getUHCWorld().getWorldBorder().getCenter();
             toTeleport = toTeleport.getWorld().getHighestBlockAt(toTeleport).getLocation()
-                .add(0, 0.5, 0);
+                .add(0, 1.5, 0);
             Location finalToTeleport = toTeleport;
             Bukkit.getOnlinePlayers().forEach(player -> {
                 if (!player.isValid()) {

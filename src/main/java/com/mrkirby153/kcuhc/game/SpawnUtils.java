@@ -13,7 +13,7 @@ public class SpawnUtils {
     private static Random random = new Random();
 
     public static Block getHighest(World world, int x, int z) {
-        return world.getHighestBlockAt(x, z);
+        return world.getHighestBlockAt(x, z).getLocation().add(0, 1, 0).getBlock();
     }
 
     public static Location getRandomSpawn(World world, int borderSize) {
@@ -27,9 +27,9 @@ public class SpawnUtils {
             block = getHighest(world, x, z);
 
             // Prevent spawning in lava or water (That would be embarrassing)
-//            if (!isValid(block)) {
-//                continue;
-//            }
+            if (!isValid(block)) {
+                continue;
+            }
             loc = block.getLocation().add(0.5, 0.5, 0.5);
         }
         return loc;
@@ -46,9 +46,9 @@ public class SpawnUtils {
             int zOffset = random.nextInt(radius * 2) - radius;
 
             block = getHighest(location.getWorld(), x + xOffset, z + zOffset);
-//            if (!isValid(block)) {
-//                continue;
-//            }
+            if (!isValid(block)) {
+                continue;
+            }
             loc = block.getLocation().add(0.5, 0.5, 0.5);
         }
         return loc;
