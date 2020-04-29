@@ -80,6 +80,7 @@ public class UHC extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        loadStrings();
 
         ModuleRegistry.setPresetDirectory(new File(getDataFolder(), "presets"));
         ActionBarManager.init(this);
@@ -132,6 +133,11 @@ public class UHC extends JavaPlugin {
         ModuleRegistry.INSTANCE.loadAll(this);
 
         getServer().getPluginManager().registerEvents(new MotdListener(this), this);
+    }
+
+    private void loadStrings() {
+        Strings.LONG_NAME = getConfig().getString("strings.long_name", Strings.LONG_NAME);
+        Strings.SHORT_NAME = getConfig().getString("strings.short_name", Strings.SHORT_NAME);
     }
 
     private void registerCommands() {

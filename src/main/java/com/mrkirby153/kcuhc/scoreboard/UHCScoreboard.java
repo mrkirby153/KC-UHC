@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.scoreboard;
 
+import com.mrkirby153.kcuhc.Strings;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
@@ -24,7 +25,7 @@ public class UHCScoreboard extends KirbyScoreboard {
     private Objective belowNameHealth;
 
     public UHCScoreboard(UHC plugin) {
-        super(ChatColor.GOLD + "" + ChatColor.BOLD + "KC UHC");
+        super(ChatColor.GOLD + "" + ChatColor.BOLD + Strings.SHORT_NAME);
         this.plugin = plugin;
         this.game = plugin.getGame();
 

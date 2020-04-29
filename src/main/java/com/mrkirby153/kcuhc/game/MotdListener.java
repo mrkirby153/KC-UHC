@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.game;
 
+import com.mrkirby153.kcuhc.Strings;
 import com.mrkirby153.kcuhc.UHC;
 import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
@@ -17,7 +18,7 @@ public class MotdListener implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onServerListPing(ServerListPingEvent event) {
         String motd =
-            ChatColor.GOLD + "" + ChatColor.BOLD + "Kirbycraft Ultra Hardcore:\n" + ChatColor.GRAY;
+            ChatColor.GOLD + "" + ChatColor.BOLD + Strings.LONG_NAME + ":\n" + ChatColor.GRAY;
         switch (plugin.getGame().getCurrentState()) {
             case WAITING:
                 motd += "Waiting for start";

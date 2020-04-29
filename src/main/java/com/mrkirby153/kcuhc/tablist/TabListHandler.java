@@ -5,6 +5,7 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.wrappers.WrappedChatComponent;
+import com.mrkirby153.kcuhc.Strings;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
@@ -49,7 +50,7 @@ public class TabListHandler implements Listener {
     }
 
     public void sendHeaderFooter(Player player) {
-        String header = ChatColor.GOLD + "" + ChatColor.BOLD + "  Kirbycraft Ultra Hardcore  \n";
+        String header = ChatColor.GOLD + "" + ChatColor.BOLD + "  "+ Strings.LONG_NAME+"  \n";
         String footer =
             "\n" + ChatColor.GRAY + "Time: " + ChatColor.WHITE + Time.INSTANCE.now()
                 + ChatColor.GRAY + " \n";
