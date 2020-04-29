@@ -98,7 +98,7 @@ public class TeamRespawnStructure {
 
     private void setWallsign(Location l, BlockFace facing) {
         Block b = l.getBlock();
-        b.setType(Material.WALL_SIGN);
+        b.setType(Material.OAK_WALL_SIGN);
         WallSign ws = (WallSign) b.getBlockData();
         ws.setFacing(facing);
         b.setBlockData(ws);
@@ -222,7 +222,7 @@ public class TeamRespawnStructure {
 
     private void setSignText(Location l, String[] text) {
         Block b = l.getBlock();
-        if (b.getType() != Material.WALL_SIGN && b.getType() != Material.SIGN) {
+        if (b.getType() != Material.OAK_WALL_SIGN && b.getType() != Material.OAK_SIGN) {
             return;
         }
         Sign s = (Sign) b.getState();

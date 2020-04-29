@@ -18,6 +18,7 @@ import com.mrkirby153.kcuhc.module.CommandModule;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.player.TeamInventoryModule;
+import com.mrkirby153.kcuhc.player.ActionBarManager;
 import com.mrkirby153.kcuhc.player.UHCPlayer;
 import com.mrkirby153.kcuhc.scoreboard.ScoreboardUpdater;
 import com.mrkirby153.kcuhc.tablist.TabListHandler;
@@ -81,6 +82,7 @@ public class UHC extends JavaPlugin {
         saveDefaultConfig();
 
         ModuleRegistry.setPresetDirectory(new File(getDataFolder(), "presets"));
+        ActionBarManager.init(this);
 
         // Initialize the command manager
         CommandManager.Companion.initialize(this);

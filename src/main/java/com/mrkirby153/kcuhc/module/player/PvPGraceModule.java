@@ -7,12 +7,15 @@ import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.settings.TimeSetting;
+import com.mrkirby153.kcuhc.player.ActionBar;
+import com.mrkirby153.kcuhc.player.ActionBarManager;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.BaseComponent;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -30,6 +33,8 @@ public class PvPGraceModule extends UHCModule {
 
     private UHCGame game;
     private UHC uhc;
+
+    private ActionBar pvpActionBar = new ActionBar("pvp", 1);
 
     @Inject
     public PvPGraceModule(UHC uhc, UHCGame game) {
@@ -78,6 +83,54 @@ public class PvPGraceModule extends UHCModule {
                 announcePvPGrace();
             }
         }
+        if (event.getType() == UpdateType.FAST && game.getCurrentState() == GameState.ALIVE) {
+            if (pvpDisabled()) {
+                updatePvpActionBar();
+            } else {
+                Bukkit.getOnlinePlayers().forEach(player -> {
+                    if (pvpActionBar.get(player) != null) {
+                        pvpActionBar.clear(player);
+                    }
+                });
+            }
+        }
+    }
+
+    @Override
+    public void onLoad() {
+        ActionBarManager.getInstance().registerActionBar(pvpActionBar);
+    }
+
+    @Override
+    public void onUnload() {
+        ActionBarManager.getInstance().registerActionBar(pvpActionBar);
+    }
+
+    private void updatePvpActionBar() {
+        TextComponent tc = new TextComponent("PVP » ");
+        tc.setColor(ChatColor.RED);
+        TextComponent time = new TextComponent(
+            shorthandTime(this.graceUntil - System.currentTimeMillis()));
+        time.setColor(ChatColor.GRAY);
+        tc.addExtra(time);
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            pvpActionBar.set(player, tc);
+        });
+    }
+
+
+    private String shorthandTime(long ms) {
+        double seconds = Math.floor(ms / 1000D);
+        double minutes = Math.floor(seconds / 60D);
+
+        StringBuilder sb = new StringBuilder();
+        sb.append((int) minutes).append("m");
+        int s = (int) seconds % 60;
+        if (s < 10) {
+            sb.append("0");
+        }
+        sb.append(s).append("s");
+        return sb.toString();
     }
 
     private void announcePvPGrace() {
@@ -99,7 +152,7 @@ public class PvPGraceModule extends UHCModule {
                 component
                     .addExtra(Chat.formattedChat("!", ChatColor.RED, Chat.Style.BOLD));
                 Bukkit.getOnlinePlayers().forEach(p -> {
-                    this.uhc.protocolLibManager.sendActionBar(p, component);
+                    p.spigot().sendMessage(component);
                     p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1F, 1F);
                 });
             }

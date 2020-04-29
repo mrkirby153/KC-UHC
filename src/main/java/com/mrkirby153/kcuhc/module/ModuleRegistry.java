@@ -168,22 +168,6 @@ public class ModuleRegistry {
             System.out.println("[MODULE] Attempting to register " + c.getName());
             UHCModule module = injector.getInstance(c);
             availableModules.add(module);
-           /* try {
-                // Find a constructor with a JavaPlugin
-                UHCModule m;
-                try {
-                    Constructor constructor = c.getConstructor(UHC.class);
-                    m = (UHCModule) constructor.newInstance(UHC.getPlugin(UHC.class));
-                } catch (NoSuchMethodException e) {
-                    m = c.newInstance();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                    return;
-                }
-                availableModules.add(m);
-            } catch (InstantiationException | IllegalAccessException e) {
-                e.printStackTrace();
-            }*/
         });
         // Load all modules set to autoload
         availableModules.stream().filter(UHCModule::autoLoad).filter(m -> !loaded(m.getClass()))

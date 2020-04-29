@@ -20,7 +20,7 @@ public class TeamChatModule extends UHCModule {
 
     @Inject
     public TeamChatModule(UHC uhc) {
-        super("Team Chat", "Restrict chat on the server to teams", Material.SIGN);
+        super("Team Chat", "Restrict chat on the server to teams", Material.OAK_SIGN);
         this.uhc = uhc;
     }
 

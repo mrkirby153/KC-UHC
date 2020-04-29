@@ -25,7 +25,7 @@ public class CornucopiaLootTable {
         addLoot(new ItemFactory(Material.IRON_INGOT).construct(), 45, 2);
         addLoot(new ItemFactory(Material.GOLDEN_APPLE).construct(), 0, 3, true);
         addLoot(new ItemFactory(Material.BEDROCK).construct(), 90, 30);
-        addLoot(new ItemFactory(Material.DANDELION_YELLOW).construct(), 60, 4);
+        addLoot(new ItemFactory(Material.DANDELION).construct(), 60, 4);
         addLoot(new ItemFactory(Material.BOW).enchantment(Enchantment.KNOCKBACK, 30).name("POW!")
             .damage(382).construct(), 90, 1, true);
         addLoot(new ItemFactory(Material.EXPERIENCE_BOTTLE).construct(), 0, 32, true);
