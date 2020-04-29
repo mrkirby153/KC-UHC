@@ -5,7 +5,10 @@ import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
+import com.mrkirby153.kcuhc.player.ActionBar;
+import com.mrkirby153.kcuhc.player.ActionBarManager;
 import me.mrkirby153.kcutils.Chat;
+import me.mrkirby153.kcutils.Chat.Style;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
@@ -29,7 +32,7 @@ import java.util.stream.Collectors;
 public class SpectatorHandler implements Listener {
 
     private final UHC uhc;
-
+    private final ActionBar spectatorActionBar = new ActionBar("spectator", 5);
     public HashSet<UUID> pendingSpectators = new HashSet<>();
 
     @Inject
@@ -39,6 +42,8 @@ public class SpectatorHandler implements Listener {
         uhc.getServer().getPluginManager()
             .registerEvents(new SpectatorListener(uhc.getGame()), uhc);
         uhc.getServer().getPluginManager().registerEvents(this, uhc);
+
+        ActionBarManager.getInstance().registerActionBar(spectatorActionBar);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -93,17 +98,20 @@ public class SpectatorHandler implements Listener {
         if (event.getType() != UpdateType.FAST) {
             return;
         }
-        uhc.getGame().getSpectators().getPlayers().stream()
-            .map(Bukkit::getPlayer).filter(Objects::nonNull)
-            .filter(p -> p.getGameMode() == GameMode.SPECTATOR)
-            .forEach(p -> {
+
+        uhc.getGame().getSpectators().getPlayers().stream().map(Bukkit::getPlayer)
+            .filter(Objects::nonNull).forEach(player -> {
+            if (player.getGameMode() == GameMode.SPECTATOR) {
                 TextComponent component = Chat.formattedChat("Type ", ChatColor.GREEN);
-                component.addExtra(
-                    Chat.formattedChat("/spectate", ChatColor.GOLD, Chat.Style.BOLD));
-                component.addExtra(
-                    Chat.formattedChat(" to return to survival", ChatColor.GREEN));
-                uhc.protocolLibManager.sendActionBar(p, component);
-            });
+                component.addExtra(Chat.formattedChat("/spectate", ChatColor.GOLD, Style.BOLD));
+                component.addExtra(Chat.formattedChat(" to return to survival", ChatColor.GREEN));
+                spectatorActionBar.set(player, component);
+            } else {
+                if (spectatorActionBar.get(player) != null) {
+                    spectatorActionBar.clear(player);
+                }
+            }
+        });
         uhc.getGame().getSpectators().getPlayers().stream()
             .map(Bukkit::getPlayer)
             .filter(Objects::nonNull)

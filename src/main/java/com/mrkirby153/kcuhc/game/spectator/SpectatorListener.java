@@ -49,6 +49,8 @@ public class SpectatorListener implements Listener {
         }
     }
 
+
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
     public void onBlockPlace(BlockPlaceEvent event) {
         if (game.isSpectator(event.getPlayer())) {

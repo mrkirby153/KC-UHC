@@ -7,13 +7,16 @@ import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
+import com.mrkirby153.kcuhc.module.settings.IntegerSetting;
+import com.mrkirby153.kcuhc.player.ActionBar;
+import com.mrkirby153.kcuhc.player.ActionBarManager;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.Time.TimeUnit;
-import me.mrkirby153.kcutils.cooldown.Cooldown;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -38,12 +41,12 @@ import java.util.stream.Collectors;
 
 public class PlayerTrackerModule extends UHCModule {
 
+    private final ActionBar cooldownActionBar = new ActionBar("cooldown", 2);
     private Map<Player, Player> targets = new HashMap<>();
-
     private UHC uhc;
     private UHCGame game;
-
-    private Cooldown<UUID> cooldown = new Cooldown<>(10 * 1000, "Player Tracker", true);
+    private IntegerSetting cooldown = new IntegerSetting(30);
+    private Map<UUID, Long> compassCooldowns = new HashMap<>();
 
 
     @Inject
@@ -77,13 +80,13 @@ public class PlayerTrackerModule extends UHCModule {
             return;
         }
         if (item.getType() == Material.COMPASS) {
-            if (!cooldown.check(player.getUniqueId())) {
+            if (!checkCooldown(player)) {
                 player.spigot().sendMessage(Chat
-                    .message("Cooldown", "You can use this again in {time}", "{time}", Time.INSTANCE
-                        .format(1, cooldown.getTimeLeft(player.getUniqueId()), TimeUnit.FIT)));
+                    .message("Tracker", "You can use this again in {time}", "{time}", Time.INSTANCE
+                        .format(1, getTimeLeft(player), TimeUnit.FIT)));
                 return;
             } else {
-                cooldown.use(player.getUniqueId());
+                resetCooldown(player);
             }
             HashSet<UUID> toExclude = new HashSet<>();
             UHCTeam team = (UHCTeam) game.getTeam(player);
@@ -126,19 +129,16 @@ public class PlayerTrackerModule extends UHCModule {
 
     @Override
     public void onLoad() {
-        this.uhc.cooldownManager.displayCooldown(Material.COMPASS, this.cooldown);
-        this.uhc.cooldownManager.registerNotifiable(this.cooldown);
-        super.onLoad();
+        ActionBarManager.getInstance().registerActionBar(cooldownActionBar);
     }
 
     @Override
     public void onUnload() {
-        this.uhc.cooldownManager.removeCooldown(Material.COMPASS);
-        this.uhc.cooldownManager.unregisterNotifiable(this.cooldown);
         game.getTeams().values().forEach(t -> t.getPlayers().stream()
             .map(Bukkit::getPlayer)
             .filter(Objects::nonNull)
             .forEach(this::clearCompassMetadata));
+        ActionBarManager.getInstance().unregisterActionBar(cooldownActionBar);
     }
 
     @EventHandler(ignoreCancelled = true)
@@ -153,6 +153,17 @@ public class PlayerTrackerModule extends UHCModule {
                     } else {
                         tracker
                             .setCompassTarget(tracker.getLocation().getWorld().getSpawnLocation());
+                    }
+                }
+            });
+        }
+        if (event.getType() == UpdateType.TICK) {
+            Bukkit.getOnlinePlayers().forEach(this::updateCooldownDisplay);
+            Bukkit.getOnlinePlayers().forEach(player ->{
+                if(compassCooldowns.containsKey(player.getUniqueId())) {
+                    if(getTimeLeft(player) <= 0) {
+                        player.sendMessage(Chat.message("Player tracker recharged").toLegacyText());
+                        compassCooldowns.remove(player.getUniqueId());
                     }
                 }
             });
@@ -254,5 +265,59 @@ public class PlayerTrackerModule extends UHCModule {
             }
         }
         player.updateInventory();
+    }
+
+    private boolean checkCooldown(Player player) {
+        if(!compassCooldowns.containsKey(player.getUniqueId()))
+            return true;
+        return System.currentTimeMillis() > compassCooldowns.get(player.getUniqueId());
+    }
+
+    private void resetCooldown(Player player) {
+        compassCooldowns
+            .put(player.getUniqueId(), System.currentTimeMillis() + (cooldown.getValue() * 1000));
+    }
+
+    private long getTimeLeft(Player player) {
+        if (!compassCooldowns.containsKey(player.getUniqueId())) {
+            return 0;
+        }
+        long coolsOffAt = compassCooldowns.get(player.getUniqueId());
+        return coolsOffAt - System.currentTimeMillis();
+    }
+
+    private void updateCooldownDisplay(Player player) {
+        if (getTimeLeft(player) <= 0) {
+            if (cooldownActionBar.get(player) != null) {
+                cooldownActionBar.clear(player);
+            }
+            return;
+        }
+        if (player.getInventory().getItemInMainHand().getType() != Material.COMPASS
+            && player.getInventory().getItemInOffHand().getType() != Material.COMPASS) {
+            cooldownActionBar.clear(player);
+            return;
+        }
+        long timeLeft = getTimeLeft(player);
+        double cooldownTimeMs = cooldown.getValue() * 1000D;
+        double percentLeft = (cooldownTimeMs - timeLeft) / cooldownTimeMs;
+
+        double filledBars = Math.floor(percentLeft * 10);
+
+        TextComponent c = Chat
+            .formattedChat(Time.INSTANCE.format(1, timeLeft, TimeUnit.FIT, TimeUnit.SECONDS),
+                net.md_5.bungee.api.ChatColor.GREEN);
+        c.addExtra(Chat.formattedChat(" [", net.md_5.bungee.api.ChatColor.WHITE));
+        for (int i = 1; i <= 10; i++) {
+            TextComponent c1 = new TextComponent("█");
+            if (i <= filledBars) {
+                c1.setColor(net.md_5.bungee.api.ChatColor.GREEN);
+            } else {
+                c1.setColor(net.md_5.bungee.api.ChatColor.RED);
+            }
+            c.addExtra(c1);
+        }
+        c.addExtra(Chat.formattedChat("]", net.md_5.bungee.api.ChatColor.WHITE));
+        cooldownActionBar.set(player, c);
     }
 }

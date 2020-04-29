@@ -165,7 +165,7 @@ public class PvPGraceModule extends UHCModule {
                 component.addExtra(
                     Chat.formattedChat(" seconds!", ChatColor.RED, Chat.Style.BOLD));
                 Bukkit.getOnlinePlayers().forEach(p -> {
-                    this.uhc.protocolLibManager.sendActionBar(p, component);
+                   p.spigot().sendMessage(component);
                     p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1F, 1F);
                 });
             }

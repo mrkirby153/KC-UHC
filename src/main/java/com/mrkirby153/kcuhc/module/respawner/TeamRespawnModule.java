@@ -2,6 +2,7 @@ package com.mrkirby153.kcuhc.module.respawner;
 
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.event.GameStartingEvent;
 import com.mrkirby153.kcuhc.game.event.GameStoppingEvent;
 import com.mrkirby153.kcuhc.module.UHCModule;
@@ -60,6 +61,9 @@ public class TeamRespawnModule extends UHCModule {
             this.plugin.getLogger().info("[RESPAWNER] Loading respawn at " + this.location);
             this.structure = new TeamRespawnStructure(this.plugin, this.location);
             this.structure.buildStructure();
+        }
+        if(this.plugin.getGame().getCurrentState() == GameState.ALIVE) {
+            structure.setPhase(Phase.IDLE);
         }
     }
 
