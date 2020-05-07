@@ -20,6 +20,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
+import org.bukkit.GameRule;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -235,6 +236,7 @@ public class UHCGame implements Listener {
             this.plugin.getLogger().info("Game start canceled");
             return false;
         }
+        setGameRules();
         this.setCurrentState(GameState.COUNTDOWN);
         return true;
     }
@@ -570,5 +572,15 @@ public class UHCGame implements Listener {
         fw_pXnZ.setFireworkMeta(meta);
         fw_pZnX.setFireworkMeta(meta);
         fw_nXZ.setFireworkMeta(meta);
+    }
+
+    private void setGameRules() {
+        setGameRule(GameRule.DO_INSOMNIA, false);
+        setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
+    }
+
+    public <T> void setGameRule(GameRule<T> rule, T value) {
+        getUHCWorld().setGameRule(rule, value);
+        getUHCNether().setGameRule(rule, value);
     }
 }

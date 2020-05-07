@@ -73,6 +73,7 @@ public class PvPGraceModule extends UHCModule {
         }
         if (event.getTo() == GameState.ENDING) {
             graceUntil = 0;
+            pvpActionBar.clearAll();
         }
     }
 

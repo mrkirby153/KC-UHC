@@ -31,7 +31,7 @@ public class NaturalRegenModule extends UHCModule {
             if (rule == null || rule) {
                 uhc.getLogger()
                     .info("Disabling natural regeneration on " + game.getUHCWorld().getName());
-                game.getUHCWorld().setGameRule(GameRule.NATURAL_REGENERATION, false);
+                game.setGameRule(GameRule.NATURAL_REGENERATION, false);
             }
         }
     }
@@ -39,6 +39,6 @@ public class NaturalRegenModule extends UHCModule {
     @Override
     public void onUnload() {
         uhc.getLogger().info("Enabling natural regeneration on " + game.getUHCWorld().getName());
-        game.getUHCWorld().setGameRule(GameRule.NATURAL_REGENERATION, true);
+        game.setGameRule(GameRule.NATURAL_REGENERATION, true);
     }
 }
