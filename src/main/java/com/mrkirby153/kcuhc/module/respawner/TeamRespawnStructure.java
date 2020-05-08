@@ -3,14 +3,18 @@ package com.mrkirby153.kcuhc.module.respawner;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
+import com.mrkirby153.kcuhc.player.ActionBar;
+import com.mrkirby153.kcuhc.player.ActionBarManager;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.ItemFactory;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
+import org.bukkit.Particle.DustOptions;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.block.Block;
@@ -20,6 +24,8 @@ import org.bukkit.block.data.type.WallSign;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -31,7 +37,7 @@ public class TeamRespawnStructure {
 
     public static final int STRUCTURE_SIZE = 1;
     public static final int STRUCTURE_HEIGHT = 2;
-
+    public static final double RESPAWN_RADIUS = 10.0;
     private static final int RESPAWN_TIME_TICKS = 120 * 20;
     private static final int COOLDOWN_TIME_TICKS = 300 * 20;
     public double r = 1;
@@ -45,6 +51,8 @@ public class TeamRespawnStructure {
     private List<WeakReference<Player>> observers = new ArrayList<>();
     private UHC plugin;
 
+    private static final ActionBar actionBar = new ActionBar("respawner", 100);
+
     public TeamRespawnStructure(UHC plugin, Location location) {
         this.center = location;
         this.center.setPitch(0);
@@ -53,6 +61,8 @@ public class TeamRespawnStructure {
         this.center.setY(this.center.getBlockY());
         this.center.setZ(this.center.getBlockZ());
         this.plugin = plugin;
+        ActionBarManager.getInstance().unregisterActionBar(actionBar);
+        ActionBarManager.getInstance().registerActionBar(actionBar);
 
         // Fill the slots
     }
@@ -114,6 +124,8 @@ public class TeamRespawnStructure {
     private String[] getStatusMessage() {
         String[] lines = new String[4];
         lines[1] = "Soul Monument";
+        Player p = SoulVialHandler.getInstance()
+            .getSoulVialContents(this.inventory.getItem(4));
         switch (this.phase) {
             case DEACTIVATED:
                 lines[2] = ChatColor.GRAY + "DEACTIVATED";
@@ -121,6 +133,11 @@ public class TeamRespawnStructure {
             case IDLE:
                 lines[2] = ChatColor.DARK_GRAY + "Waiting...";
                 break;
+            case RESPAWNING_NO_PLAYER_NEARBY:
+                lines[0] = "Respawning...";
+                lines[1] = getTimeRemaining();
+                lines[2] = "No nearby team members";
+                lines[3] = p != null ? plugin.getName() : "";
             case RESPAWNING:
                 lines[0] = "Respawning...";
                 lines[1] = getTimeRemaining();
@@ -134,8 +151,7 @@ public class TeamRespawnStructure {
                 }
                 s.append("]");
                 lines[2] = s.toString();
-                Player p = SoulVialHandler.getInstance().getSoulVialContents(this.inventory.getItem(4));
-                lines[3] = p != null? p.getName() : "";
+                lines[3] = p != null ? p.getName() : "";
                 break;
             case RECHARGING:
                 lines[2] = getTimeRemaining();
@@ -151,9 +167,12 @@ public class TeamRespawnStructure {
     public void tick() {
         updateParticles();
         updateIdleParticles();
+        updatePlayerRing();
         checkRespawnItem();
-        if (this.ticksRemaining != -1) {
-            this.ticksRemaining--;
+        if (this.phase != Phase.RESPAWNING_NO_PLAYER_NEARBY) {
+            if (this.ticksRemaining != -1) {
+                this.ticksRemaining--;
+            }
         }
         setAllSignTexts(getStatusMessage());
         switch (this.phase) {
@@ -164,23 +183,41 @@ public class TeamRespawnStructure {
                 if (this.ticksRemaining <= 0) {
                     doRespawn();
                     System.out.println("Respawn structure hit 0 ticks! Respawning team");
-                    this.phase = Phase.RECHARGING;
-                    this.setTicksLeft(COOLDOWN_TIME_TICKS);
-                    this.deactivateBeacon();
-                    this.center.clone().add(0, 2, 0).getBlock().setType(Material.AIR);
+                    recharge();
                     this.center.getWorld().playSound(this.center, Sound.ENTITY_ZOMBIE_VILLAGER_CURE,
                         SoundCategory.MASTER, 1.0F, 1.0F);
                     this.center.getWorld()
                         .spawnParticle(Particle.EXPLOSION_HUGE, this.center.clone().add(0, 2, 0), 1,
                             0, 0, 0, 0);
                 }
+                if (!teamMemberNearby()) {
+                    System.out.println("No team members nearby, switching to idle");
+                    setPhase(Phase.RESPAWNING_NO_PLAYER_NEARBY);
+                    deactivateBeacon();
+                }
+                break;
+            case RESPAWNING_NO_PLAYER_NEARBY:
+                if (teamMemberNearby()) {
+                    System.out.println("Team member nearby, continuing spawn");
+                    this.setPhase(Phase.RESPAWNING);
+                    activateBeacon();
+                }
+                break;
             case RECHARGING:
                 if (this.ticksRemaining <= 0) {
                     System.out.println("Respawn structure cooled down");
                     this.phase = Phase.IDLE;
                     this.center.clone().add(0, 2, 0).getBlock().setType(Material.CHEST);
                 }
+                break;
         }
+    }
+
+    private void recharge() {
+        this.phase = Phase.RECHARGING;
+        this.setTicksLeft(COOLDOWN_TIME_TICKS);
+        this.deactivateBeacon();
+        this.center.clone().add(0, 2, 0).getBlock().setType(Material.AIR);
     }
 
     private void displayParticles(double x, double y, double z) {
@@ -189,7 +226,7 @@ public class TeamRespawnStructure {
         }
         for (double y1 = y - bounds; y1 <= y + bounds; y1 += 0.2) {
             this.center.add(x, y1, z);
-            this.center.getWorld().spawnParticle(Particle.FLAME, this.center, 50, 0, 0, 0, 0.0);
+            this.center.getWorld().spawnParticle(Particle.FLAME, this.center, 50, 0, 0, 0, 0.0, null, true);
             this.center.subtract(x, y1, z);
         }
     }
@@ -216,8 +253,31 @@ public class TeamRespawnStructure {
         }
         this.center.add(0.5, 2, 0.5);
         this.center.getWorld()
-            .spawnParticle(Particle.PORTAL, this.center, 10, 0.25, 0.25, 0.25, 0.0);
+            .spawnParticle(Particle.PORTAL, this.center, 10, 0.25, 0.25, 0.25, 0.0, null, true);
         this.center.subtract(0.5, 2, 0.5);
+    }
+
+    private void updatePlayerRing() {
+        // Show a ring that the players must be inside for the respawner to work
+        if (this.phase != Phase.RESPAWNING && this.phase != Phase.RESPAWNING_NO_PLAYER_NEARBY) {
+            return;
+        }
+        for (int theta = 0; theta < 360; theta += 5) {
+            double x = RESPAWN_RADIUS * Math.cos(theta);
+            double z = RESPAWN_RADIUS * Math.sin(theta);
+            Location l = this.center.clone();
+            l.add(x, 0, z);
+            Block highest = l.getWorld().getHighestBlockAt(l.getBlockX(), l.getBlockZ());
+            l.setY(highest.getY() + 1.25);
+            Color dustColor;
+            if (!teamMemberNearby()) {
+                dustColor = Color.RED;
+            } else {
+                dustColor = Color.LIME;
+            }
+            l.getWorld().spawnParticle(Particle.REDSTONE, l, 1, 0.0, 0.0, 0.0, 0,
+                new DustOptions(dustColor, 1), true);
+        }
     }
 
     private void setSignText(Location l, String[] text) {
@@ -325,16 +385,56 @@ public class TeamRespawnStructure {
             System.out.println("Not adding to team as they weren't a part of one");
         }
         p.teleport(this.center.clone().add(0.5, 2, 0.5));
+        p.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 20 * 5, 0, false, false));
+        p.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 20 * 5, 0, false, false));
         this.inventory.setItem(4, null); // Remove the item
         Bukkit.getOnlinePlayers().forEach(player -> {
-            player.spigot().sendMessage(Chat.message("Respawn", "{player} has been respawned", "{player}", p.getName()));
+            player.spigot().sendMessage(
+                Chat.message("Respawn", "{player} has been respawned", "{player}", p.getName()));
         });
+        actionBar.clearAll();
+    }
+
+    private boolean teamMemberNearby() {
+        ScoreboardTeam targetTeam = SoulVialHandler.getInstance()
+            .getTeam(getInventory().getItem(4));
+        if (targetTeam == null) {
+            return true;
+        }
+        List<Player> players = targetTeam.getPlayers().stream().map(Bukkit::getPlayer)
+            .filter(Objects::nonNull).collect(
+                Collectors.toList());
+        if (players.isEmpty()) {
+            // Eject the vial and go into cooldown
+            System.out.println("team has been eliminated, going to cooldown");
+            recharge();
+            ItemStack item = getInventory().getItem(4);
+            center.getWorld().dropItemNaturally(center.clone().add(0, 2, 0), item);
+            getInventory().clear();
+
+        }
+        boolean found = false;
+        for (Player p : players) {
+            if (this.plugin.getGame().getTeam(p) == targetTeam) {
+                Location playerLocation = p.getLocation().clone();
+                playerLocation.setY(center.getY());
+                if (playerLocation.distanceSquared(center) <= Math.pow(RESPAWN_RADIUS, 2)) {
+                    found =  true;
+                    actionBar.set(p, Chat.formattedChat("Stay close to the monument!", net.md_5.bungee.api.ChatColor.GOLD));
+                } else {
+                    if(actionBar.get(p) != null)
+                        actionBar.clear(p);
+                }
+            }
+        }
+        return found;
     }
 
     public enum Phase {
         DEACTIVATED,
         IDLE,
         RESPAWNING,
+        RESPAWNING_NO_PLAYER_NEARBY,
         RECHARGING
     }
 }

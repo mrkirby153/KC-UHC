@@ -5,6 +5,7 @@ import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.event.GameStartingEvent;
 import com.mrkirby153.kcuhc.game.event.GameStoppingEvent;
+import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.respawner.TeamRespawnStructure.Phase;
 import me.mrkirby153.kcutils.event.UpdateEvent;
@@ -111,10 +112,12 @@ public class TeamRespawnModule extends UHCModule {
             event.setCancelled(true);
             if (event.getClickedBlock().getType() == Material.CHEST
                 && this.structure.getPhase() == Phase.IDLE && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                event.getPlayer().playSound(event.getClickedBlock().getLocation(),
-                    Sound.BLOCK_CHEST_LOCKED, 1.0F, 1.0F);
-                event.getPlayer().openInventory(this.structure.getInventory());
-                this.structure.addObserver(event.getPlayer());
+                if(!(plugin.getGame().getTeam(event.getPlayer()) instanceof SpectatorTeam)) {
+                    event.getPlayer().playSound(event.getClickedBlock().getLocation(),
+                        Sound.BLOCK_CHEST_LOCKED, 1.0F, 1.0F);
+                    event.getPlayer().openInventory(this.structure.getInventory());
+                    this.structure.addObserver(event.getPlayer());
+                }
             }
         }
         // TODO 5/10/2019: Prevent soul vials from being thrown

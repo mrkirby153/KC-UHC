@@ -306,19 +306,21 @@ public class UHCGame implements Listener {
                 p.setHealth(p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
                 p.setFoodLevel(20);
                 p.setExhaustion(0);
+                p.getInventory().clear();
+                p.getActivePotionEffects().stream().map(PotionEffect::getType).forEach(p::removePotionEffect);
 
                 p.addPotionEffect(
                     new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 5, true));
                 p.addPotionEffect(
                     new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 5, true));
             });
-            this.getUHCWorld().setGameRuleValue("doDaylightCycle", "true");
+            setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
             this.getUHCWorld().setTime(0);
         }
         if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
             Arrays.stream(WorldFlags.values())
                 .forEach(f -> plugin.flagModule.set(this.getUHCWorld(), f, false, false));
-            this.getUHCWorld().setGameRuleValue("doDaylightCycle", "false");
+            setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
             this.getUHCWorld().setTime(1200);
         }
         if (event.getTo() == GameState.ALIVE) {
@@ -581,6 +583,8 @@ public class UHCGame implements Listener {
 
     public <T> void setGameRule(GameRule<T> rule, T value) {
         getUHCWorld().setGameRule(rule, value);
-        getUHCNether().setGameRule(rule, value);
+        if (getUHCNether() != null) {
+            getUHCNether().setGameRule(rule, value);
+        }
     }
 }
