@@ -25,3 +25,4 @@ classes/
 src/main/resources/rebel.xml
 .gradle/
 build/
+out/

@@ -13,6 +13,7 @@ import com.mrkirby153.kcuhc.game.event.GameStartingEvent;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
+import me.mrkirby153.kcutils.Chat;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.Permission;
 import net.dv8tion.jda.core.entities.Guild;
@@ -31,6 +32,7 @@ import org.bukkit.Material;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
@@ -51,7 +53,7 @@ public class DiscordModule extends UHCModule {
     public TextChannel logChannel;
     public JDA jda;
 
-    public PlayerMapper playerMapper = new UHCBotLinkMapper(this);
+    public PlayerMapper playerMapper;
     public boolean ready = false;
     private UHC uhc;
     private String token;
@@ -71,6 +73,7 @@ public class DiscordModule extends UHCModule {
         UHC.getCommandManager()
             .registerCommand(
                 this.discordMinecraftCommand = new DiscordCommand(uhc.getGame(), this));
+        playerMapper = new UHCBotLinkMapper(uhc, this);
     }
 
     @Override
@@ -91,8 +94,6 @@ public class DiscordModule extends UHCModule {
         this.commandExecutor.register(this.playerMapper);
 
         this.shardManager.addListener(new CommandEventListener());
-
-
 
         this.uhc.getLogger().info("[DISCORD] Starting up...");
         this.shardManager.startAllShards(false);
@@ -367,6 +368,29 @@ public class DiscordModule extends UHCModule {
     @EventHandler(ignoreCancelled = true)
     public void onPlayerDeath(PlayerDeathEvent event) {
         log(":skull:", ChatColor.stripColor(event.getDeathMessage()));
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        User discordUser = playerMapper.getUser(event.getPlayer().getUniqueId());
+        if (discordUser == null) {
+            String code = playerMapper.getCode(event.getPlayer().getUniqueId());
+            if (code == null) {
+                // User is not linked and no code has been generated
+                playerMapper.createLink(event.getPlayer());
+            } else {
+                event.getPlayer().sendMessage(Chat.message("Discord",
+                    "To link your minecraft account to discord, run the following command in {guild}: {cmd}",
+                    "{guild}", guild.getName(), "{cmd}", String.format("!uhcbot link %s", code))
+                    .toLegacyText());
+            }
+        } else {
+            event.getPlayer().sendMessage(Chat.message("Discord",
+                "Your account is linked to {user}. If this is not you, re-link with {command}",
+                "{user}",
+                String.format("%s#%s", discordUser.getName(), discordUser.getDiscriminator()),
+                "{command}", "/discord link").toLegacyText());
+        }
     }
 
     /**

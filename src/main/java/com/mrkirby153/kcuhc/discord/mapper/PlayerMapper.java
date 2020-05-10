@@ -27,7 +27,16 @@ public interface PlayerMapper {
      * Forcibly creates a link between the two accounts
      *
      * @param player The player
-     * @param id The id of the account to link
+     * @param id     The id of the account to link
      */
     void forceLink(Player player, String id);
+
+    /**
+     * Gets the link code of a user
+     *
+     * @param uuid The UUID of the player
+     *
+     * @return The link code, or null
+     */
+    String getCode(UUID uuid);
 }

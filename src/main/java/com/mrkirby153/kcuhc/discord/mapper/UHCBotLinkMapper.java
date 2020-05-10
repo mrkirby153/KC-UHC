@@ -3,6 +3,7 @@ package com.mrkirby153.kcuhc.discord.mapper;
 import com.mrkirby153.botcore.command.Command;
 import com.mrkirby153.botcore.command.Context;
 import com.mrkirby153.botcore.command.args.CommandContext;
+import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.DiscordModule;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.utils.IdGenerator;
@@ -17,11 +18,17 @@ import net.md_5.bungee.api.chat.HoverEvent.Action;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
+import org.bukkit.configuration.InvalidConfigurationException;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class UHCBotLinkMapper implements PlayerMapper {
 
@@ -30,21 +37,24 @@ public class UHCBotLinkMapper implements PlayerMapper {
 
     private static final String CROSS_MARK = "\u274C";
     private static final String CHECK_MARK = "\u2705";
-
+    private final UHC uhc;
+    private final File dataFile;
     private DiscordModule discordModule;
-
     /**
      * Links a player's UUID to their Discord ID
      */
     private HashMap<UUID, String> uuidToDiscordMap = new HashMap<>();
-
     /**
      * Correlate a link code with a UUID
      */
     private HashMap<String, UUID> linkCodeMap = new HashMap<>();
+    private FileConfiguration savedLinkages = new YamlConfiguration();
 
-    public UHCBotLinkMapper(DiscordModule discordModule) {
+    public UHCBotLinkMapper(UHC uhc, DiscordModule discordModule) {
         this.discordModule = discordModule;
+        this.uhc = uhc;
+        dataFile = new File(uhc.getDataFolder(), "links.yml");
+        loadLinks();
     }
 
     @Override
@@ -101,7 +111,7 @@ public class UHCBotLinkMapper implements PlayerMapper {
             return;
         }
         User user = member.getUser();
-        this.uuidToDiscordMap.put(player.getUniqueId(), id);
+        commitLink(user, player.getUniqueId());
         player.spigot()
             .sendMessage(Chat.message("Discord", "Your account has been linked to {user}",
                 "{user}", user.getName() + "#" + user.getDiscriminator()));
@@ -124,6 +134,7 @@ public class UHCBotLinkMapper implements PlayerMapper {
             reject(context);
             return;
         }
+        commitLink(context.getAuthor(), uuid);
         this.uuidToDiscordMap.put(uuid, context.getAuthor().getId());
         this.accept(context);
         Player p = Bukkit.getPlayer(uuid);
@@ -136,6 +147,46 @@ public class UHCBotLinkMapper implements PlayerMapper {
                 .log(":chains:",
                     "Linking `" + context.getAuthor().getName() + "#" + context.getAuthor()
                         .getDiscriminator() + "` to minecraft account `" + p.getName() + "`");
+        }
+    }
+
+    public void commitLink(User user, UUID uuid) {
+        this.uuidToDiscordMap.put(uuid, user.getId());
+        savedLinkages.set(uuid.toString(), user.getId());
+        saveLinks();
+    }
+
+    @Override
+    public String getCode(UUID uuid) {
+        for (Map.Entry<String, UUID> e : linkCodeMap.entrySet()) {
+            if (e.getValue().equals(uuid)) {
+                return e.getKey();
+            }
+        }
+        return null;
+    }
+
+    private void saveLinks() {
+        try {
+            savedLinkages.save(dataFile);
+        } catch (IOException e) {
+            uhc.getLogger().log(Level.SEVERE, "Could not load link file", e);
+        }
+    }
+
+    public void loadLinks() {
+        try {
+            if(!dataFile.exists()) {
+                dataFile.createNewFile();
+            }
+            savedLinkages.load(dataFile);
+            uuidToDiscordMap.clear();
+            savedLinkages.getKeys(false).forEach(key -> {
+                UUID u = UUID.fromString(key);
+                uuidToDiscordMap.put(u, savedLinkages.getString(key));
+            });
+        } catch (IOException | InvalidConfigurationException e) {
+            uhc.getLogger().log(Level.SEVERE, "Could not load link file", e);
         }
     }
 }

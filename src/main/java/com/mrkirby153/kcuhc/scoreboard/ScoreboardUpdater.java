@@ -82,8 +82,17 @@ public class ScoreboardUpdater implements Listener {
                         finalScoreboard.add(new ElementHeadedText(ChatColor.GREEN + "Linked to ",
                             ChatColor.GOLD + u.getName() + "#" + u.getDiscriminator()));
                     } else {
-                        finalScoreboard.add(new ElementHeadedText(ChatColor.RED + "Linked to",
-                            "Discord not linked!"));
+                        String code = mod.playerMapper.getCode(player.getUniqueId());
+                        if (code != null) {
+                            finalScoreboard.add(new ElementHeadedText(
+                                ChatColor.RED + "Link your discord account with",
+                                String.format("!uhcbot link %s",
+                                    code)));
+                        } else {
+                            finalScoreboard.add(
+                                new ElementHeadedText(ChatColor.RED + "Link your discord account",
+                                    "Use /discord link to get started"));
+                        }
                     }
                 });
                 scoreboard.add(" ");
@@ -112,7 +121,8 @@ public class ScoreboardUpdater implements Listener {
                         ChatColor.GREEN + "Teams Alive: " + ChatColor.RED + aliveTeamCount
                             + ChatColor.GRAY + "/" + ChatColor.WHITE + totalTeams);
                 scoreboard.add(" ");
-                scoreboard.add(ChatColor.GRAY + "Kills: " + ChatColor.WHITE+this.game.getKills(player));
+                scoreboard
+                    .add(ChatColor.GRAY + "Kills: " + ChatColor.WHITE + this.game.getKills(player));
                 scoreboard.add(" ");
                 ModuleRegistry.INSTANCE.getLoadedModule(WorldBorderModule.class)
                     .ifPresent(worldBorderModule -> {
