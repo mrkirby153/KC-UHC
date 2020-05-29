@@ -40,7 +40,7 @@ repositories {
 
 dependencies {
     implementation 'commons-io:commons-io:2.4'
-    implementation 'me.mrkirby153:KirbyUtils-Bukkit:3.2-SNAPSHOT'
+    implementation 'me.mrkirby153:KirbyUtils-Bukkit:3.3'
     implementation 'co.aikar:acf-bukkit:0.5.0-SNAPSHOT'
     implementation 'org.reflections:reflections:0.9.11'
     implementation 'com.google.inject:guice:4.1.0'
