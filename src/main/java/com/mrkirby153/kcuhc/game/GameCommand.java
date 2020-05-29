@@ -3,6 +3,7 @@ package com.mrkirby153.kcuhc.game;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
+import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
@@ -44,12 +45,14 @@ public class GameCommand extends BaseCommand {
     }
 
     @Subcommand("pregen|pregenerate")
+    @CommandPermission("kcuhc.game.generate")
     public void pregenerateWorld(CommandSender sender) {
         this.game.generate();
         sender.sendMessage(Chat.message("Game", "Pregeneration started!").toLegacyText());
     }
 
     @Subcommand("stalemate")
+    @CommandPermission("kcuhc.game.stalemate")
     public void resolveStalemate(Player sender, @Optional String code) {
         java.util.Optional<WorldBorderModule> mod = ModuleRegistry.INSTANCE
             .getLoadedModule(WorldBorderModule.class);
@@ -87,6 +90,7 @@ public class GameCommand extends BaseCommand {
 
     @Subcommand("state")
     @CommandCompletion("@state")
+    @CommandPermission("kcuhc.game.state")
     public void setGameState(CommandSender sender, GameState state) {
         game.setCurrentState(state);
         sender.sendMessage(
@@ -95,6 +99,7 @@ public class GameCommand extends BaseCommand {
     }
 
     @Subcommand("cornucopia")
+    @CommandPermission("kcuhc.game.spawn-cornucopia")
     public void spawnCorn(CommandSender sender, @Default("100") Integer size) {
         ModuleRegistry.INSTANCE.getLoadedModule(CornucopiaModule.class).ifPresent(mod -> {
             mod.spawnCornucopia(size);
@@ -102,6 +107,7 @@ public class GameCommand extends BaseCommand {
     }
 
     @Subcommand("start")
+    @CommandPermission("kcuhc.game.start")
     public void startGame(CommandSender sender) {
         if (!this.game.start()) {
             sender.sendMessage(Chat.error("Game start has been aborted").toLegacyText());
@@ -115,6 +121,7 @@ public class GameCommand extends BaseCommand {
     }
 
     @Subcommand("stop")
+    @CommandPermission("kcuhc.game.stop")
     public void stopGame(CommandSender sender) {
         if (!this.game.abort()) {
             sender.sendMessage(Chat.error("Game abort unsuccessful!").toLegacyText());
@@ -128,6 +135,7 @@ public class GameCommand extends BaseCommand {
     }
 
     @CommandAlias("coords")
+    @CommandPermission("kcuhc.game.coords")
     public void coordCommand(Player player) {
         Location location = player.getLocation();
         ScoreboardTeam team = this.game.getTeam(player);
@@ -157,6 +165,7 @@ public class GameCommand extends BaseCommand {
     }
 
     @Subcommand("border")
+    @CommandPermission("kcuhc.game.border")
     public class BorderCommands extends BaseCommand {
 
         @Subcommand("get")
@@ -201,6 +210,7 @@ public class GameCommand extends BaseCommand {
     }
 
     @Subcommand("spectator-commands")
+    @CommandPermission("kcuhc.game.spectator-commands")
     public class SpectatorWhitelistCommands extends BaseCommand {
 
         @Default
@@ -235,6 +245,7 @@ public class GameCommand extends BaseCommand {
     }
 
     @Subcommand("preset")
+    @CommandPermission("kcuhc.game.preset")
     public class PresetCommands extends BaseCommand {
 
         @Default

@@ -157,7 +157,7 @@ public class SpectatorListener implements Listener {
         if (!event.getMessage().startsWith("/")) {
             return; // This isn't a command
         }
-        if (game.isSpectator(event.getPlayer()) && !event.getPlayer().isOp()) {
+        if (game.isSpectator(event.getPlayer()) && (!event.getPlayer().isOp() && !event.getPlayer().hasPermission("kcuhc.spectate.command.bypass"))) {
             String commandName = event.getMessage().substring(1);
             if (commandName.contains(" ")) {
                 commandName = commandName.split(" ")[0];

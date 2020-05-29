@@ -21,7 +21,7 @@ public class SpectatorInventory extends Inventory<UHC> {
     public void build() {
         clear();
         addItem(hotbarSlot(1),
-            new ItemFactory(Material.COMPASS).name("Spectate " + ChatColor.GREEN + "( Right Click)")
+            new ItemFactory(Material.COMPASS).name("Spectate " + ChatColor.GREEN + "(Right Click)")
                 .construct(), (player1, clickType) -> {
                 new SpectatorGui(getPlugin()).open(player1);
             });

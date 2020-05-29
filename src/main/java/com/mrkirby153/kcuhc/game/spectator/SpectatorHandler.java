@@ -20,6 +20,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerLoginEvent;
+import org.bukkit.event.player.PlayerLoginEvent.Result;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.ArrayList;
@@ -69,6 +70,16 @@ public class SpectatorHandler implements Listener {
         // Hide all spectators from the player
 
         // TODO: 7/30/2017 Fix rejoining being placed on spectator team
+        if(uhc.getGame().getCurrentState() == GameState.ALIVE) {
+            ScoreboardTeam team = uhc.getGame().getTeam(event.getPlayer());
+            if(team == null || team instanceof SpectatorTeam) {
+                if(!event.getPlayer().hasPermission("kcuhc.spectate")) {
+                    event.setResult(Result.KICK_OTHER);
+                    event.setKickMessage("You do not have permission to spectate");
+                    return;
+                }
+            }
+        }
         Bukkit.getServer().getScheduler().runTask(uhc, () -> {
             uhc.getGame().getSpectators().getPlayers().stream().map(Bukkit::getPlayer)
                 .filter(Objects::nonNull).forEach(e -> {

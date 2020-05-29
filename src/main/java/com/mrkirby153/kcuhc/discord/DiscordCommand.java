@@ -3,6 +3,7 @@ package com.mrkirby153.kcuhc.discord;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
+import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.contexts.OnlinePlayer;
 import com.mrkirby153.kcuhc.game.UHCGame;
@@ -28,6 +29,7 @@ public class DiscordCommand extends BaseCommand {
     }
 
     @Subcommand("create")
+    @CommandPermission("kcuhc.discord.create")
     public void createTeam(CommandSender sender, UHCTeam team) {
         this.module.createTeam(team);
         sender.sendMessage(Chat
@@ -36,6 +38,7 @@ public class DiscordCommand extends BaseCommand {
     }
 
     @Subcommand("remove")
+    @CommandPermission("kcuhc.discord.remove")
     public void destroyTeam(CommandSender sender, UHCTeam team) {
         this.module.destroyTeam(team);
         sender.sendMessage(
@@ -44,12 +47,14 @@ public class DiscordCommand extends BaseCommand {
     }
 
     @Subcommand("link")
+    @CommandPermission("kcuhc.discord.link")
     public void link(Player player) {
         module.playerMapper.createLink(player);
     }
 
     @Subcommand("forcelink")
     @CommandCompletion("@players")
+    @CommandPermission("kcuhc.discord.link.force")
     public void forceLink(CommandSender sender, OnlinePlayer player, String id) {
         module.playerMapper.forceLink(player.player, id);
         sender.sendMessage(Chat
@@ -59,6 +64,7 @@ public class DiscordCommand extends BaseCommand {
     }
 
     @Subcommand("generate")
+    @CommandPermission("kcuhc.discord.generate")
     public void generateTeamChannels(CommandSender sender) {
         this.module.createChannels();
         sender.sendMessage(
@@ -66,6 +72,7 @@ public class DiscordCommand extends BaseCommand {
     }
 
     @Subcommand("destroy")
+    @CommandPermission("kcuhc.discord.remove.all")
     public void destroyAllTeamChannels(CommandSender sender) {
         this.module.destroyChannels();
         sender.sendMessage(
@@ -73,6 +80,7 @@ public class DiscordCommand extends BaseCommand {
     }
 
     @Subcommand("distribute")
+    @CommandPermission("kcuhc.discord.distribute")
     public void distributePlayers(CommandSender sender) {
         if (!this.module.ready) {
             sender.sendMessage(Chat
@@ -84,6 +92,7 @@ public class DiscordCommand extends BaseCommand {
     }
 
     @Subcommand("linked")
+    @CommandPermission("kcuhc.discord.linked")
     public void linkedPlayers(CommandSender sender) {
         HashMap<UUID, String> linkedUsers = new HashMap<>();
         Bukkit.getOnlinePlayers().forEach(player -> {

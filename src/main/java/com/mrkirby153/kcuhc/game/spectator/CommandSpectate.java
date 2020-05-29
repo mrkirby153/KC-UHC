@@ -2,6 +2,7 @@ package com.mrkirby153.kcuhc.game.spectator;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Subcommand;
 import com.google.inject.Inject;
@@ -25,11 +26,13 @@ public class CommandSpectate extends BaseCommand {
     }
 
     @Subcommand("inv")
+    @CommandPermission("kcuhc.spectate.inv")
     public void inventory(Player player) {
         new SpectatorGui(uhc).open(player);
     }
 
     @Default
+    @CommandPermission("kcuhc.spectate")
     public void returnToSurvival(Player player) {
         if (uhc.getGame().getCurrentState() != GameState.ALIVE) {
             if (uhc.spectatorHandler.pendingSpectators.contains(player.getUniqueId())) {

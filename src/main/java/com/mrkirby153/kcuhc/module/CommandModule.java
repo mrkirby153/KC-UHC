@@ -3,6 +3,7 @@ package com.mrkirby153.kcuhc.module;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
+import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Subcommand;
 import com.google.inject.Inject;
@@ -29,6 +30,7 @@ public class CommandModule extends BaseCommand {
 
     @Subcommand("load")
     @CommandCompletion("@unloadedModules")
+    @CommandPermission("kcuhc.module.load")
     public void loadModule(CommandSender sender, UHCModule module) {
         ModuleRegistry.INSTANCE.load(module);
         sender.sendMessage(
@@ -37,6 +39,7 @@ public class CommandModule extends BaseCommand {
     }
 
     @Default
+    @CommandPermission("kcuhc.module")
     public void showGui(Player player) {
 //        gui.open(player);
         ModuleRegistry.INSTANCE.openGui(player);
@@ -44,6 +47,7 @@ public class CommandModule extends BaseCommand {
 
     @Subcommand("unload")
     @CommandCompletion("@loadedModules")
+    @CommandPermission("kcuhc.module.unload")
     public void unloadModule(CommandSender sender, UHCModule module) {
         ModuleRegistry.INSTANCE.unload(module);
         sender.sendMessage(Chat
@@ -53,6 +57,7 @@ public class CommandModule extends BaseCommand {
 
     @Subcommand("options|settings")
     @CommandCompletion("@loadedModules @moduleSettings")
+    @CommandPermission("kcuhc.module.options")
     public void options(CommandSender sender, UHCModule module, @Default String setting,
         @Default String value) {
         if (setting.isEmpty()) {

@@ -436,6 +436,10 @@ public class UHCGame implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         // Join the spectator team
         if (this.getCurrentState() == GameState.ALIVE) {
+            if(!event.getPlayer().hasPermission("kcuhc.spectate")) {
+                event.getPlayer().kickPlayer("You do not have permission to spectate");
+                return;
+            }
             Bukkit.getServer().getScheduler().runTask(plugin, () -> {
                 if (getTeam(event.getPlayer()) != null) {
                     getTeam(event.getPlayer()).removePlayer(event.getPlayer());

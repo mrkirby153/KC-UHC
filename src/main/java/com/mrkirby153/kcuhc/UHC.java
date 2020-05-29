@@ -166,15 +166,16 @@ public class UHC extends JavaPlugin {
             .registerCompletion("presets", c -> ModuleRegistry.INSTANCE.getAvailablePresets());
 
         manager.getCommandCompletions().registerCompletion("moduleSettings", c -> {
-           UHCModule mod =  c.getContextValue(UHCModule.class);
-           if(mod == null){
-               return new ArrayList<>();
-           } else {
-               return mod.getSettings().keySet();
-           }
+            UHCModule mod = c.getContextValue(UHCModule.class);
+            if (mod == null) {
+                return new ArrayList<>();
+            } else {
+                return mod.getSettings().keySet();
+            }
         });
 
-        manager.getCommandCompletions().registerCompletion("spectatorCommands", c -> SpectatorListener.COMMAND_WHITELIST);
+        manager.getCommandCompletions()
+            .registerCompletion("spectatorCommands", c -> SpectatorListener.COMMAND_WHITELIST);
 
         // Register resolvers
         manager.getCommandContexts()

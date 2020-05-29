@@ -2,6 +2,7 @@ package com.mrkirby153.kcuhc.module.player;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Default;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
@@ -115,6 +116,7 @@ public class TeamInventoryModule extends UHCModule {
     }
 
     @CommandAlias("teaminv|ti")
+    @CommandPermission("kcuhc.teaminventory")
     public static class TeamInventoryCommand extends BaseCommand {
 
         private UHC uhc;

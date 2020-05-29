@@ -4,3 +4,117 @@ author: mrkirby153
 main: com.mrkirby153.kcuhc.UHC
 depend: [ProtocolLib]
 api-version: '1.13'
+permissions:
+  kcuhc.*:
+    default: op
+    description: Grants all KC-UHC permissions
+    children:
+      kcuhc.discord.*: true
+      kcuhc.spectate.*: true
+      kcuhc.team.*: true
+      kcuhc.game.*: true
+      kcuhc.teaminventory: true
+      kcuhc.module.*: true
+
+  kcuhc.user:
+    default: true
+    description: Grants all KC-UHC user permissions
+    children:
+      kcuhc.discord.link: true
+      kcuhc.spectate: true
+      kcuhc.teams: true
+      kcuhc.team.leave: true
+      kcuhc.team.join: true
+      kcuhc.teaminventory: true
+
+  kcuhc.discord.*:
+    descrption: Grants all KC-UHC discord permissions
+    children:
+      kcuhc.discord.create:
+        descrption: Creates a team channel on discord
+      kcuhc.discord.remove:
+        description: Removes a team channel on discord
+      kcuhc.discord.link:
+        description: Lets users link their discord account
+      kcuhc.discord.link.force:
+        descrption: Lets a user force link a user to discord
+      kcuhc.discord.generate:
+        description: Generates all the team channels on discord
+      kcuhc.discord.remove.all:
+        description: Removes all team channels on discord
+      kcuhc.discord.distribute:
+        description: Sends all players to their team channels
+      kcuhc.discord.linked:
+        description: Check if users are linked
+
+  kcuhc.spectate.*:
+    description: Grants all KC-UHC spectator permissions
+    children:
+      kcuhc.spectate.inv:
+        description: Debugging command to forcibly open a spectator inventory
+      kcuhc.spectate:
+        description: Lets users spectate the game
+      kcuhc.spectate.command.bypass:
+        description: lets users bypass the spectate command whitelist
+
+  kcuhc.team.*:
+    description: Grants all KC-UHC team permisisons
+    children:
+      kcuhc.team.create:
+        description: Lets users create teams
+      kcuhc.team.remove:
+        description: Lets users remove teams
+      kcuhc.teams:
+        description: Lets users view team information such as all the teams and their current team
+      kcuhc.teams.join:
+        description: Lets users join teams
+      kcuhc.team.join.others:
+        description: Lets users join other people to teams
+      kcuhc.team.leave:
+        description: Lets users leave their current team
+      kcuhc.team.random:
+        description: Lets users create random teams
+      kcuhc.team.swap:
+        description: Lets users swap two members of teams
+
+  kcuhc.game.*:
+    description: Grants all KC-UHC game permissions
+    children:
+      kcuhc.game.generate:
+        description: Lets users pregenerate the world
+      kcuhc.game.stalemate:
+        description: Lets users trigger a stalemate
+      kcuhc.game.state:
+        description: Lets users forcibly change the game's state
+      kcuhc.game.spawn-cornucopia:
+        description: Lets users forcibly spawn the cornucopia
+      kcuhc.game.start:
+        description: Lets users start the game
+      kcuhc.game.stop:
+        description: Lets users stop the game
+      kcuhc.game.coords:
+        description: Lets users send their coordinates to their team members
+      kcuhc.game.border:
+        description: Lets users manipulate the world border
+      kcuhc.game.spectator-commands:
+        description: Lets users manage the spectator command whitelist
+      kcuhc.game.preset:
+        description: Lets users manage game presets
+
+  kcuhc.module.*:
+    description: Grants all KC-UHC module permissions
+    children:
+      kcuhc.module: true
+      kcuhc.module.options:
+        description: Lets users manipulate module options
+
+  kcuhc.module:
+    description: Grants access to loading/unloading modules
+    children:
+      kcuhc.module.load:
+        description: Lets users load modules
+      kcuhc.module.unload:
+        description: Lets users unload modules
+
+  kcuhc.teaminventory:
+    description: Lets users access their team's team inventory

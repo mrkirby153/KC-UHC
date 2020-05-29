@@ -3,6 +3,7 @@ package com.mrkirby153.kcuhc.game.team;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.CommandAlias;
 import co.aikar.commands.annotation.CommandCompletion;
+import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Default;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.Subcommand;
@@ -34,6 +35,7 @@ public class CommandTeam extends BaseCommand {
 
 
     @Subcommand("create|add")
+    @CommandPermission("kcuhc.team.create")
     public void createTeam(CommandSender sender, String name, ChatColor color) {
         uhc.getGame().createTeam(name, color);
         sender.sendMessage(
@@ -42,6 +44,7 @@ public class CommandTeam extends BaseCommand {
 
     @Subcommand("delete")
     @CommandCompletion("@teams")
+    @CommandPermission("kcuhc.team.remove")
     public void deleteTeam(CommandSender sender, UHCTeam team) {
         uhc.getGame().deleteTeam(team);
         sender.sendMessage(
@@ -51,6 +54,7 @@ public class CommandTeam extends BaseCommand {
 
     @Subcommand("list")
     @CommandAlias("teams")
+    @CommandPermission("kcuhc.teams")
     public void getTeams(CommandSender sender) {
         StringBuilder teams = new StringBuilder();
         uhc.getGame().getTeams().keySet().forEach(s -> {
@@ -65,8 +69,14 @@ public class CommandTeam extends BaseCommand {
 
     @Subcommand("join")
     @CommandCompletion("@teams @players")
+    @CommandPermission("kcuhc.team.join")
     public void joinTeam(Player sender, UHCTeam team, @Optional OnlinePlayer player) {
         if (player != null) {
+            if (!sender.hasPermission("kcuhc.teams.join.other")) {
+                sender.sendMessage(
+                    Chat.legacyError("You do not have permission to perform that command"));
+                return;
+            }
             if (uhc.getGame().getTeam(player.player) != null) {
                 uhc.getGame().getTeam(player.player).removePlayer(player.player);
             }
@@ -87,6 +97,7 @@ public class CommandTeam extends BaseCommand {
     }
 
     @Subcommand("leave")
+    @CommandPermission("kcuhc.team.leave")
     public void leaveTeam(Player sender) {
         ScoreboardTeam currentTeam = uhc.getGame().getTeam(sender);
         if (uhc.getGame().getCurrentState() == GameState.ALIVE) {
@@ -104,6 +115,7 @@ public class CommandTeam extends BaseCommand {
     }
 
     @Subcommand("random")
+    @CommandPermission("kcuhc.team.random")
     public void randomizeTeams(Player sender, Integer teamSize) {
         List<UHCTeam> currentTeams = new ArrayList<>(uhc.getGame().getTeams().values());
         currentTeams.forEach(c -> uhc.getGame().deleteTeam(c));
@@ -150,6 +162,7 @@ public class CommandTeam extends BaseCommand {
     }
 
     @Default
+    @CommandPermission("kcuhc.teams")
     public void showTeam(Player sender) {
         ScoreboardTeam team = uhc.getGame().getTeam(sender);
         if (team == null) {
@@ -162,6 +175,7 @@ public class CommandTeam extends BaseCommand {
 
     @Subcommand("swap")
     @CommandCompletion("@players @players")
+    @CommandPermission("kcuhc.team.swap")
     public void swapTeams(Player sender, OnlinePlayer player1, OnlinePlayer player2) {
         ScoreboardTeam p1Team = uhc.getGame().getTeam(player1.player);
 
@@ -183,6 +197,7 @@ public class CommandTeam extends BaseCommand {
     }
 
     @Subcommand("twoteams")
+    @CommandPermission("kcuhc.team.create")
     public void twoTeams(Player player) {
         List<UHCTeam> currentTeams = new ArrayList<>(uhc.getGame().getTeams().values());
         currentTeams.forEach(c -> uhc.getGame().deleteTeam(c));
