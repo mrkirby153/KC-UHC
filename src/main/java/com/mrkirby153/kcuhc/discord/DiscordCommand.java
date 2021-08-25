@@ -9,7 +9,7 @@ import co.aikar.commands.contexts.OnlinePlayer;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import me.mrkirby153.kcutils.Chat;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.entities.User;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

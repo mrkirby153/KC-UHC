@@ -13,7 +13,7 @@ import me.mrkirby153.kcutils.Time.TimeUnit;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
 import me.mrkirby153.kcutils.scoreboard.items.ElementHeadedText;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.api.entities.User;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;

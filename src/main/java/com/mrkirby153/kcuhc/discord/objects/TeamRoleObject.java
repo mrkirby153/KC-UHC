@@ -4,7 +4,7 @@ import com.mrkirby153.kcuhc.discord.DiscordModule;
 import com.mrkirby153.kcuhc.discord.ObjectRegistry;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
-import net.dv8tion.jda.core.entities.Role;
+import net.dv8tion.jda.api.entities.Role;
 import org.apache.commons.lang.WordUtils;
 
 import java.awt.Color;
@@ -28,7 +28,7 @@ public class TeamRoleObject implements DiscordObject<Role> {
         if (this.team instanceof UHCTeam) {
             c = new Color(((UHCTeam) this.team).toColor().asRGB());
         }
-        this.module.guild.getController().createRole()
+        this.module.guild.createRole()
             .setName(WordUtils.capitalizeFully("Team " + this.team.getTeamName())).setColor(c)
             .queue(r -> {
                 this.role = r;

@@ -3,7 +3,6 @@ package com.mrkirby153.kcuhc.discord;
 import com.google.inject.Inject;
 import com.mrkirby153.botcore.command.CommandExecutor;
 import com.mrkirby153.botcore.command.CommandExecutor.MentionMode;
-import com.mrkirby153.botcore.shard.ShardManager;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.mapper.PlayerMapper;
 import com.mrkirby153.kcuhc.discord.mapper.UHCBotLinkMapper;
@@ -14,18 +13,20 @@ import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import me.mrkirby153.kcutils.Chat;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.PermissionOverride;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.entities.VoiceChannel;
-import net.dv8tion.jda.core.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
-import net.dv8tion.jda.core.utils.PermissionUtil;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.PermissionOverride;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
+import net.dv8tion.jda.api.sharding.ShardManager;
+import net.dv8tion.jda.internal.utils.PermissionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -43,6 +44,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import javax.security.auth.login.LoginException;
 
 
 public class DiscordModule extends UHCModule {
@@ -78,8 +80,21 @@ public class DiscordModule extends UHCModule {
 
     @Override
     public void onLoad() {
+        this.uhc.getLogger().info("[DISCORD] Starting up...");
         this.loadConfiguration();
-        this.shardManager = new ShardManager(this.token, 1);
+        try {
+            this.shardManager = DefaultShardManagerBuilder.createDefault(token).build();
+            this.shardManager.getShards().forEach(jda -> {
+                try {
+                    jda.awaitReady();
+                } catch (InterruptedException e) {
+                    // Ignore
+                }
+            });
+        } catch (LoginException e) {
+            this.uhc.getLogger().severe("Could not load up discord module :(");
+            return;
+        }
         this.commandExecutor = new CommandExecutor("!", MentionMode.OPTIONAL, null,
             this.shardManager);
         this.commandExecutor.setAlertNoClearance(false);
@@ -93,12 +108,10 @@ public class DiscordModule extends UHCModule {
         this.commandExecutor.register(discordCommands = new DiscordChatCommands());
         this.commandExecutor.register(this.playerMapper);
 
-        this.shardManager.addListener(new CommandEventListener());
+        this.shardManager.addEventListener(new CommandEventListener());
 
-        this.uhc.getLogger().info("[DISCORD] Starting up...");
-        this.shardManager.startAllShards(false);
         this.uhc.getLogger().info("Shards started up!");
-        this.jda = this.shardManager.getShard(0);
+        this.jda = this.shardManager.getShardById(0);
 
         if (!this.verifyConfiguration()) {
             this.uhc.getLogger()
@@ -116,13 +129,13 @@ public class DiscordModule extends UHCModule {
         this.guild = null;
         this.adminRole = null;
         this.logChannel = null;
-        this.shardManager.shutdownAll();
+        this.shardManager.shutdown();
     }
 
     private boolean verifyConfiguration() {
         try {
             this.uhc.getLogger().info("[DISCORD] Verifying configuration");
-            JDA jda = this.shardManager.getShard(0);
+            JDA jda = this.jda;
             this.guild = jda.getGuildById(this.guildId);
             if (this.guild == null) {
                 this.uhc.getLogger().warning("[DISCORD] Bot is not in guild " + this.guildId);
@@ -138,8 +151,7 @@ public class DiscordModule extends UHCModule {
                 .filter(chan -> chan.getName().equals("uhc-log")).findFirst().orElse(null);
             if (match == null) {
                 this.uhc.getLogger().info("[DISCORD] Log channel doesn't exist, creating");
-                this.logChannel = (TextChannel) this.guild.getController()
-                    .createTextChannel("uhc-log")
+                this.logChannel = this.guild.createTextChannel("uhc-log")
                     .complete();
                 this.uhc.getLogger().info("[DISCORD] Log channel created!");
             } else {
@@ -169,7 +181,7 @@ public class DiscordModule extends UHCModule {
                 }
             }
 
-            Member member = guild.getMember(this.shardManager.getShard(0).getSelfUser());
+            Member member = guild.getMember(this.jda.getSelfUser());
             if (!PermissionUtil.checkPermission(this.logChannel, member, Permission.MESSAGE_WRITE,
                 Permission.MESSAGE_READ)) {
                 this.uhc.getLogger().info("[DISCORD] Bot cannot read and write, creating override");
@@ -226,8 +238,7 @@ public class DiscordModule extends UHCModule {
                 .info("[DISCORD] Using " + role.get().getId() + " as the spectator role");
             this.spectatorRole = role.get();
         } else {
-            this.spectatorRole = this.guild.getController().createRole().setName("Spectators")
-                .complete();
+            this.spectatorRole = this.guild.createRole().setName("Spectators").complete();
         }
     }
 
@@ -286,7 +297,7 @@ public class DiscordModule extends UHCModule {
             if (m != null) {
                 log(":crossed_swords:", "Assigning `" + u.getName() + "#" + u.getDiscriminator() +
                     "` to the spectators team");
-                guild.getController().addSingleRoleToMember(m, this.spectatorRole).queue();
+                guild.addRoleToMember(m, this.spectatorRole).queue();
             }
         }
     }
@@ -303,7 +314,7 @@ public class DiscordModule extends UHCModule {
             if (m != null) {
                 log(":crossed_swords:", "Removing `" + u.getName() + "#" + u.getDiscriminator() +
                     "` from the spectators team");
-                guild.getController().removeSingleRoleFromMember(m, this.spectatorRole).queue();
+                guild.removeRoleFromMember(m, this.spectatorRole).queue();
             }
         }
     }
@@ -380,8 +391,8 @@ public class DiscordModule extends UHCModule {
                 playerMapper.createLink(event.getPlayer());
             } else {
                 event.getPlayer().sendMessage(Chat.message("Discord",
-                    "To link your minecraft account to discord, run the following command in {guild}: {cmd}",
-                    "{guild}", guild.getName(), "{cmd}", String.format("!uhcbot link %s", code))
+                        "To link your minecraft account to discord, run the following command in {guild}: {cmd}",
+                        "{guild}", guild.getName(), "{cmd}", String.format("!uhcbot link %s", code))
                     .toLegacyText());
             }
         } else {
@@ -414,11 +425,12 @@ public class DiscordModule extends UHCModule {
         if (channels.size() > 0) {
             channel = channels.get(0);
         } else {
-            channel = (VoiceChannel) guild.getController().createVoiceChannel("General")
+            channel = guild.createVoiceChannel("General")
                 .complete();
         }
-        guild.getMembers().stream().filter(m -> m.getVoiceState().inVoiceChannel())
-            .forEach(m -> guild.getController().moveVoiceMember(m, channel).queue());
+        guild.getMembers().stream()
+            .filter(m -> m.getVoiceState() != null && m.getVoiceState().inVoiceChannel())
+            .forEach(m -> guild.moveVoiceMember(m, channel).queue());
     }
 
     private class CommandEventListener extends ListenerAdapter {

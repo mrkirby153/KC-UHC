@@ -12,7 +12,6 @@ import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
-import me.mrkirby153.kcutils.reflections.Reflections;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -52,7 +51,7 @@ public class TabListHandler implements Listener {
     public void sendHeaderFooter(Player player) {
         String header = ChatColor.GOLD + "" + ChatColor.BOLD + "  "+ Strings.LONG_NAME+"  \n";
         String footer =
-            "\n" + ChatColor.GRAY + "Time: " + ChatColor.WHITE + Time.INSTANCE.now()
+            "\n" + ChatColor.GRAY + "Time: " + ChatColor.WHITE + Time.now()
                 + ChatColor.GRAY + " \n";
         if (uhc.getGame().getCurrentState() == GameState.ALIVE) {
             long initialPlayers = this.uhc.getGame().getInitialPlayers();
@@ -60,12 +59,10 @@ public class TabListHandler implements Listener {
                 .mapToLong(t -> t.getPlayers().size()).sum();
             footer += "Players: " + ChatColor.WHITE + alivePlayers + "/" + initialPlayers + ChatColor.GRAY + " | Kills: " + ChatColor.WHITE + this.uhc.getGame().getKills(player);
         }
-        Object cp = Reflections.invoke(player, "getHandle");
-        int ping = Reflections.get(cp, "ping");
+        int ping = player.getPing();
         footer +=
             ChatColor.DARK_GRAY + "\nPing: " + getPingBarColor(ping) + ping + "ms" + ChatColor.WHITE
-                + " | " + ChatColor.DARK_GRAY + "TPS: " + ChatColor.WHITE + Time.INSTANCE
-                .trim(1, getTps()[0]);
+                + " | " + ChatColor.DARK_GRAY + "TPS: " + ChatColor.WHITE + Time.trim(1, getTps()[0]);
         ScoreboardTeam team = this.uhc.getGame().getTeam(player);
         if (team != null) {
             if (!(team instanceof SpectatorTeam)) {
@@ -93,7 +90,7 @@ public class TabListHandler implements Listener {
 
     private double[] getTps() {
         try {
-            Class mcServer = Reflections.getNMSClass("MinecraftServer");
+            Class mcServer = Class.forName("net.minecraft.server.MinecraftServer");
             Field f = mcServer.getField("recentTps");
             Method m = mcServer.getDeclaredMethod("getServer");
             Object server = m.invoke(null);

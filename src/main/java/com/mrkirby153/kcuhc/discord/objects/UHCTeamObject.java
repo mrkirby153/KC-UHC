@@ -2,15 +2,14 @@ package com.mrkirby153.kcuhc.discord.objects;
 
 import com.mrkirby153.kcuhc.discord.DiscordModule;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
-import net.dv8tion.jda.core.Permission;
-import net.dv8tion.jda.core.entities.Channel;
-import net.dv8tion.jda.core.entities.GuildVoiceState;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.PermissionOverride;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.managers.PermOverrideManager;
-import net.dv8tion.jda.core.requests.restaction.PermissionOverrideAction;
+import net.dv8tion.jda.api.Permission;
+import net.dv8tion.jda.api.entities.GuildChannel;
+import net.dv8tion.jda.api.entities.GuildVoiceState;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.PermissionOverride;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.requests.restaction.PermissionOverrideAction;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
@@ -96,11 +95,11 @@ public class UHCTeamObject implements DiscordObject<UHCTeamObject> {
                     "Adding `" + u.getName() + "#" + u.getDiscriminator() + "` to team `"
                         + this.team.getTeamName() + "`");
                 this.role.get().ifPresent(
-                    r -> this.module.guild.getController().addSingleRoleToMember(m, r).queue());
+                    r -> this.module.guild.addRoleToMember(m, r).queue());
 
                 GuildVoiceState state = m.getVoiceState();
                 if (state.inVoiceChannel()) {
-                    this.voiceChannel.get().ifPresent(vc -> module.guild.getController().moveVoiceMember(m, vc).queue());
+                    this.voiceChannel.get().ifPresent(vc -> module.guild.moveVoiceMember(m, vc).queue());
                 }
             }
         }
@@ -120,13 +119,12 @@ public class UHCTeamObject implements DiscordObject<UHCTeamObject> {
                     "Removing `" + u.getName() + "#" + u.getDiscriminator() + "` from team `"
                         + this.team.getTeamName() + "`");
                 this.role.get().ifPresent(
-                    r -> this.module.guild.getController().removeSingleRoleFromMember(m, r)
-                        .queue());
+                    r -> this.module.guild.removeRoleFromMember(m, r).queue());
             }
         }
     }
 
-    private void createOverride(Channel c, Role role, Permission[] allow, Permission[] deny) {
+    private void createOverride(GuildChannel c, Role role, Permission[] allow, Permission[] deny) {
         PermissionOverride override = c.getPermissionOverride(role);
         if (override == null) {
             PermissionOverrideAction action =
@@ -139,7 +137,7 @@ public class UHCTeamObject implements DiscordObject<UHCTeamObject> {
             }
             action.queue();
         } else {
-            PermOverrideManager manager = override.getManager();
+            PermissionOverrideAction manager = override.getManager();
             if (allow != null) {
                 manager = manager.grant(allow);
             }

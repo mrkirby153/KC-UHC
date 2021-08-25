@@ -2,7 +2,7 @@ package com.mrkirby153.kcuhc.discord.objects;
 
 import com.mrkirby153.kcuhc.discord.DiscordModule;
 import com.mrkirby153.kcuhc.discord.ObjectRegistry;
-import net.dv8tion.jda.core.entities.Category;
+import net.dv8tion.jda.api.entities.Category;
 
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -22,11 +22,11 @@ public class ChannelCategoryObject implements DiscordObject<Category> {
 
     @Override
     public void create(Consumer<Category> consumer) {
-        this.module.guild.getController().createCategory(name).queue(cat -> {
+        this.module.guild.createCategory(name).queue(cat -> {
             ObjectRegistry.INSTANCE.register(this);
-            this.category = (Category) cat;
+            this.category = cat;
             if (consumer != null) {
-                consumer.accept((Category) cat);
+                consumer.accept(cat);
             }
         });
     }

@@ -319,6 +319,7 @@ public class UHCGame implements Listener {
             if(this.getUHCWorld().hasStorm()) {
                 plugin.getLogger().info("Stopping the storm that's currently in progress");
                 this.getUHCWorld().setStorm(false);
+                this.getUHCWorld().setClearWeatherDuration(0);
             }
         }
         if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
