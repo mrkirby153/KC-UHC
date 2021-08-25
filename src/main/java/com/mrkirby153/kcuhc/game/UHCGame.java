@@ -316,6 +316,10 @@ public class UHCGame implements Listener {
             });
             setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
             this.getUHCWorld().setTime(0);
+            if(this.getUHCWorld().hasStorm()) {
+                plugin.getLogger().info("Stopping the storm that's currently in progress");
+                this.getUHCWorld().setStorm(false);
+            }
         }
         if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
             Arrays.stream(WorldFlags.values())
