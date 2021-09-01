@@ -2,11 +2,13 @@ package com.mrkirby153.kcuhc.module.settings;
 
 public abstract class ModuleSetting<T> {
 
+    private final T defaultValue;
     protected T value;
 
     protected String internal;
 
     public ModuleSetting(T defaultValue) {
+        this.defaultValue = defaultValue;
         this.value = defaultValue;
         this.internal = defaultValue.toString();
     }
@@ -51,5 +53,12 @@ public abstract class ModuleSetting<T> {
      */
     public final String getInternal() {
         return this.internal;
+    }
+
+    /**
+     * Resets this setting to its default value
+     */
+    public final void reset() {
+        this.value = this.defaultValue;
     }
 }

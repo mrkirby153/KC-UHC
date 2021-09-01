@@ -46,6 +46,9 @@ dependencies {
     implementation 'org.reflections:reflections:0.9.12'
     implementation 'com.google.inject:guice:5.0.1'
     implementation 'com.mrkirby153:bot-core:3.1-SNAPSHOT'
+    implementation 'com.sparkjava:spark-core:2.9.3'
+    implementation 'com.squareup.okhttp3:okhttp:4.9.1'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
     compileOnly 'org.spigotmc:spigot-api:1.17.1-R0.1-SNAPSHOT'
     compileOnly 'com.comphenix.protocol:ProtocolLib-API:4.4.0'
 }

@@ -76,9 +76,8 @@ public class CommandModule extends BaseCommand {
         ModuleSetting moduleSetting = optSetting.get().getValue();
 
         if (value.isEmpty()) {
-            sender.sendMessage(Chat
-                .message("Module", "{key} = {value}", "{key}", setting, "{value}",
-                    moduleSetting.toString()).toLegacyText());
+            moduleSetting.reset();
+            sender.sendMessage("Module", "Reset {key}", "{key}", setting);
             return;
         }
         try {
