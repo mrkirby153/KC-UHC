@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.oauth.OAuthClient.OAuthTokens;
 import com.mrkirby153.kcuhc.module.UHCModule;
+import com.mrkirby153.kcuhc.module.settings.IntegerSetting;
 import com.mrkirby153.kcuhc.module.settings.StringSetting;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -20,6 +21,7 @@ import org.bukkit.event.player.AsyncPlayerPreLoginEvent.Result;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
+import spark.Spark;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +51,7 @@ public class DiscordOAuthModule extends UHCModule {
      * in the list. If left blank, access will not be enforced
      */
     private StringSetting accessServers = new StringSetting("");
+    private IntegerSetting apiPort = new IntegerSetting(42069);
 
     @Inject
     public DiscordOAuthModule(UHC uhc) {
@@ -256,5 +259,37 @@ public class DiscordOAuthModule extends UHCModule {
     @Override
     public void onLoad() {
         this.loadConfiguration();
+        Spark.port(this.apiPort.getValue());
+        Spark.get("/ping", (request, response) -> "Pong!");
+        Spark.get("/code/:code", (request, response) -> {
+            String code = request.params("code");
+            UUID uuid = this.oauthCodes.get(code);
+            if (uuid == null) {
+                response.status(404);
+                return "Code not found";
+            } else {
+                return uuid.toString();
+            }
+        });
+        Spark.get("/auth-url/:uuid", (request, response) -> {
+            UUID uuid = UUID.fromString(request.params("uuid"));
+            return makeOauthClient(uuid).getAuthUrl("authorization_code", "identify", "guilds");
+        });
+        Spark.post("/map/:uuid", (request, response) -> {
+            UUID uuid = UUID.fromString(request.params("uuid"));
+            OAuthClient client = makeOauthClient(uuid);
+            OAuthTokens tokens = client.getTokens(request.queryParams("state"),
+                request.queryParams("code"), "code");
+            saveTokens(uuid, tokens);
+            uhc.getLogger().info("Generated tokens for " + uuid);
+            response.status(204);
+            this.oauthCodes.entrySet().removeIf(e -> e.getValue().equals(uuid));
+            return null;
+        });
+    }
+
+    @Override
+    public void onUnload() {
+        Spark.stop();
     }
 }
