@@ -1,0 +1,13 @@
+.btn {
+  @apply py-2 px-4 font-semibold rounded-lg shadow-md text-white
+}
+.btn-success {
+  @apply bg-green-500 hover:bg-green-700
+}
+.btn-warning {
+  @apply  bg-yellow-300 hover:bg-yellow-400
+}
+
+.btn-info {
+  @apply bg-blue-500 hover:bg-blue-700
+}
