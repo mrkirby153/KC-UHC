@@ -260,8 +260,8 @@ public class DiscordOAuthModule extends UHCModule {
     public void onLoad() {
         this.loadConfiguration();
         Spark.port(this.apiPort.getValue());
-        Spark.get("/ping", (request, response) -> "Pong!");
-        Spark.get("/code/:code", (request, response) -> {
+        Spark.get("/api/ping", (request, response) -> "Pong!");
+        Spark.get("/api/code/:code", (request, response) -> {
             String code = request.params("code");
             UUID uuid = this.oauthCodes.get(code);
             if (uuid == null) {
@@ -271,11 +271,11 @@ public class DiscordOAuthModule extends UHCModule {
                 return uuid.toString();
             }
         });
-        Spark.get("/auth-url/:uuid", (request, response) -> {
+        Spark.get("/api/auth-url/:uuid", (request, response) -> {
             UUID uuid = UUID.fromString(request.params("uuid"));
             return makeOauthClient(uuid).getAuthUrl("authorization_code", "identify", "guilds");
         });
-        Spark.post("/map/:uuid", (request, response) -> {
+        Spark.post("/api/map/:uuid", (request, response) -> {
             UUID uuid = UUID.fromString(request.params("uuid"));
             OAuthClient client = makeOauthClient(uuid);
             OAuthTokens tokens = client.getTokens(request.queryParams("state"),
