@@ -6,7 +6,8 @@ export enum ButtonType {
   SUCCESS,
   WARNING,
   ERROR,
-  INFO
+  INFO,
+  CUSTOM
 }
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,21 +15,24 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 export const Button: React.FunctionComponent<ButtonProps> = (props) => {
-  let {buttonType, ...rest} = props
-  let className = "";
+  let {buttonType, className, ...rest} = props
+  let btnClassName = "btn ";
   switch (props.buttonType) {
     case ButtonType.SUCCESS:
-      className = "btn-success";
+      btnClassName += "btn-success";
       break;
     case ButtonType.ERROR:
-      className = "btn-error";
+      btnClassName += "btn-error";
       break;
     case ButtonType.WARNING:
-      className = "btn-warning"
+      btnClassName += "btn-warning"
       break;
     case ButtonType.INFO:
-      className = "btn-info"
+      btnClassName += "btn-info"
       break;
   }
-  return <button className={`btn ${className}`} {...rest}/>
+  if(className) {
+    btnClassName += ` ${className}`
+  }
+  return <button className={btnClassName} {...rest}/>
 }

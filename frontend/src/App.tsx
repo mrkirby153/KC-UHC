@@ -2,6 +2,7 @@ import React from 'react';
 import {HashRouter as Router, Route, Switch} from "react-router-dom";
 
 import Index from './pages/index';
+import Link from './pages/link'
 
 function App() {
 
@@ -13,7 +14,13 @@ function App() {
                 className="col-start-2 col-end-12 border-2 border-grey-100 p-2 text-center rounded-md shadow-sm">
               <Router>
                 <Switch>
-                  <Route path="/">
+                  <Route path="/link/:uuid">
+                    <Link missingCode={false}/>
+                  </Route>
+                  <Route path="/link" exact={true}>
+                    <Link missingCode={true}/>
+                  </Route>
+                  <Route path="/" exact={true}>
                     <Index/>
                   </Route>
                 </Switch>

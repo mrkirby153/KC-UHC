@@ -2,7 +2,7 @@
   @apply py-2 px-4 font-semibold rounded-lg shadow-md text-white
 }
 .btn-success {
-  @apply bg-green-500 hover:bg-green-700
+  @apply bg-green-500 hover:bg-green-700 disabled:bg-green-400
 }
 .btn-warning {
   @apply  bg-yellow-300 hover:bg-yellow-400

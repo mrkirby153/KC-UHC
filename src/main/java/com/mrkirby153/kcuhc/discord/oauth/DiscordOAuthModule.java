@@ -273,7 +273,7 @@ public class DiscordOAuthModule extends UHCModule {
         });
         Spark.get("/api/auth-url/:uuid", (request, response) -> {
             UUID uuid = UUID.fromString(request.params("uuid"));
-            return makeOauthClient(uuid).getAuthUrl("authorization_code", "identify", "guilds");
+            return makeOauthClient(uuid).getAuthUrl("code", "identify", "guilds");
         });
         Spark.post("/api/map/:uuid", (request, response) -> {
             UUID uuid = UUID.fromString(request.params("uuid"));
