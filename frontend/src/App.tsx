@@ -3,6 +3,8 @@ import {HashRouter as Router, Route, Switch} from "react-router-dom";
 
 import Index from './pages/index';
 import Link from './pages/link'
+import LoginCallback from "./pages/callback";
+import Login from "./pages/callback/Login";
 
 function App() {
 
@@ -19,6 +21,12 @@ function App() {
                   </Route>
                   <Route path="/link" exact={true}>
                     <Link missingCode={true}/>
+                  </Route>
+                  <Route path="/callback">
+                    <LoginCallback/>
+                  </Route>
+                  <Route path="/login">
+                    <Login/>
                   </Route>
                   <Route path="/" exact={true}>
                     <Index/>

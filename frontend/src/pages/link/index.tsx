@@ -63,34 +63,64 @@ const HasCode: React.FC = () => {
   const match = useRouteMatch<RouteParams>()
   const uuid = match.params.uuid;
 
-  const [authUrl, setAuthUrl] = useState("")
+  const [minecraftUser, setMCUser] = useState<MinecraftUser | null>(null)
+  const [existingUser, setExistingUser] = useState<OauthUser | null>(null)
 
   useEffect(() => {
-    axios.get(`/api/auth-url/${uuid}`).then(resp => {
-      setAuthUrl(resp.data)
+    axios.get(`/api/uuid/${uuid}`).then(resp => {
+      setMCUser(resp.data)
     })
+    axios.get(`/api/user/${uuid}`).then(resp => {
+      setExistingUser(resp.data)
+    }).catch(result => {
+      // Ignore
+    })
+    window.localStorage.setItem('UUID', uuid);
   }, [])
 
   const receivePostedMessage = (event: MessageEvent<any>) => {
-    if(event.origin !== window.origin) {
+    if (event.origin !== window.origin) {
       return;
+    }
+    window.removeEventListener('message', receivePostedMessage);
+    switch (event.data) {
+      case 'LOGIN_SUCCESS':
+        axios.get(`/api/user/${uuid}`).then(resp => {
+          setExistingUser(resp.data)
+        }).catch(result => {
+          // Ignore
+        })
+        break;
     }
   }
 
   const openPopUpWindow = () => {
-    window.open(authUrl, 'test', 'menubar=no,toolbar=no,location=no')
+    window.open(`/#/login`, 'test', 'menubar=no,toolbar=no,location=no')
     window.addEventListener("message", receivePostedMessage, false);
   }
 
   return <>
     <p>
-      Click the button below to log in with Discord and link your accounts
+      Click the button below to log in with Discord and link your Discord account
     </p>
-    <Button className="bg-blurple mt-3" buttonType={ButtonType.CUSTOM} disabled={!authUrl} onClick={openPopUpWindow}>
+    <p>
+      Your account will be linked with the Minecraft account <span
+        className={"text-green-500 font-bold"}>{minecraftUser?.username || "Loading..."}</span>
+    </p>
+    {!existingUser &&
+    <Button className="bg-blurple mt-3" buttonType={ButtonType.CUSTOM} onClick={openPopUpWindow}>
       <img src={DiscordLogo}
            alt="Discord Logo"
            className="w-6 h-6 inline mr-2"/> Log in with Discord
-    </Button>
+    </Button>}
+    {existingUser && <>
+      <p className="mt-3">
+        Already linked to <span
+          className="text-blue-400">{existingUser.username}#{existingUser.discrim}</span>. <a
+          className="text-blue-700 hover:underline cursor-pointer"
+          onClick={() => setExistingUser(null)}>Not You?</a>
+      </p>
+    </>}
   </>
 }
 

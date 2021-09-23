@@ -79,7 +79,7 @@ public class OAuthClient {
     public OAuthTokens getTokens(String state, String code, String grantType) {
         String existingState = OAuthClient.state.remove(this.playerUuid);
         String scopes = OAuthClient.scopes.get(this.playerUuid);
-        if (!existingState.equals(state)) {
+        if (existingState == null || !existingState.equals(state)) {
             throw new OAuthException("State does not match");
         }
         FormBody body = new FormBody.Builder().add("client_id", this.clientId)
@@ -100,9 +100,14 @@ public class OAuthClient {
             if (respBody == null) {
                 throw new OAuthException("Body was null");
             }
-            JSONObject bodyJson = new JSONObject(new JSONTokener(respBody.string()));
+            String bodyStr = respBody.string();
+            if(resp.code() != 200) {
+                System.out.println(bodyStr);
+                throw new OAuthException("Bad request from discord");
+            }
+            JSONObject bodyJson = new JSONObject(new JSONTokener(bodyStr));
             return new OAuthTokens(bodyJson.getString("access_token"),
-                bodyJson.getString("token_type"), bodyJson.getLong("expires_at"),
+                bodyJson.getString("token_type"), System.currentTimeMillis() + (bodyJson.getLong("expires_in") * 1000),
                 bodyJson.getString("refresh_token"));
         }
 

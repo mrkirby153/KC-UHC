@@ -1,8 +1,13 @@
 package com.mrkirby153.kcuhc.discord.oauth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.oauth.OAuthClient.OAuthTokens;
+import com.mrkirby153.kcuhc.discord.oauth.dto.MinecraftUser;
+import com.mrkirby153.kcuhc.discord.oauth.dto.SavedOAuthUser;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.settings.IntegerSetting;
 import com.mrkirby153.kcuhc.module.settings.StringSetting;
@@ -11,6 +16,7 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -44,6 +50,7 @@ public class DiscordOAuthModule extends UHCModule {
     private final String redirectUri;
     private final String oauthDashboardUrl;
     private final Map<String, UUID> oauthCodes = new ConcurrentHashMap<>();
+    private final Map<UUID, SavedOAuthUser> savedOAuthUserMap = new ConcurrentHashMap<>();
     private FileConfiguration oauthConfiguration = new YamlConfiguration();
     private File oauthConfigurationFile;
     /**
@@ -69,6 +76,16 @@ public class DiscordOAuthModule extends UHCModule {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private static String dataToJson(Object object) {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        try {
+            return mapper.writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Exception processing Json");
         }
     }
 
@@ -164,7 +181,7 @@ public class DiscordOAuthModule extends UHCModule {
         ConfigurationSection section = this.oauthConfiguration.getConfigurationSection(
             uuid.toString());
         if (section == null) {
-            throw new IllegalStateException("This should never happen (Malformed config?)");
+            section = this.oauthConfiguration.createSection(uuid.toString());
         }
         section.set("accessToken", tokens.getAccessToken());
         section.set("tokenType", tokens.getTokenType());
@@ -195,6 +212,34 @@ public class DiscordOAuthModule extends UHCModule {
         }
     }
 
+    public SavedOAuthUser getDiscordUser(UUID uuid) {
+        SavedOAuthUser existingUser = savedOAuthUserMap.get(uuid);
+        if (existingUser != null) {
+            return existingUser;
+        }
+        OAuthTokens existingTokens = getTokens(uuid);
+        if (existingTokens == null) {
+            return null;
+        }
+        Request discordRequest = new Request.Builder().url("https://discord.com/api/v9/users/@me")
+            .addHeader("Authorization",
+                String.format("Bearer %s", existingTokens.getAccessToken())).build();
+        try (Response resp = OAuthClient.httpClient.newCall(discordRequest).execute()) {
+            if (resp.code() == 401) {
+                return null;
+            }
+            ResponseBody body = resp.body();
+            if (body == null) {
+                return null;
+            }
+            JSONObject user = new JSONObject(new JSONTokener(body.string()));
+            return new SavedOAuthUser(user.getString("username"), user.getString("discriminator"),
+                user.getString("id"));
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
     public AccessState checkServerAccess(UUID uuid) {
         if (this.accessServers.getValue().equals("")) {
             return AccessState.GRANTED;
@@ -206,7 +251,8 @@ public class DiscordOAuthModule extends UHCModule {
         if (existingTokens == null) {
             return AccessState.DENIED_MISSING_OAUTH;
         }
-        Request serverRequest = new Request.Builder().url("https://discord.com/api/v9/users/@me")
+        Request serverRequest = new Request.Builder().url(
+                "https://discord.com/api/v9/users/@me/guilds")
             .addHeader("Authorization", String.format("Bearer %s", existingTokens.getAccessToken()))
             .header("Content-Type", "application/json").build();
         try (Response resp = OAuthClient.httpClient.newCall(serverRequest).execute()) {
@@ -277,14 +323,38 @@ public class DiscordOAuthModule extends UHCModule {
         });
         Spark.post("/api/map/:uuid", (request, response) -> {
             UUID uuid = UUID.fromString(request.params("uuid"));
-            OAuthClient client = makeOauthClient(uuid);
-            OAuthTokens tokens = client.getTokens(request.queryParams("state"),
-                request.queryParams("code"), "code");
-            saveTokens(uuid, tokens);
-            uhc.getLogger().info("Generated tokens for " + uuid);
-            response.status(204);
-            this.oauthCodes.entrySet().removeIf(e -> e.getValue().equals(uuid));
-            return null;
+            try {
+                JSONObject body = new JSONObject(new JSONTokener(request.body()));
+                OAuthClient client = makeOauthClient(uuid);
+                OAuthTokens tokens = client.getTokens(body.getString("state"),
+                    body.getString("code"), "authorization_code");
+                saveTokens(uuid, tokens);
+                uhc.getLogger().info("Generated tokens for " + uuid);
+                response.status(200);
+                this.oauthCodes.entrySet().removeIf(e -> e.getValue().equals(uuid));
+                this.savedOAuthUserMap.remove(uuid);
+                return "Success";
+            } catch (OAuthException e) {
+                JSONObject err = new JSONObject();
+                err.put("error", e.getMessage());
+                response.status(400);
+                return err.toString();
+            }
+        });
+        Spark.get("/api/user/:uuid", (request, response) -> {
+            SavedOAuthUser user = getDiscordUser(UUID.fromString(request.params("uuid")));
+            if (user == null) {
+                response.status(404);
+                return "Not found";
+            }
+            response.header("Content-Type", "application/json");
+            return dataToJson(user);
+        });
+        Spark.get("/api/uuid/:uuid", (request, response) -> {
+            UUID uuid = UUID.fromString(request.params("uuid"));
+            OfflinePlayer player = this.uhc.getServer().getOfflinePlayer(uuid);
+            response.header("Content-Type", "application/json");
+            return dataToJson(new MinecraftUser(player.getUniqueId().toString(), player.getName()));
         });
     }
 
