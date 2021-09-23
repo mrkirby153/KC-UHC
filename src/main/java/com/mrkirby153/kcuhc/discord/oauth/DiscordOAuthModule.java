@@ -97,17 +97,26 @@ public class DiscordOAuthModule extends UHCModule {
         doAccessCheck(event, state, 0);
     }
 
+    public String generateCode(UUID uuid) {
+        String chars = "0123456789";
+        StringBuilder code = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            code.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        this.oauthCodes.put(code.toString(), uuid);
+        return code.toString();
+    }
+
+    public String getOauthDashboardUrl() {
+        return this.oauthDashboardUrl;
+    }
+
     private void doAccessCheck(AsyncPlayerPreLoginEvent event, AccessState state, int retryCount) {
         uhc.getLogger().info("Access " + state + " for " + event.getUniqueId());
         switch (state) {
             case DENIED_MISSING_OAUTH:
                 // Generate a code to link discord oauth to minecraft
-                String chars = "0123456789";
-                StringBuilder code = new StringBuilder();
-                for (int i = 0; i < 8; i++) {
-                    code.append(chars.charAt(random.nextInt(chars.length())));
-                }
-                this.oauthCodes.put(code.toString(), event.getUniqueId());
+                String code = generateCode(event.getUniqueId());
                 event.setKickMessage(ChatColor.GOLD + "Hold up!\n\n" + ChatColor.WHITE
                     + "There's one more thing you need to do before you can join:\n\n Visit "
                     + ChatColor.GREEN

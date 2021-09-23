@@ -3,6 +3,7 @@ package com.mrkirby153.kcuhc.scoreboard;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.DiscordModule;
+import com.mrkirby153.kcuhc.discord.mapper.UHCBotLinkMapper;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
@@ -82,16 +83,22 @@ public class ScoreboardUpdater implements Listener {
                         finalScoreboard.add(new ElementHeadedText(ChatColor.GREEN + "Linked to ",
                             ChatColor.GOLD + u.getName() + "#" + u.getDiscriminator()));
                     } else {
-                        String code = mod.playerMapper.getCode(player.getUniqueId());
-                        if (code != null) {
-                            finalScoreboard.add(new ElementHeadedText(
-                                ChatColor.RED + "Link your discord account with",
-                                String.format("!uhcbot link %s",
-                                    code)));
+                        if (mod.playerMapper instanceof UHCBotLinkMapper) {
+                            String code = mod.playerMapper.getCode(player.getUniqueId());
+                            if (code != null) {
+                                finalScoreboard.add(new ElementHeadedText(
+                                    ChatColor.RED + "Link your discord account with",
+                                    String.format("!uhcbot link %s",
+                                        code)));
+                            } else {
+                                finalScoreboard.add(
+                                    new ElementHeadedText(
+                                        ChatColor.RED + "Link your discord account",
+                                        "Use /discord link to get started"));
+                            }
                         } else {
-                            finalScoreboard.add(
-                                new ElementHeadedText(ChatColor.RED + "Link your discord account",
-                                    "Use /discord link to get started"));
+                            finalScoreboard.add(new ElementHeadedText(
+                                ChatColor.RED + "Link your discord account with", "/disocrd link"));
                         }
                     }
                 });

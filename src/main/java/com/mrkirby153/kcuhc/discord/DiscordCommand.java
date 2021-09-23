@@ -6,8 +6,13 @@ import co.aikar.commands.annotation.CommandCompletion;
 import co.aikar.commands.annotation.CommandPermission;
 import co.aikar.commands.annotation.Subcommand;
 import co.aikar.commands.contexts.OnlinePlayer;
+import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.discord.mapper.DiscordOauthMapper;
+import com.mrkirby153.kcuhc.discord.mapper.UHCBotLinkMapper;
+import com.mrkirby153.kcuhc.discord.oauth.DiscordOAuthModule;
 import com.mrkirby153.kcuhc.game.UHCGame;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
+import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import me.mrkirby153.kcutils.Chat;
 import net.dv8tion.jda.api.entities.User;
 import org.bukkit.Bukkit;
@@ -15,6 +20,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.UUID;
 
 @CommandAlias("discord")
@@ -22,10 +28,12 @@ public class DiscordCommand extends BaseCommand {
 
     private DiscordModule module;
     private UHCGame game;
+    private UHC uhc;
 
-    public DiscordCommand(UHCGame game, DiscordModule module) {
+    public DiscordCommand(UHC uhc, UHCGame game, DiscordModule module) {
         this.module = module;
         this.game = game;
+        this.uhc = uhc;
     }
 
     @Subcommand("create")
@@ -110,5 +118,29 @@ public class DiscordCommand extends BaseCommand {
             sender.sendMessage(
                 Chat.message(p.getName(), "{account}", "{account}", name).toLegacyText());
         });
+    }
+
+    @Subcommand("backend")
+    @CommandPermission("kcuhc.discord.backend")
+    public void setLinkBackend(CommandSender sender, LinkBackend backend) {
+        switch (backend) {
+            case OAUTH:
+                Optional<DiscordOAuthModule> mod = ModuleRegistry.INSTANCE.getLoadedModule(
+                    DiscordOAuthModule.class);
+                if (mod.isPresent()) {
+                    module.playerMapper = new DiscordOauthMapper(mod.get(), module.jda);
+                    sender.sendMessage(
+                        Chat.message("Discord", "Set backend to OAuth").toLegacyText());
+                } else {
+                    sender.sendMessage(
+                        Chat.error("Discord Oauth module not loaded!").toLegacyText());
+                }
+                break;
+            case CODE:
+                module.playerMapper = new UHCBotLinkMapper(uhc, module);
+                sender.sendMessage(
+                    Chat.message("Discord", "Set backend to link code").toLegacyText());
+                break;
+        }
     }
 }

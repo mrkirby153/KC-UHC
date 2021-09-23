@@ -24,8 +24,10 @@ import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
+import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.internal.utils.PermissionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -74,7 +76,7 @@ public class DiscordModule extends UHCModule {
         this.uhc = uhc;
         UHC.getCommandManager()
             .registerCommand(
-                this.discordMinecraftCommand = new DiscordCommand(uhc.getGame(), this));
+                this.discordMinecraftCommand = new DiscordCommand(uhc, uhc.getGame(), this));
         playerMapper = new UHCBotLinkMapper(uhc, this);
     }
 
@@ -83,7 +85,8 @@ public class DiscordModule extends UHCModule {
         this.uhc.getLogger().info("[DISCORD] Starting up...");
         this.loadConfiguration();
         try {
-            this.shardManager = DefaultShardManagerBuilder.createDefault(token).build();
+            this.shardManager = DefaultShardManagerBuilder.createDefault(token).setChunkingFilter(
+                ChunkingFilter.ALL).enableIntents(GatewayIntent.GUILD_MEMBERS).build();
             this.shardManager.getShards().forEach(jda -> {
                 try {
                     jda.awaitReady();
