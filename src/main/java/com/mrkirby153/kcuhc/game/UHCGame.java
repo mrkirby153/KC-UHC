@@ -14,7 +14,6 @@ import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
 import me.mrkirby153.kcutils.flags.WorldFlags;
-import me.mrkirby153.kcutils.protocollib.TitleTimings;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -301,22 +300,23 @@ public class UHCGame implements Listener {
             Bukkit.getOnlinePlayers().stream()
                 .filter(p -> !this.spectators.getPlayers().contains(p.getUniqueId()))
                 .filter(Player::isValid).forEach(p -> {
-                p.setAllowFlight(false);
-                p.setFlying(false);
-                p.setHealth(p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
-                p.setFoodLevel(20);
-                p.setExhaustion(0);
-                p.getInventory().clear();
-                p.getActivePotionEffects().stream().map(PotionEffect::getType).forEach(p::removePotionEffect);
+                    p.setAllowFlight(false);
+                    p.setFlying(false);
+                    p.setHealth(p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
+                    p.setFoodLevel(20);
+                    p.setExhaustion(0);
+                    p.getInventory().clear();
+                    p.getActivePotionEffects().stream().map(PotionEffect::getType)
+                        .forEach(p::removePotionEffect);
 
-                p.addPotionEffect(
-                    new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 5, true));
-                p.addPotionEffect(
-                    new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 5, true));
-            });
+                    p.addPotionEffect(
+                        new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 5, true));
+                    p.addPotionEffect(
+                        new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 5, true));
+                });
             setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
             this.getUHCWorld().setTime(0);
-            if(this.getUHCWorld().hasStorm()) {
+            if (this.getUHCWorld().hasStorm()) {
                 plugin.getLogger().info("Stopping the storm that's currently in progress");
                 this.getUHCWorld().setStorm(false);
                 this.getUHCWorld().setClearWeatherDuration(0);
@@ -353,8 +353,7 @@ public class UHCGame implements Listener {
                 player.getInventory().clear();
                 player.getActivePotionEffects()
                     .forEach(e -> player.removePotionEffect(e.getType()));
-                plugin.protocolLibManager.title(player, ChatColor.GOLD + winner, "won the game",
-                    new TitleTimings(20, 60, 20));
+                player.sendTitle(ChatColor.GOLD + winner, "won the game", 20, 60, 20);
             });
         }
     }
@@ -441,7 +440,7 @@ public class UHCGame implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         // Join the spectator team
         if (this.getCurrentState() == GameState.ALIVE) {
-            if(!event.getPlayer().hasPermission("kcuhc.spectate")) {
+            if (!event.getPlayer().hasPermission("kcuhc.spectate")) {
                 event.getPlayer().kickPlayer("You do not have permission to spectate");
                 return;
             }
@@ -513,9 +512,8 @@ public class UHCGame implements Listener {
                 }
 
                 if (!plugin.protocolLibManager.isErrored() && parts.length == 2) {
-                    plugin.protocolLibManager
-                        .title(p, ChatColor.RED + parts[0].trim(), ChatColor.GOLD + parts[1].trim(),
-                            new TitleTimings(20, 120, 10));
+                    p.sendTitle(ChatColor.RED + parts[0].trim(), ChatColor.GOLD + parts[1].trim(),
+                        20, 120, 10);
                     p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + parts[0].trim() + ": "
                         + ChatColor.GOLD + parts[1].trim());
                 } else {
