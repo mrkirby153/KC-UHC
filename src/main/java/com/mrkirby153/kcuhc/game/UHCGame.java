@@ -10,6 +10,9 @@ import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
+import com.mrkirby153.kcuhc.scoreboard.ScoreboardModuleManager;
+import com.mrkirby153.kcuhc.scoreboard.modules.GameStateScoreboardModule;
+import com.mrkirby153.kcuhc.scoreboard.modules.TimeElapsedScoreboardModule;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.event.UpdateEvent;
 import me.mrkirby153.kcutils.event.UpdateType;
@@ -101,6 +104,10 @@ public class UHCGame implements Listener {
         this.plugin = plugin;
         this.plugin.getServer().getPluginManager().registerEvents(this, plugin);
         this.spectators = new SpectatorTeam(plugin);
+
+        ScoreboardModuleManager scoreboardModuleManager = ScoreboardModuleManager.INSTANCE;
+        scoreboardModuleManager.installModule(new GameStateScoreboardModule(this), 0);
+        scoreboardModuleManager.installModule(new TimeElapsedScoreboardModule(this), Integer.MIN_VALUE);
     }
 
     /**

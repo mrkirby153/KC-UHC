@@ -194,6 +194,12 @@ public class ModuleRegistry {
         new HashSet<>(this.loadedModules).forEach(this::forceUnload);
 
         JSONObject data = object.getJSONObject("settings");
+        array.forEach(o -> {
+            UHCModule module = getModuleByName(o.toString());
+            if (module != null && !module.isLoaded()) {
+                forceLoad(module);
+            }
+        });
         loadedModules.forEach(mod -> {
             JSONObject modObject = data.optJSONObject(mod.getInternalName());
             if (modObject == null) {
@@ -210,13 +216,6 @@ public class ModuleRegistry {
                     // Ignore
                 }
             });
-        });
-
-        array.forEach(o -> {
-            UHCModule module = getModuleByName(o.toString());
-            if (module != null && !module.isLoaded()) {
-                forceLoad(module);
-            }
         });
     }
 

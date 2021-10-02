@@ -50,7 +50,7 @@ public class UHCScoreboard extends KirbyScoreboard {
             Optional<PrestigeModule> mod = ModuleRegistry.INSTANCE
                 .getLoadedModule(PrestigeModule.class);
             mod.ifPresent(prestigeModule -> teams.addAll(prestigeModule.getTeams().values()));
-            if(!mod.isPresent()){
+            if (!mod.isPresent()) {
                 teams.addAll(game.getTeams().values());
                 teams.add(game.getSpectators());
             }
@@ -59,5 +59,12 @@ public class UHCScoreboard extends KirbyScoreboard {
             teams.add(game.getSpectators());
         }
         return teams;
+    }
+
+    /**
+     * Adds a spacer
+     */
+    public void addSpacer() {
+        this.add(" ");
     }
 }

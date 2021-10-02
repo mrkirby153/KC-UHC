@@ -12,6 +12,8 @@ import com.mrkirby153.kcuhc.game.event.GameStartingEvent;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import com.mrkirby153.kcuhc.module.UHCModule;
+import com.mrkirby153.kcuhc.scoreboard.ScoreboardModuleManager;
+import com.mrkirby153.kcuhc.scoreboard.modules.DiscordScoreboardModule;
 import me.mrkirby153.kcutils.Chat;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
@@ -82,6 +84,8 @@ public class DiscordModule extends UHCModule {
 
     @Override
     public void onLoad() {
+        ScoreboardModuleManager.INSTANCE.installModule(new DiscordScoreboardModule(uhc.getGame(), this), -1);
+
         this.uhc.getLogger().info("[DISCORD] Starting up...");
         this.loadConfiguration();
         try {
@@ -133,6 +137,7 @@ public class DiscordModule extends UHCModule {
         this.adminRole = null;
         this.logChannel = null;
         this.shardManager.shutdown();
+        ScoreboardModuleManager.INSTANCE.removeModule(DiscordScoreboardModule.class);
     }
 
     private boolean verifyConfiguration() {

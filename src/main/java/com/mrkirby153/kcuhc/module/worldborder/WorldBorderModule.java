@@ -8,6 +8,8 @@ import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.settings.IntegerSetting;
 import com.mrkirby153.kcuhc.module.settings.TimeSetting;
+import com.mrkirby153.kcuhc.scoreboard.ScoreboardModuleManager;
+import com.mrkirby153.kcuhc.scoreboard.modules.WorldBorderScoreboardModule;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.protocollib.TitleTimings;
@@ -71,11 +73,13 @@ public class WorldBorderModule extends UHCModule {
     public void onLoad() {
         this.game.getWorldBorder().setSize(LOBBY_SIZE);
         this.game.getWorldBorder().setWarningDistance(0);
+        ScoreboardModuleManager.INSTANCE.installModule(new WorldBorderScoreboardModule(game, this), -1);
     }
 
     @Override
     public void onUnload() {
         this.game.getWorldBorder().setSize(DEFAULT_SIZE);
+        ScoreboardModuleManager.INSTANCE.removeModule(WorldBorderScoreboardModule.class);
     }
 
     @EventHandler

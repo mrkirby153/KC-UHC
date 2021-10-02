@@ -2,7 +2,9 @@ package com.mrkirby153.kcuhc.discord.mapper;
 
 import com.mrkirby153.kcuhc.discord.oauth.DiscordOAuthModule;
 import com.mrkirby153.kcuhc.discord.oauth.dto.SavedOAuthUser;
+import com.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
 import me.mrkirby153.kcutils.Chat;
+import me.mrkirby153.kcutils.scoreboard.items.ElementHeadedText;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.User;
 import net.md_5.bungee.api.ChatColor;
@@ -45,7 +47,8 @@ public class DiscordOauthMapper implements PlayerMapper {
             player.getUniqueId());
         suggest.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, linkSite));
         component.addExtra(suggest);
-        BaseComponent finalComponent = Chat.formattedChat(" to link your Discord and Minecraft Accounts", Chat.INSTANCE.getTEXT_COLOR());
+        BaseComponent finalComponent = Chat.formattedChat(
+            " to link your Discord and Minecraft Accounts", Chat.INSTANCE.getTEXT_COLOR());
         component.addExtra(finalComponent);
         player.spigot().sendMessage(component);
     }
@@ -58,5 +61,11 @@ public class DiscordOauthMapper implements PlayerMapper {
     @Override
     public String getCode(UUID uuid) {
         return "<NO OP>";
+    }
+
+    @Override
+    public void drawUnlinkedScoreboard(Player player, UHCScoreboard scoreboard) {
+        scoreboard.add(new ElementHeadedText(ChatColor.RED + "Link your discord account with",
+            "/discord link"));
     }
 }

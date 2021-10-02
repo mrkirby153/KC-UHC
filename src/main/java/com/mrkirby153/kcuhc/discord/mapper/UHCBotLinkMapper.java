@@ -5,7 +5,9 @@ import com.mrkirby153.botcore.command.Context;
 import com.mrkirby153.botcore.command.args.CommandContext;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.discord.DiscordModule;
+import com.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
 import me.mrkirby153.kcutils.Chat;
+import me.mrkirby153.kcutils.scoreboard.items.ElementHeadedText;
 import me.mrkirby153.kcutils.utils.IdGenerator;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -117,6 +119,28 @@ public class UHCBotLinkMapper implements PlayerMapper {
                 "{user}", user.getName() + "#" + user.getDiscriminator()));
     }
 
+    @Override
+    public String getCode(UUID uuid) {
+        for (Map.Entry<String, UUID> e : linkCodeMap.entrySet()) {
+            if (e.getValue().equals(uuid)) {
+                return e.getKey();
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void drawUnlinkedScoreboard(Player player, UHCScoreboard scoreboard) {
+        String code = getCode(player.getUniqueId());
+        if (code != null) {
+            scoreboard.add(new ElementHeadedText(ChatColor.RED + "Link your discord account with",
+                String.format("!uhcbot link %s", code)));
+        } else {
+            scoreboard.add(new ElementHeadedText(ChatColor.RED + "Link your discord account",
+                "Use /discord link to get started"));
+        }
+    }
+
     private void accept(Message message) {
         message.addReaction(CHECK_MARK).queue();
     }
@@ -156,16 +180,6 @@ public class UHCBotLinkMapper implements PlayerMapper {
         saveLinks();
     }
 
-    @Override
-    public String getCode(UUID uuid) {
-        for (Map.Entry<String, UUID> e : linkCodeMap.entrySet()) {
-            if (e.getValue().equals(uuid)) {
-                return e.getKey();
-            }
-        }
-        return null;
-    }
-
     private void saveLinks() {
         try {
             savedLinkages.save(dataFile);
@@ -176,7 +190,7 @@ public class UHCBotLinkMapper implements PlayerMapper {
 
     public void loadLinks() {
         try {
-            if(!dataFile.exists()) {
+            if (!dataFile.exists()) {
                 dataFile.createNewFile();
             }
             savedLinkages.load(dataFile);

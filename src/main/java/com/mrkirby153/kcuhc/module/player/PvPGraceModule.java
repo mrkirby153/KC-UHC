@@ -9,6 +9,8 @@ import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.settings.TimeSetting;
 import com.mrkirby153.kcuhc.player.ActionBar;
 import com.mrkirby153.kcuhc.player.ActionBarManager;
+import com.mrkirby153.kcuhc.scoreboard.ScoreboardModuleManager;
+import com.mrkirby153.kcuhc.scoreboard.modules.PvpGraceScoreboardModule;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
 import me.mrkirby153.kcutils.event.UpdateEvent;
@@ -67,8 +69,8 @@ public class PvPGraceModule extends UHCModule {
         if (event.getTo() == GameState.ALIVE) {
             graceUntil = System.currentTimeMillis() + graceTime.getValue();
             broadcast(Chat.message("PvP", "PVP is disabled for {time}",
-                "{time}",
-                Time.INSTANCE.format(1, graceUntil - System.currentTimeMillis(), Time.TimeUnit.FIT))
+                    "{time}",
+                    Time.INSTANCE.format(1, graceUntil - System.currentTimeMillis(), Time.TimeUnit.FIT))
                 .toLegacyText());
         }
         if (event.getTo() == GameState.ENDING) {
@@ -100,11 +102,14 @@ public class PvPGraceModule extends UHCModule {
     @Override
     public void onLoad() {
         ActionBarManager.getInstance().registerActionBar(pvpActionBar);
+        ScoreboardModuleManager.INSTANCE.installModule(new PvpGraceScoreboardModule(this),
+            Integer.MAX_VALUE);
     }
 
     @Override
     public void onUnload() {
-        ActionBarManager.getInstance().registerActionBar(pvpActionBar);
+        ActionBarManager.getInstance().unregisterActionBar(pvpActionBar);
+        ScoreboardModuleManager.INSTANCE.removeModule(PvpGraceScoreboardModule.class);
     }
 
     private void updatePvpActionBar() {
@@ -166,7 +171,7 @@ public class PvPGraceModule extends UHCModule {
                 component.addExtra(
                     Chat.formattedChat(" seconds!", ChatColor.RED, Chat.Style.BOLD));
                 Bukkit.getOnlinePlayers().forEach(p -> {
-                   p.spigot().sendMessage(component);
+                    p.spigot().sendMessage(component);
                     p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1F, 1F);
                 });
             }

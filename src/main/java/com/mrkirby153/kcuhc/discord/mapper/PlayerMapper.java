@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.discord.mapper;
 
+import com.mrkirby153.kcuhc.scoreboard.UHCScoreboard;
 import net.dv8tion.jda.api.entities.User;
 import org.bukkit.entity.Player;
 
@@ -39,4 +40,12 @@ public interface PlayerMapper {
      * @return The link code, or null
      */
     String getCode(UUID uuid);
+
+    /**
+     * Render link information on the scoreboard
+     *
+     * @param player     The player to draw the scoreboard for
+     * @param scoreboard The scoreboard
+     */
+    void drawUnlinkedScoreboard(Player player, UHCScoreboard scoreboard);
 }
