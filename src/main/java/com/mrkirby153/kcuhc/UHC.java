@@ -5,6 +5,7 @@ import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.MinecraftMessageKeys;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.mrkirby153.kcuhc.game.EventTracker;
 import com.mrkirby153.kcuhc.game.GameCommand;
 import com.mrkirby153.kcuhc.game.GameState;
 import com.mrkirby153.kcuhc.game.MotdListener;
@@ -50,6 +51,7 @@ public class UHC extends JavaPlugin {
     public SpectatorHandler spectatorHandler;
     public CooldownManager cooldownManager;
     public TabListHandler tabListHandler;
+    public EventTracker eventTracker;
     private UpdateEventHandler tickEventHandler;
     private ScoreboardUpdater scoreboardUpdater;
     private UHCGame game;
@@ -89,6 +91,8 @@ public class UHC extends JavaPlugin {
         CommandManager.Companion.initialize(this);
         // Initialize ACF
         manager = new BukkitCommandManager(this);
+
+        eventTracker = new EventTracker(this);
 
         // Initialize tick event
         tickEventHandler = new UpdateEventHandler(this);

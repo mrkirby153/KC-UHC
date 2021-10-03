@@ -3,25 +3,25 @@ package com.mrkirby153.kcuhc.module.player;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
 import com.mrkirby153.kcuhc.game.GameState;
+import com.mrkirby153.kcuhc.game.ScheduledEvent;
 import com.mrkirby153.kcuhc.game.event.GameStateChangeEvent;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.settings.TimeSetting;
-import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.Time;
-import me.mrkirby153.kcutils.event.UpdateEvent;
-import me.mrkirby153.kcutils.event.UpdateType;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.event.EventHandler;
+
+import java.util.concurrent.TimeUnit;
 
 public class FullHealModule extends UHCModule {
 
     private final UHC plugin;
     private TimeSetting healTime = new TimeSetting("45m");
-    private long healAt = -1L;
-    private boolean healed = false;
+
+    private long healTaskId = -1;
 
     @Inject
     public FullHealModule(UHC plugin) {
@@ -32,43 +32,45 @@ public class FullHealModule extends UHCModule {
     @EventHandler(ignoreCancelled = true)
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.ALIVE) {
-            this.healAt = System.currentTimeMillis() + healTime.getValue();
-            this.healed = false;
-            plugin.getLogger().info("[FULL HEAL] Healing in " + (Time.INSTANCE
-                .format(1, this.healAt - System.currentTimeMillis())));
-        }
-    }
-
-    @EventHandler(ignoreCancelled = true)
-    public void onUpdate(UpdateEvent event) {
-        if (event.getType() == UpdateType.SECOND
-            && this.plugin.getGame().getCurrentState() == GameState.ALIVE) {
-            if (!healed) {
-                announceFullHeal();
-                if(this.healAt < System.currentTimeMillis()) {
-                    Bukkit.getOnlinePlayers().forEach(player -> {
-                        player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
-                        player.setFoodLevel(20);
-                        player.setSaturation(20.0F);
-                    });
-                    healed = true;
-                }
+            plugin.getLogger().info("[FULL HEAL] Healing in " + (Time
+                .format(1, healTime.getValue())));
+            healTaskId = plugin.eventTracker.scheduleSyncEvent(new FullHealTask(),
+                healTime.getValue(),
+                TimeUnit.MILLISECONDS);
+        } else {
+            if(healTaskId != -1) {
+                plugin.eventTracker.cancel(healTaskId);
+                healTaskId = -1;
             }
         }
     }
 
-    private void announceFullHeal() {
-        double msRemaining = this.healAt - System.currentTimeMillis();
-        double secondsRemaining = Math.floor(msRemaining / 1000D);
-        double minutesRemaining = Math.floor(secondsRemaining / 60D);
-        if (secondsRemaining <= 0) {
-            Bukkit.getOnlinePlayers().forEach(
-                p -> p.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "You have been healed!"));
+    private class FullHealTask implements ScheduledEvent {
+
+        @Override
+        public String getName() {
+            return "Final Heal";
         }
-        if (minutesRemaining > 0 && (minutesRemaining % 15) == 0) {
-            Bukkit.getOnlinePlayers().forEach(p -> p.sendMessage(
-                Chat.message("Full Heal", "You will be healed in {time}","{time}",
-                    Time.INSTANCE.format(0, (long) msRemaining)).toLegacyText()));
+
+        @Override
+        public void run() {
+            Bukkit.getOnlinePlayers().forEach(player -> {
+                AttributeInstance attr = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+                player.setHealth(attr != null ? attr.getValue() : 20.0);
+                player.setFoodLevel(20);
+                player.setSaturation(20.0F);
+            });
+        }
+
+        @Override
+        public boolean shouldAnnounce(long msLeft) {
+            double secondsRemaining = Math.floor(msLeft / 1000D);
+            double minutesRemaining = Math.floor(secondsRemaining / 60D);
+            if (minutesRemaining > 0) {
+                return minutesRemaining % 15 == 0;
+            } else {
+                return secondsRemaining < 10;
+            }
         }
     }
 }

@@ -12,6 +12,7 @@ import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.worldborder.WorldBorderModule;
 import com.mrkirby153.kcuhc.scoreboard.ScoreboardModuleManager;
 import com.mrkirby153.kcuhc.scoreboard.modules.GameStateScoreboardModule;
+import com.mrkirby153.kcuhc.scoreboard.modules.NextEventScoreboardModule;
 import com.mrkirby153.kcuhc.scoreboard.modules.TimeElapsedScoreboardModule;
 import me.mrkirby153.kcutils.Chat;
 import me.mrkirby153.kcutils.event.UpdateEvent;
@@ -48,6 +49,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The main game class
@@ -107,7 +109,10 @@ public class UHCGame implements Listener {
 
         ScoreboardModuleManager scoreboardModuleManager = ScoreboardModuleManager.INSTANCE;
         scoreboardModuleManager.installModule(new GameStateScoreboardModule(this), 0);
-        scoreboardModuleManager.installModule(new TimeElapsedScoreboardModule(this), Integer.MIN_VALUE);
+        scoreboardModuleManager.installModule(new TimeElapsedScoreboardModule(this),
+            Integer.MIN_VALUE);
+        scoreboardModuleManager.installModule(new NextEventScoreboardModule(plugin.eventTracker),
+            Integer.MAX_VALUE);
     }
 
     /**
@@ -280,21 +285,8 @@ public class UHCGame implements Listener {
     @EventHandler(ignoreCancelled = true)
     public void onGameStateChange(GameStateChangeEvent event) {
         if (event.getTo() == GameState.COUNTDOWN) {
-            new CountdownTimer(plugin, 10, 20, time -> {
-                if (time == 0) {
-                    setCurrentState(GameState.ALIVE);
-                    return;
-                }
-                Bukkit.getOnlinePlayers().forEach(p -> {
-                    if (time <= 5) {
-                        ChatColor color = time <= 3 ? ChatColor.RED : ChatColor.YELLOW;
-                        p.sendTitle(color + "" + time, "", 5, 21, 5);
-                    }
-                    p.spigot().sendMessage(Chat
-                        .message("Game", "Starting in {time} seconds", "{time}", time));
-                    p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_HAT, 1F, 1F);
-                });
-            });
+            plugin.eventTracker.scheduleSyncEvent(new StartEvent(), 10, TimeUnit.SECONDS);
+            plugin.eventTracker.start();
         }
         if (event.getTo() == GameState.ALIVE) {
             // Butcher all the mobs
@@ -362,6 +354,9 @@ public class UHCGame implements Listener {
                     .forEach(e -> player.removePotionEffect(e.getType()));
                 player.sendTitle(ChatColor.GOLD + winner, "won the game", 20, 60, 20);
             });
+        }
+        if (event.getTo() == GameState.ENDED) {
+            plugin.eventTracker.stop();
         }
     }
 
@@ -599,6 +594,29 @@ public class UHCGame implements Listener {
         getUHCWorld().setGameRule(rule, value);
         if (getUHCNether() != null) {
             getUHCNether().setGameRule(rule, value);
+        }
+    }
+
+    private class StartEvent implements ScheduledEvent {
+
+        @Override
+        public String getName() {
+            return "Game Start";
+        }
+
+        @Override
+        public void run() {
+            setCurrentState(GameState.ALIVE);
+        }
+
+        @Override
+        public Sound notifySound() {
+            return Sound.BLOCK_NOTE_BLOCK_HAT;
+        }
+
+        @Override
+        public Sound startSound() {
+            return null;
         }
     }
 }
