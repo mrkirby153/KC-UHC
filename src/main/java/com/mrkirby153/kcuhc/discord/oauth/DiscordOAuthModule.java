@@ -10,10 +10,12 @@ import com.mrkirby153.kcuhc.discord.oauth.dto.MinecraftUser;
 import com.mrkirby153.kcuhc.discord.oauth.dto.SavedOAuthUser;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.settings.IntegerSetting;
+import com.mrkirby153.kcuhc.module.settings.ModuleSetting;
 import com.mrkirby153.kcuhc.module.settings.StringSetting;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -370,5 +372,18 @@ public class DiscordOAuthModule extends UHCModule {
     @Override
     public void onUnload() {
         Spark.stop();
+    }
+
+    @Override
+    public void onReload() {
+        unload();
+        Bukkit.getServer().getScheduler().runTaskLater(uhc, this::load, 10);
+    }
+
+    @Override
+    public void onSettingChange(ModuleSetting<?> setting) {
+        if (setting == this.apiPort) {
+            reload(false);
+        }
     }
 }

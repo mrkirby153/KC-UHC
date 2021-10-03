@@ -216,6 +216,7 @@ public class ModuleRegistry {
                     // Ignore
                 }
             });
+            mod.reload(false);
         });
     }
 

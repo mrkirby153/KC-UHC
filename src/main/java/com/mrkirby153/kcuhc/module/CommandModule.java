@@ -77,11 +77,13 @@ public class CommandModule extends BaseCommand {
 
         if (value.isEmpty()) {
             moduleSetting.reset();
-            sender.sendMessage("Module", "Reset {key}", "{key}", setting);
+            module.onSettingChange(moduleSetting);
+            sender.sendMessage(Chat.message("Module", "Reset {key}", "{key}", setting).toLegacyText());
             return;
         }
         try {
             moduleSetting.set(value);
+            module.onSettingChange(moduleSetting);
         } catch (SettingParseException e) {
             sender.sendMessage(Chat.error(e.getMessage()).toLegacyText());
             return;

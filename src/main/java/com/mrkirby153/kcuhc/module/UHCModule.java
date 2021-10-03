@@ -129,6 +129,22 @@ public abstract class UHCModule implements Listener {
     }
 
     /**
+     * Called when the module is reloaded
+     */
+    public void onReload() {
+
+    }
+
+    /**
+     * Called when a setting is changed
+     *
+     * @param setting The setting that was changed
+     */
+    public void onSettingChange(ModuleSetting<?> setting) {
+
+    }
+
+    /**
      * Unloads the module
      */
     public final boolean unload() {
@@ -146,6 +162,23 @@ public abstract class UHCModule implements Listener {
         return true;
     }
 
+    /**
+     * Reloads the module
+     */
+    public final void reload(boolean full) {
+        if (full) {
+            unload();
+            load();
+        } else {
+            onReload();
+        }
+    }
+
+    /**
+     * Gets a list of settings available
+     *
+     * @return The list of settings
+     */
     public final Map<String, ModuleSetting> getSettings() {
         Map<String, ModuleSetting> map = new HashMap<>();
         for (Field f : this.getClass().getDeclaredFields()) {
