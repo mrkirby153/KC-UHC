@@ -105,6 +105,9 @@ public class UHC extends JavaPlugin {
         flagModule.initialize(world);
 
         Arrays.stream(WorldFlags.values()).forEach(f -> {
+            if(f == WorldFlags.WEATHER_CHANGE) {
+                return;
+            }
             flagModule.set(world, f, false, false);
         });
 

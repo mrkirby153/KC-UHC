@@ -24,6 +24,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.GameRule;
+import org.bukkit.Keyed;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -113,6 +114,7 @@ public class UHCGame implements Listener {
             Integer.MIN_VALUE);
         scoreboardModuleManager.installModule(new NextEventScoreboardModule(plugin.eventTracker),
             Integer.MAX_VALUE);
+        initializeWorld();
     }
 
     /**
@@ -308,12 +310,20 @@ public class UHCGame implements Listener {
                     p.getActivePotionEffects().stream().map(PotionEffect::getType)
                         .forEach(p::removePotionEffect);
 
+                    p.undiscoverRecipes(p.getDiscoveredRecipes());
+                    Bukkit.getServer().recipeIterator().forEachRemaining(r -> {
+                        if(r instanceof Keyed) {
+                            p.discoverRecipe(((Keyed) r).getKey());
+                        }
+                    });
+
                     p.addPotionEffect(
                         new PotionEffect(PotionEffectType.REGENERATION, 30 * 20, 5, true));
                     p.addPotionEffect(
                         new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 30 * 20, 5, true));
                 });
             setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
+            setGameRule(GameRule.DO_WEATHER_CYCLE, true);
             this.getUHCWorld().setTime(0);
             if (this.getUHCWorld().hasStorm()) {
                 plugin.getLogger().info("Stopping the storm that's currently in progress");
@@ -324,8 +334,11 @@ public class UHCGame implements Listener {
         if (event.getTo() == GameState.ENDING || event.getTo() == GameState.WAITING) {
             Arrays.stream(WorldFlags.values())
                 .forEach(f -> plugin.flagModule.set(this.getUHCWorld(), f, false, false));
+            plugin.flagModule.set(this.getUHCWorld(), WorldFlags.WEATHER_CHANGE, true, false);
             setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
             this.getUHCWorld().setTime(1200);
+            this.getUHCWorld().setStorm(false);
+            this.getUHCWorld().setClearWeatherDuration(0);
         }
         if (event.getTo() == GameState.ALIVE) {
             Arrays.stream(WorldFlags.values())
@@ -358,6 +371,12 @@ public class UHCGame implements Listener {
         if (event.getTo() == GameState.ENDED) {
             plugin.eventTracker.stop();
         }
+    }
+
+    public void initializeWorld() {
+        getUHCWorld().setTime(1200);
+        setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+        setGameRule(GameRule.DO_WEATHER_CYCLE, false);
     }
 
     /**
@@ -586,7 +605,6 @@ public class UHCGame implements Listener {
     }
 
     private void setGameRules() {
-        setGameRule(GameRule.DO_INSOMNIA, false);
         setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
     }
 
