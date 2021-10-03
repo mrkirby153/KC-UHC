@@ -121,7 +121,7 @@ public class CommandTeam extends BaseCommand {
         currentTeams.forEach(c -> uhc.getGame().deleteTeam(c));
         List<ChatColor> blacklistedColors = Arrays
             .asList(ChatColor.RESET, ChatColor.BOLD, ChatColor.STRIKETHROUGH, ChatColor.MAGIC,
-                ChatColor.WHITE);
+                ChatColor.WHITE, ChatColor.BLACK, ChatColor.UNDERLINE);
 
         List<Player> availablePlayers = new ArrayList<>(Bukkit.getOnlinePlayers());
 
