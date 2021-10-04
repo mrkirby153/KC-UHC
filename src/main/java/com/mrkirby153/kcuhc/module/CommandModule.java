@@ -56,7 +56,7 @@ public class CommandModule extends BaseCommand {
     }
 
     @Subcommand("options|settings")
-    @CommandCompletion("@loadedModules @moduleSettings")
+    @CommandCompletion("@loadedModules @moduleSettings @moduleOptions")
     @CommandPermission("kcuhc.module.options")
     public void options(CommandSender sender, UHCModule module, @Default String setting,
         @Default String value) {

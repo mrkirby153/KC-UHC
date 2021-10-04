@@ -1,5 +1,8 @@
 package com.mrkirby153.kcuhc.module.settings;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public abstract class ModuleSetting<T> {
 
     private final T defaultValue;
@@ -44,6 +47,15 @@ public abstract class ModuleSetting<T> {
     @Override
     public String toString() {
         return getValue().toString();
+    }
+
+    /**
+     * Gets a list of completions to show for this module
+     *
+     * @return The list of completions
+     */
+    public List<String> getCompletions(String input) {
+        return new ArrayList<>();
     }
 
     /**

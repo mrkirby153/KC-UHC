@@ -5,13 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.discord.DiscordModule;
 import com.mrkirby153.kcuhc.discord.oauth.OAuthClient.OAuthTokens;
 import com.mrkirby153.kcuhc.discord.oauth.dto.MinecraftUser;
 import com.mrkirby153.kcuhc.discord.oauth.dto.SavedOAuthUser;
+import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.settings.IntegerSetting;
 import com.mrkirby153.kcuhc.module.settings.ModuleSetting;
+import com.mrkirby153.kcuhc.module.settings.SettingParseException;
 import com.mrkirby153.kcuhc.module.settings.StringSetting;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Guild;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
@@ -33,12 +38,15 @@ import spark.Spark;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 public class DiscordOAuthModule extends UHCModule {
 
@@ -59,7 +67,7 @@ public class DiscordOAuthModule extends UHCModule {
      * A list of servers (comma separated) that the user must be in. This will match any server
      * in the list. If left blank, access will not be enforced
      */
-    private StringSetting accessServers = new StringSetting("");
+    private StringSetting accessServer = new DiscordServerSetting("");
     private IntegerSetting apiPort = new IntegerSetting(42069);
 
     @Inject
@@ -252,11 +260,11 @@ public class DiscordOAuthModule extends UHCModule {
     }
 
     public AccessState checkServerAccess(UUID uuid) {
-        if (this.accessServers.getValue().equals("")) {
+        if (this.accessServer.getValue().equals("")) {
             return AccessState.GRANTED;
         }
 
-        List<String> requiredServers = Arrays.asList(accessServers.getValue().split(","));
+        List<String> requiredServers = Arrays.asList(accessServer.getValue().split(","));
 
         OAuthTokens existingTokens = getTokens(uuid);
         if (existingTokens == null) {
@@ -384,6 +392,60 @@ public class DiscordOAuthModule extends UHCModule {
     public void onSettingChange(ModuleSetting<?> setting) {
         if (setting == this.apiPort) {
             reload(false);
+        }
+    }
+
+    public class DiscordServerSetting extends StringSetting {
+
+        private Pattern idRegex = Pattern.compile("\\d{17,18}");
+
+        public DiscordServerSetting(String defaultValue) {
+            super(defaultValue);
+        }
+
+        @Override
+        public String parse(String s) throws SettingParseException {
+            if (idRegex.matcher(s).find()) {
+                return super.parse(s);
+            } else {
+                Optional<DiscordModule> modOpt = ModuleRegistry.INSTANCE.getLoadedModule(
+                    DiscordModule.class);
+                if (modOpt.isPresent()) {
+                    JDA jda = modOpt.get().jda;
+                    List<Guild> g = jda.getGuildsByName(s, true);
+                    if (g.size() > 1) {
+                        throw new SettingParseException("More than one guild exists by that name!");
+                    } else if (g.size() == 1) {
+                        return g.get(0).getId();
+                    } else {
+                        throw new SettingParseException("No guild found with that name!");
+                    }
+                } else {
+                    throw new SettingParseException(
+                        "Server by name requires the discord module loaded!");
+                }
+            }
+        }
+
+        @Override
+        public List<String> getCompletions(String input) {
+            Optional<DiscordModule> modOpt = ModuleRegistry.INSTANCE.getLoadedModule(
+                DiscordModule.class);
+            if (modOpt.isPresent()) {
+                DiscordModule module = modOpt.get();
+                List<String> names = new ArrayList<>();
+                List<String> ids = new ArrayList<>();
+                module.jda.getGuilds().forEach(g -> {
+                    names.add(g.getName());
+                    ids.add(g.getId());
+                });
+                List<String> all = new ArrayList<>();
+                all.addAll(names);
+                all.addAll(ids);
+                return all;
+            } else {
+                return new ArrayList<>();
+            }
         }
     }
 }

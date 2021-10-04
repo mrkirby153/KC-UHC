@@ -19,6 +19,7 @@ import com.mrkirby153.kcuhc.module.CommandModule;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
 import com.mrkirby153.kcuhc.module.UHCModule;
 import com.mrkirby153.kcuhc.module.player.TeamInventoryModule;
+import com.mrkirby153.kcuhc.module.settings.ModuleSetting;
 import com.mrkirby153.kcuhc.player.ActionBarManager;
 import com.mrkirby153.kcuhc.player.UHCPlayer;
 import com.mrkirby153.kcuhc.scoreboard.ScoreboardUpdater;
@@ -105,7 +106,7 @@ public class UHC extends JavaPlugin {
         flagModule.initialize(world);
 
         Arrays.stream(WorldFlags.values()).forEach(f -> {
-            if(f == WorldFlags.WEATHER_CHANGE) {
+            if (f == WorldFlags.WEATHER_CHANGE) {
                 return;
             }
             flagModule.set(world, f, false, false);
@@ -178,6 +179,25 @@ public class UHC extends JavaPlugin {
                 return new ArrayList<>();
             } else {
                 return mod.getSettings().keySet();
+            }
+        });
+
+        manager.getCommandCompletions().registerCompletion("moduleOptions", c -> {
+            UHCModule mod = c.getContextValue(UHCModule.class);
+            if (mod == null) {
+                return new ArrayList<>();
+            }
+            try {
+                String setting = c.getContextValue(String.class, 2);
+                ModuleSetting<?> modSetting = mod.getSettings().get(setting);
+                if (modSetting != null) {
+                    List<String> completions = modSetting.getCompletions(c.getInput());
+                    return completions != null ? completions : new ArrayList<>();
+                } else {
+                    return new ArrayList<>();
+                }
+            } catch (InvalidCommandArgument e) {
+                return new ArrayList<>();
             }
         });
 
