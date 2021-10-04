@@ -5,6 +5,7 @@ import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.MinecraftMessageKeys;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.mrkirby153.kcuhc.fakeblock.FakeBlockManager;
 import com.mrkirby153.kcuhc.game.EventTracker;
 import com.mrkirby153.kcuhc.game.GameCommand;
 import com.mrkirby153.kcuhc.game.GameState;
@@ -53,6 +54,7 @@ public class UHC extends JavaPlugin {
     public CooldownManager cooldownManager;
     public TabListHandler tabListHandler;
     public EventTracker eventTracker;
+    public FakeBlockManager fakeBlockManager = new FakeBlockManager();
     private UpdateEventHandler tickEventHandler;
     private ScoreboardUpdater scoreboardUpdater;
     private UHCGame game;
@@ -141,6 +143,7 @@ public class UHC extends JavaPlugin {
         ModuleRegistry.INSTANCE.loadAll(this);
 
         getServer().getPluginManager().registerEvents(new MotdListener(this), this);
+        getServer().getPluginManager().registerEvents(this.fakeBlockManager, this);
     }
 
     private void loadStrings() {

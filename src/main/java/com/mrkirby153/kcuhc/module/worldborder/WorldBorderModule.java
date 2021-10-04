@@ -31,6 +31,12 @@ import org.bukkit.WorldBorder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 public class WorldBorderModule extends UHCModule {
 
     private static final int LOBBY_SIZE = 60;
@@ -44,10 +50,15 @@ public class WorldBorderModule extends UHCModule {
     private IntegerSetting start = new IntegerSetting(100);
     private IntegerSetting end = new IntegerSetting(50);
     private IntegerSetting warningDistance = new IntegerSetting(50);
-    private EnumSetting<AltWarningMode> altWarningMode = new EnumSetting<>(
-        AltWarningMode.BEDROCK_ONLY, AltWarningMode.class);
+    private EnumSetting<PlatformTarget> altWarningMode = new EnumSetting<>(
+        PlatformTarget.BEDROCK_ONLY, PlatformTarget.class);
+    private EnumSetting<Material> borderWall = new EnumSetting<>(Material.BEDROCK, Material.class);
+    private EnumSetting<PlatformTarget> borderWallEnabled = new EnumSetting<>(
+        PlatformTarget.BEDROCK_ONLY, PlatformTarget.class);
 
     private ActionBar worldBorderActionBar;
+
+    private Map<UUID, List<Location>> lastFakeBorderBlocks = new HashMap<>();
 
     @Inject
     public WorldBorderModule(UHC uhc, UHCGame game) {
@@ -128,7 +139,7 @@ public class WorldBorderModule extends UHCModule {
     @EventHandler(ignoreCancelled = true)
     public void onUpdate(UpdateEvent event) {
         if (event.getType() == UpdateType.FAST
-            && altWarningMode.getValue() != AltWarningMode.NONE) {
+            && altWarningMode.getValue() != PlatformTarget.NONE) {
             Bukkit.getOnlinePlayers().forEach(pl -> {
                 switch (altWarningMode.getValue()) {
                     case ALL:
@@ -144,52 +155,113 @@ public class WorldBorderModule extends UHCModule {
                 }
             });
         }
+        if (event.getType() == UpdateType.FAST) {
+            if (borderWallEnabled.getValue() == PlatformTarget.NONE) {
+                lastFakeBorderBlocks.forEach((u, l) -> {
+                    Player p = Bukkit.getPlayer(u);
+                    if (p != null) {
+                        l.forEach(location -> {
+                            uhc.fakeBlockManager.resetFakeBlock(p, location);
+                        });
+                    }
+                });
+                lastFakeBorderBlocks.clear();
+            } else {
+                Bukkit.getOnlinePlayers().forEach(p -> {
+                    if (borderWallEnabled.getValue() == PlatformTarget.ALL || (
+                        borderWallEnabled.getValue() == PlatformTarget.BEDROCK_ONLY
+                            && FloodgateWrapper.getFloodgate()
+                            .isFloodgatePlayer(p.getUniqueId()))) {
+                        showFakeBorder(p);
+                    } else {
+                        List<Location> lastBlocks = lastFakeBorderBlocks.remove(p.getUniqueId());
+                        if (lastBlocks != null) {
+                            lastBlocks.forEach(l -> uhc.fakeBlockManager.resetFakeBlock(p, l));
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    private double getDistanceSquaredToWorldBorder(Player player) {
+        Location playerPos = player.getLocation();
+        World world = playerPos.getWorld();
+        Location wbCenter = world.getWorldBorder().getCenter();
+
+        double locX = (world.getWorldBorder().getSize() / 2.0) + wbCenter.getX();
+        double locZ = (world.getWorldBorder().getSize() / 2.0) + wbCenter.getZ();
+
+        Location southWorldBorderLocation = playerPos.clone();
+        Location northWorldBorderLocation = playerPos.clone();
+        Location eastWorldBorderLocation = playerPos.clone();
+        Location westWorldBorderLocation = playerPos.clone();
+
+        southWorldBorderLocation.setZ(Math.abs(locZ));
+        northWorldBorderLocation.setZ(Math.abs(locZ) * -1);
+
+        eastWorldBorderLocation.setX(Math.abs(locX));
+        westWorldBorderLocation.setX(Math.abs(locX) * -1);
+
+        double distanceSouth = southWorldBorderLocation.distanceSquared(playerPos);
+        double distanceNorth = northWorldBorderLocation.distanceSquared(playerPos);
+        double distanceEast = eastWorldBorderLocation.distanceSquared(playerPos);
+        double distanceWest = westWorldBorderLocation.distanceSquared(playerPos);
+
+        return Math.min(
+            Math.min(distanceSouth, Math.min(distanceNorth, distanceEast)), distanceWest);
+    }
+
+    private ClosestWorldborder getClosestWorldBorderDirection(Player player) {
+        Location playerPos = player.getLocation();
+        World world = playerPos.getWorld();
+        Location wbCenter = world.getWorldBorder().getCenter();
+
+        double locX = (world.getWorldBorder().getSize() / 2.0) + wbCenter.getX();
+        double locZ = (world.getWorldBorder().getSize() / 2.0) + wbCenter.getZ();
+
+        Location southWorldBorderLocation = playerPos.clone();
+        Location northWorldBorderLocation = playerPos.clone();
+        Location eastWorldBorderLocation = playerPos.clone();
+        Location westWorldBorderLocation = playerPos.clone();
+
+        southWorldBorderLocation.setZ(Math.abs(locZ));
+        northWorldBorderLocation.setZ(Math.abs(locZ) * -1);
+
+        eastWorldBorderLocation.setX(Math.abs(locX));
+        westWorldBorderLocation.setX(Math.abs(locX) * -1);
+
+        double distanceSouth = southWorldBorderLocation.distanceSquared(playerPos);
+        double distanceNorth = northWorldBorderLocation.distanceSquared(playerPos);
+        double distanceEast = eastWorldBorderLocation.distanceSquared(playerPos);
+        double distanceWest = westWorldBorderLocation.distanceSquared(playerPos);
+
+        if (distanceSouth < distanceNorth && distanceSouth < distanceEast
+            && distanceSouth < distanceWest) {
+            return ClosestWorldborder.SOUTH;
+        } else if (distanceNorth < distanceEast && distanceNorth < distanceWest) {
+            return ClosestWorldborder.NORTH;
+        } else if (distanceEast < distanceWest) {
+            return ClosestWorldborder.EAST;
+        }
+        return ClosestWorldborder.WEST;
     }
 
     private void updateWarningActionbar(Player player) {
         Location playerPos = player.getLocation();
         World world = playerPos.getWorld();
         if (world != null && world.getWorldBorder().getWarningDistance() > 0) {
-            Location wbCenter = world.getWorldBorder().getCenter();
-
-            double locX = (world.getWorldBorder().getSize() / 2.0) + wbCenter.getX();
-            double locZ = (world.getWorldBorder().getSize() / 2.0) + wbCenter.getX();
-
-            Location southWorldBorderLocation = playerPos.clone();
-            Location northWorldBorderLocation = playerPos.clone();
-            Location eastWorldBorderLocation = playerPos.clone();
-            Location westWorldBorderLocation = playerPos.clone();
-
-            southWorldBorderLocation.setZ(Math.abs(locZ));
-            northWorldBorderLocation.setZ(Math.abs(locZ) * -1);
-
-            eastWorldBorderLocation.setX(Math.abs(locX));
-            westWorldBorderLocation.setX(Math.abs(locX) * -1);
-
-            double distanceSouth = southWorldBorderLocation.distanceSquared(playerPos);
-            double distanceNorth = northWorldBorderLocation.distanceSquared(playerPos);
-            double distanceEast = eastWorldBorderLocation.distanceSquared(playerPos);
-            double distanceWest = westWorldBorderLocation.distanceSquared(playerPos);
-
-            double distanceSquared = distanceWest;
-            if (distanceSouth < distanceNorth && distanceSouth < distanceEast
-                && distanceSouth < distanceWest) {
-                distanceSquared = distanceSouth;
-            } else if (distanceNorth < distanceEast && distanceNorth < distanceWest) {
-                distanceSquared = distanceNorth;
-            } else if (distanceEast < distanceWest) {
-                distanceSquared = distanceEast;
-            }
-
             boolean outsideWorldborder = false;
-            if(Math.abs(playerPos.getX()) > locX || Math.abs(playerPos.getZ()) > locZ) {
+            double[] border = worldborderLoc(world);
+            if (Math.abs(playerPos.getX()) > border[0] || Math.abs(playerPos.getZ()) > border[1]) {
                 outsideWorldborder = true;
             }
 
-            double distance = Math.sqrt(distanceSquared);
-            if(distance < world.getWorldBorder().getWarningDistance() || outsideWorldborder) {
-                double distancePercent = 1 - (distance / world.getWorldBorder().getWarningDistance());
-                if(outsideWorldborder) {
+            double distance = Math.sqrt(getDistanceSquaredToWorldBorder(player));
+            if (distance < world.getWorldBorder().getWarningDistance() || outsideWorldborder) {
+                double distancePercent =
+                    1 - (distance / world.getWorldBorder().getWarningDistance());
+                if (outsideWorldborder) {
                     distancePercent = 1;
                 }
                 int totalSquares = 20;
@@ -211,6 +283,64 @@ public class WorldBorderModule extends UHCModule {
         } else {
             worldBorderActionBar.clear(player);
         }
+    }
+
+    /**
+     * Show the player a fake border made of glass
+     *
+     * @param player The player
+     */
+    public void showFakeBorder(Player player) {
+        List<Location> lastBlocks = this.lastFakeBorderBlocks.computeIfAbsent(player.getUniqueId(),
+            u -> new ArrayList<>());
+        if (getDistanceSquaredToWorldBorder(player) > Math.pow(20, 2) || player.getWorld().getWorldBorder().getSize() < 5) {
+            if (lastBlocks.size() > 0) {
+                lastBlocks.forEach(b -> this.uhc.fakeBlockManager.resetFakeBlock(player, b));
+            }
+            return;
+        }
+        List<Location> newBlocks = new ArrayList<>();
+        double[] wbLoc = worldborderLoc(player.getWorld());
+        wbLoc[0] = Math.round(wbLoc[0]);
+        wbLoc[1] = Math.round(wbLoc[1]);
+        ClosestWorldborder closestWorldborder = getClosestWorldBorderDirection(player);
+        int offsetX = 5;
+        int offsetY = 5;
+        int offsetZ = 5;
+        for (int oX = offsetX * -1; oX < offsetX; oX++) {
+            for (int oY = offsetY * -1; oY < offsetY; oY++) {
+                for (int oZ = offsetZ * -1; oZ < offsetZ; oZ++) {
+                    Location l = player.getLocation().getBlock().getLocation();
+                    l.add(oX, oY, oZ);
+
+                    switch (closestWorldborder) {
+                        case NORTH:
+                            l.setZ((Math.abs(wbLoc[0]) * -1) - 1);
+                            break;
+                        case SOUTH:
+                            l.setZ(Math.abs(wbLoc[0]));
+                            break;
+                        case EAST:
+                            l.setX(Math.abs(wbLoc[1]));
+                            break;
+                        case WEST:
+                            l.setX((Math.abs(wbLoc[1]) * -1) - 1);
+                            break;
+                    }
+                    if (l.distanceSquared(player.getLocation()) < Math.pow(5, 2)) {
+                        if (Math.abs(player.getLocation().getX()) < wbLoc[0]
+                            && Math.abs(player.getLocation().getZ()) < wbLoc[1]) {
+                            newBlocks.add(l);
+                        }
+                    }
+                }
+            }
+        }
+        lastBlocks.stream().filter(l -> !newBlocks.contains(l))
+            .forEach(l -> uhc.fakeBlockManager.resetFakeBlock(player, l));
+        newBlocks.stream().filter(l -> !lastBlocks.contains(l))
+            .forEach(l -> uhc.fakeBlockManager.setFakeBlock(player, l, borderWall.getValue()));
+        this.lastFakeBorderBlocks.put(player.getUniqueId(), newBlocks);
     }
 
     /**
@@ -245,14 +375,18 @@ public class WorldBorderModule extends UHCModule {
     }
 
     public double[] worldborderLoc() {
-        WorldBorder wb = this.game.getWorldBorder();
-        Location l = wb.getCenter();
-        double locX = (wb.getSize() / 2) + l.getX();
-        double locY = (wb.getSize() / 2) + l.getY();
-        return new double[]{locX, locY};
+        return worldborderLoc(this.game.getUHCWorld());
     }
 
-    public enum AltWarningMode {
+    public double[] worldborderLoc(World world) {
+        WorldBorder wb = world.getWorldBorder();
+        Location l = wb.getCenter();
+        double locX = (wb.getSize() / 2) + l.getX();
+        double locZ = (wb.getSize() / 2) + l.getZ();
+        return new double[]{locX, locZ};
+    }
+
+    public enum PlatformTarget {
         NONE,
         BEDROCK_ONLY,
         ALL
