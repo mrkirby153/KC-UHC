@@ -36,6 +36,9 @@ repositories {
     maven {
         url "https://m2.dv8tion.net/releases"
     }
+    maven {
+        url = "https://repo.opencollab.dev/maven-snapshots/"
+    }
 }
 
 dependencies {
@@ -50,6 +53,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:4.9.1'
     implementation 'org.apache.httpcomponents:httpclient:4.5.13'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.1'
+    compileOnly 'org.geysermc.floodgate:api:2.0-SNAPSHOT'
     compileOnly 'org.spigotmc:spigot-api:1.17.1-R0.1-SNAPSHOT'
     compileOnly 'com.comphenix.protocol:ProtocolLib-API:4.4.0'
 }
