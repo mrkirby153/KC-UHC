@@ -10,6 +10,7 @@ import co.aikar.commands.annotation.Subcommand;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import com.mrkirby153.kcuhc.UHC;
+import com.mrkirby153.kcuhc.game.UHCGame.GameStartException;
 import com.mrkirby153.kcuhc.game.spectator.SpectatorListener;
 import com.mrkirby153.kcuhc.game.team.SpectatorTeam;
 import com.mrkirby153.kcuhc.module.ModuleRegistry;
@@ -82,8 +83,8 @@ public class GameCommand extends BaseCommand {
             int c = (int) (Math.random() * 10000);
             this.stalemateCode.put(sender.getUniqueId(), Integer.toString(c));
             sender.sendMessage(Chat.message("Stalemate",
-                "Are you sure you want to activate the stalemate resolution system? " +
-                    "Type {command} to confirm", "{command}", "/game stalemate " + c)
+                    "Are you sure you want to activate the stalemate resolution system? " +
+                        "Type {command} to confirm", "{command}", "/game stalemate " + c)
                 .toLegacyText());
         }
     }
@@ -109,8 +110,11 @@ public class GameCommand extends BaseCommand {
     @Subcommand("start")
     @CommandPermission("kcuhc.game.start")
     public void startGame(CommandSender sender) {
-        if (!this.game.start()) {
-            sender.sendMessage(Chat.error("Game start has been aborted").toLegacyText());
+        try {
+            this.game.start();
+        } catch (GameStartException e) {
+            sender.sendMessage(
+                Chat.error("Game start has been aborted: " + e.getMessage()).toLegacyText());
             return;
         }
         sender.sendMessage(Chat.message("Game", "Started").toLegacyText());

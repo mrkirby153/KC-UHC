@@ -370,6 +370,7 @@ public class DiscordModule extends UHCModule {
         if (!ready) {
             log(":warning:", "Game start aborted. Team channels have not been created");
             event.setCancelled(true);
+            event.setCanceledReason("Discord team channels not generated");
         }
     }
 

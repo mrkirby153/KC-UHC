@@ -241,17 +241,16 @@ public class UHCGame implements Listener {
      *
      * @return True if the game was started successfully
      */
-    public boolean start() {
+    public void start() throws GameStartException {
         this.plugin.getLogger().info("Starting game");
         GameStartingEvent event = new GameStartingEvent();
         Bukkit.getServer().getPluginManager().callEvent(event);
         if (event.isCancelled()) {
             this.plugin.getLogger().info("Game start canceled");
-            return false;
+            throw new GameStartException(event.getCanceledReason());
         }
         setGameRules();
         this.setCurrentState(GameState.COUNTDOWN);
-        return true;
     }
 
     /**
@@ -312,7 +311,7 @@ public class UHCGame implements Listener {
 
                     p.undiscoverRecipes(p.getDiscoveredRecipes());
                     Bukkit.getServer().recipeIterator().forEachRemaining(r -> {
-                        if(r instanceof Keyed) {
+                        if (r instanceof Keyed) {
                             p.discoverRecipe(((Keyed) r).getKey());
                         }
                     });
@@ -635,6 +634,17 @@ public class UHCGame implements Listener {
         @Override
         public Sound startSound() {
             return null;
+        }
+    }
+
+    public class GameStartException extends Exception {
+
+        public GameStartException() {
+            super();
+        }
+
+        public GameStartException(String reason) {
+            super(reason);
         }
     }
 }

@@ -150,8 +150,7 @@ public class FakeBlockManager implements Listener {
                 return false;
             }
             FakeBlock fakeBlock = (FakeBlock) o;
-            return Objects.equals(blockData, fakeBlock.blockData) && Objects.equals(
-                location, fakeBlock.location);
+            return Objects.equals(location, fakeBlock.location);
         }
     }
 }
