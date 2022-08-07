@@ -9,7 +9,7 @@ import me.mrkirby153.kcutils.event.UpdateType;
 import me.mrkirby153.kcutils.gui.Gui;
 import me.mrkirby153.kcutils.paginate.Paginator;
 import net.md_5.bungee.api.ChatColor;
-import org.apache.commons.lang.WordUtils;
+import org.apache.commons.text.WordUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;

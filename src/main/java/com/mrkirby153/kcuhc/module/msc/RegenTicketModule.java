@@ -15,16 +15,19 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -173,10 +176,13 @@ public class RegenTicketModule extends UHCModule {
     }
 
     @EventHandler(ignoreCancelled = true)
-    public void onPlayerPickupItem(PlayerPickupItemEvent event) {
-        if (isTicket(event.getItem().getItemStack())) {
-            if (!canUse(event.getPlayer(), event.getItem().getItemStack())) {
-                event.setCancelled(true);
+    public void onPlayerPickupItem(EntityPickupItemEvent event) {
+        Entity entity = event.getEntity();
+        if(entity.getType() == EntityType.PLAYER) {
+            if (isTicket(event.getItem().getItemStack())) {
+                if (!canUse((Player) entity, event.getItem().getItemStack())) {
+                    event.setCancelled(true);
+                }
             }
         }
     }
@@ -209,7 +215,8 @@ public class RegenTicketModule extends UHCModule {
                     net.md_5.bungee.api.ChatColor.RED, Chat.Style.BOLD));
         } else {
             double currHealth = player.getHealth();
-            double maxHealth = player.getMaxHealth();
+            AttributeInstance maxHealthAttr = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+            double maxHealth = maxHealthAttr != null ? maxHealthAttr.getValue() : 20;
             double healAmount = maxHealth - currHealth;
             int healed = 20 - player.getFoodLevel();
             player.setHealth(maxHealth);

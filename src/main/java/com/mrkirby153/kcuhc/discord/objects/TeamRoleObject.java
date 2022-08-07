@@ -5,7 +5,7 @@ import com.mrkirby153.kcuhc.discord.ObjectRegistry;
 import com.mrkirby153.kcuhc.game.team.UHCTeam;
 import me.mrkirby153.kcutils.scoreboard.ScoreboardTeam;
 import net.dv8tion.jda.api.entities.Role;
-import org.apache.commons.lang.WordUtils;
+import org.apache.commons.text.WordUtils;
 
 import java.awt.Color;
 import java.util.Optional;

@@ -17,6 +17,7 @@ import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.HoverEvent.Action;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
@@ -95,10 +96,10 @@ public class UHCBotLinkMapper implements PlayerMapper {
             "{discord}", this.discordModule.guild.getName(), "{command}", command);
 
         BaseComponent suggest = Chat.formattedChat("[COPY]", ChatColor.AQUA);
-        suggest.setHoverEvent(new HoverEvent(Action.SHOW_TEXT, new BaseComponent[]{
+        suggest.setHoverEvent(new HoverEvent(Action.SHOW_TEXT, new Text(new BaseComponent[] {
             Chat.formattedChat(
                 "Click to copy the command to your chat box for easy copying", ChatColor.WHITE)
-        }));
+        })));
         suggest.setClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, command));
         component.addExtra(suggest);
         player.spigot().sendMessage(component);

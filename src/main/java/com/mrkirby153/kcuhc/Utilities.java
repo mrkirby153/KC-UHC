@@ -15,7 +15,7 @@ import java.util.UUID;
 
 public class Utilities {
 
-    private static final String GOLDEN_HEAD_URL = "http://textures.minecraft.net/texture/3bb612eb495ede2c5ca5178d2d1ecf1ca5a255d25dfc3c254bc47f6848791d8";
+    private static final String GOLDEN_HEAD_URL = "https://textures.minecraft.net/texture/3bb612eb495ede2c5ca5178d2d1ecf1ca5a255d25dfc3c254bc47f6848791d8";
     public static final UUID HEAD_UUID = UUID.fromString("1e1eb54b-65e9-49f3-91cf-c11be6fdc401");
 
     public static ItemStack getGoldenHead() {
@@ -51,16 +51,16 @@ public class Utilities {
 
     private static Object getGameProfile(UUID uuid)
         throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        Class gameProfileClass = Class.forName("com.mojang.authlib.GameProfile");
-        Constructor constructor = gameProfileClass.getConstructor(UUID.class, String.class);
+        Class<?> gameProfileClass = Class.forName("com.mojang.authlib.GameProfile");
+        Constructor<?> constructor = gameProfileClass.getConstructor(UUID.class, String.class);
 
         return constructor.newInstance(uuid, null);
     }
 
     private static Object constructSignedProperty(String key, String value)
         throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        Class propertyConstructor = Class.forName("com.mojang.authlib.properties.Property");
-        Constructor constructor = propertyConstructor.getConstructor(String.class, String.class);
+        Class<?> propertyConstructor = Class.forName("com.mojang.authlib.properties.Property");
+        Constructor<?> constructor = propertyConstructor.getConstructor(String.class, String.class);
 
         return constructor.newInstance(key, value);
     }

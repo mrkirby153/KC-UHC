@@ -272,7 +272,7 @@ public class GameCommand extends BaseCommand {
                 sender.sendMessage(Chat.message("Preset", "Saved preset {preset}",
                     "{preset}", name).toLegacyText());
             } catch (IOException e) {
-                Throwables.propagate(e);
+                Throwables.throwIfUnchecked(e);
             }
         }
 
@@ -286,7 +286,7 @@ public class GameCommand extends BaseCommand {
             } catch (FileNotFoundException e) {
                 sender.sendMessage(Chat.error("That preset doesn't exist").toLegacyText());
             } catch (IOException e) {
-                Throwables.propagate(e);
+                Throwables.throwIfUnchecked(e);
             }
         }
     }
