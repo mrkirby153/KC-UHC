@@ -412,13 +412,18 @@ public class DiscordOAuthModule extends UHCModule {
                     DiscordModule.class);
                 if (modOpt.isPresent()) {
                     JDA jda = modOpt.get().jda;
-                    List<Guild> g = jda.getGuildsByName(s, true);
-                    if (g.size() > 1) {
-                        throw new SettingParseException("More than one guild exists by that name!");
-                    } else if (g.size() == 1) {
-                        return g.get(0).getId();
-                    } else {
-                        throw new SettingParseException("No guild found with that name!");
+                    try {
+                        List<Guild> g = jda.getGuildsByName(s, true);
+                        if (g.size() > 1) {
+                            throw new SettingParseException(
+                                "More than one guild exists by that name!");
+                        } else if (g.size() == 1) {
+                            return g.get(0).getId();
+                        } else {
+                            throw new SettingParseException("No guild found with that name!");
+                        }
+                    } catch (Exception e) {
+                        return "";
                     }
                 } else {
                     throw new SettingParseException(
