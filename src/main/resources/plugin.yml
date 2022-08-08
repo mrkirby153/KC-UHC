@@ -1,7 +1,7 @@
 name: KC-UHC
 version: ${project.version}
 author: mrkirby153
-main: com.mrkirby153.kcuhc.UHC
+main: com.mrkirby153.kcuhc.UHCPlugin
 depend: [ProtocolLib]
 api-version: '1.13'
 permissions:
