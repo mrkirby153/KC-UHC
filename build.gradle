@@ -80,6 +80,11 @@ sourceSets {
 shadowJar {
     relocate 'co.aikar.commands', 'com.mrkirby153.kcuhc.thirdparty.acf'
     relocate 'co.aikar.locales', 'com.mrkirby153.kcuhc.thirdparty.acflocales'
+    relocate 'me.mrkirby153.kcutils', 'com.mrkirby153.kcuhc.thirdparty.kirbyutils'
+    dependencies {
+        include(dependency('co.aikar:acf-bukkit'))
+        include(dependency('me.mrkirby153:KirbyUtils-Bukkit'))
+    }
 }
 
 task deployTestServer(type: Copy) {
