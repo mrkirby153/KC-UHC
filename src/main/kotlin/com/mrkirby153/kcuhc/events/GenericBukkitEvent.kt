@@ -1,5 +1,6 @@
 package com.mrkirby153.kcuhc.events
 
+import org.bukkit.event.Cancellable
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 
@@ -14,5 +15,18 @@ open class GenericBukkitEvent : Event() {
 
         @JvmStatic
         fun getHandlerList() = handlers
+    }
+}
+
+/**
+ * A generic bukkit event that can be canceled
+ */
+open class GenericCancellableEvent : GenericBukkitEvent(), Cancellable {
+
+    private var canceled = false
+    override fun isCancelled() = canceled
+
+    override fun setCancelled(cancel: Boolean) {
+        canceled = cancel
     }
 }
