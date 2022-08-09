@@ -1,14 +1,17 @@
+import io.reflekt.plugin.reflekt
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     java
     id("com.github.johnrengelman.shadow") version "5.2.0"
-    kotlin("jvm") version "1.7.10"
+    kotlin("jvm") version "1.5.30"
+    id("io.reflekt") version "1.5.30"
 }
 
 repositories {
     mavenLocal()
     mavenCentral()
+    maven(url = "https://packages.jetbrains.team/maven/p/reflekt/reflekt")
     maven(url = "https://hub.spigotmc.org/nexus/content/groups/public/")
     maven(url = "https://repo.mrkirby153.com/repository/maven-public/")
     maven(url = "https://oss.sonatype.org/content/repositories/snapshots/")
@@ -31,6 +34,7 @@ dependencies {
     compileOnly("com.comphenix.protocol:ProtocolLib-API:4.4.0")
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    implementation("io.reflekt:reflekt-dsl:1.5.30")
 }
 
 group = "me.mrkirby153"
@@ -62,5 +66,11 @@ tasks {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-java-parameters")
+        jvmTarget = "11"
+        incremental = false
     }
+}
+
+reflekt {
+    enabled = true
 }
