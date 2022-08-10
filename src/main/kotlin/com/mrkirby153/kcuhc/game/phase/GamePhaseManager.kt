@@ -6,7 +6,6 @@ import com.mrkirby153.kcuhc.utils.register
 import com.mrkirby153.kcuhc.utils.unregister
 import me.mrkirby153.kcutils.event.UpdateEvent
 import me.mrkirby153.kcutils.event.UpdateType
-import org.apache.commons.collections4.multimap.AbstractListValuedMap
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 
@@ -82,8 +81,8 @@ object GamePhaseManager : Listener {
         if (event.type != UpdateType.FAST) {
             return
         }
-        if(getPlugin().game.state != GameState.RUNNING) {
-            getPlugin().logger.info("Deactivating all phases, game is no longer running")
+        if (getPlugin().game.state != GameState.RUNNING && phases.any { it.active }) {
+            getPlugin().logger.info("Deactivating all phases, game is not running")
             phases.filter { it.active }.forEach { deactivate(it) }
             return
         }

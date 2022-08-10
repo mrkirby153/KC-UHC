@@ -13,7 +13,7 @@ open class Module(
     val name: String,
     val description: String,
     val item: Material,
-    val category: Material
+    val category: ModuleCategory
 ) : Listener {
 
     var loaded = false
@@ -104,4 +104,5 @@ open class Module(
  * Enum class for module categories
  */
 enum class ModuleCategory(val icon: Material) {
+    UNKNOWN(Material.PAPER)
 }

@@ -1,6 +1,7 @@
 package com.mrkirby153.kcuhc
 
 import com.mrkirby153.kcuhc.game.Game
+import com.mrkirby153.kcuhc.game.ModuleManager
 import com.mrkirby153.kcuhc.game.phase.GamePhaseManager
 import com.mrkirby153.kcuhc.utils.setPlugin
 import me.mrkirby153.kcutils.event.UpdateEventHandler
@@ -23,6 +24,9 @@ class UHCPlugin : JavaPlugin() {
         server.pluginManager.registerEvents(GamePhaseManager, this)
 
         game = Game(this)
+
+        ModuleManager.registerAll()
+
         game.initialize()
     }
 

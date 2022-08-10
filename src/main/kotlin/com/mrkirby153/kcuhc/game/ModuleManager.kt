@@ -1,5 +1,8 @@
 package com.mrkirby153.kcuhc.game
 
+import com.mrkirby153.kcuhc.utils.getPlugin
+import io.reflekt.Reflekt
+
 object ModuleManager {
 
     private val modules = mutableListOf<Module>()
@@ -14,7 +17,21 @@ object ModuleManager {
         if (modules.any { it.id == module.id }) {
             throw DuplicateModuleException(module.id)
         }
+        getPlugin().logger.info("Registering module ${module.id}")
         modules.add(module)
+    }
+
+    fun registerAll() {
+        val moduleClasses = Reflekt.classes().withSupertype<Module>().toList().filter { it != Module::class }
+        getPlugin().logger.info("Loading ${moduleClasses.size} modules")
+        moduleClasses.forEach { clazz ->
+            val inst = clazz.java.getDeclaredConstructor().newInstance()
+            register(inst)
+        }
+        getPlugin().logger.info("Enabling autoload modules")
+        modules.filter { it.autoLoad }.forEach {
+            it.load()
+        }
     }
 
     fun getModules(): List<Module> = modules.toList()
