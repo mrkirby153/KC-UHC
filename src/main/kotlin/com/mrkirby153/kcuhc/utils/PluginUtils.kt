@@ -24,17 +24,13 @@ private fun fireEvent(event: Event) {
 }
 
 /**
- * Fires an event running the [callback] if the event succeeds. If this event does not implement
- * [Cancellable] then the callback will always fire.
+ * Fires an event running the [callback] if the event succeeds
  */
-fun Event.fire(callback: (Event.() -> Unit)? = null) {
-    fireEvent(this)
-    if (this is Cancellable) {
-        if (!isCancelled) {
-            callback?.invoke(this)
-        }
-    } else {
-        callback?.invoke(this)
+fun Cancellable.fire(callback: (Event.() -> Unit)? = null) {
+    val event = this as? Event ?: throw IllegalStateException("Attempting to fire a non-event")
+    fireEvent(event)
+    if (!isCancelled) {
+        callback?.invoke(event)
     }
 }
 
