@@ -12,7 +12,7 @@ repositories {
     mavenLocal()
     mavenCentral()
     maven(url = "https://packages.jetbrains.team/maven/p/reflekt/reflekt")
-    maven(url = "https://hub.spigotmc.org/nexus/content/groups/public/")
+    maven(url = "https://repo.papermc.io/repository/maven-public//")
     maven(url = "https://repo.mrkirby153.com/repository/maven-public/")
     maven(url = "https://oss.sonatype.org/content/repositories/snapshots/")
     maven(url = "https://repo.dmulloy2.net/content/groups/public/")
@@ -30,7 +30,7 @@ dependencies {
     implementation("com.mrkirby153:bot-core:3.1-SNAPSHOT")
 
     compileOnly("org.geysermc.floodgate:api:2.0-SNAPSHOT")
-    compileOnly("org.spigotmc:spigot-api:1.19.2-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT")
     compileOnly("com.comphenix.protocol:ProtocolLib-API:4.4.0")
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -40,8 +40,6 @@ dependencies {
 group = "me.mrkirby153"
 version = "3.0-SNAPSHOT"
 description = "KC UHC"
-java.sourceCompatibility = JavaVersion.VERSION_11
-java.targetCompatibility = JavaVersion.VERSION_11
 
 tasks {
     shadowJar {
@@ -73,4 +71,8 @@ tasks.withType<KotlinCompile> {
 
 reflekt {
     enabled = true
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
