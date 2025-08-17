@@ -1,0 +1,4 @@
+name: KC-UHC
+version: '3.0-SNAPSHOT'
+main: com.mrkirby153.uhc.UHCPlugin
+api-version: '1.21'
