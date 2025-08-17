@@ -2,17 +2,25 @@ package com.mrkirby153.uhc.game.teams
 
 import com.mrkirby153.uhc.BukkitEvent
 import com.mrkirby153.uhc.game.UHCGame
+import net.kyori.adventure.text.format.TextColor
 import org.bukkit.Bukkit
-import org.bukkit.Color
 import org.bukkit.OfflinePlayer
 import java.util.UUID
 
 /**
  * Class representing a team in a UHC game
  */
-class UHCTeam(private val game: UHCGame, val name: String, val color: Color) {
-    val id = UUID.randomUUID()
+class UHCTeam(
+    private val game: UHCGame,
+    val name: String,
+    val color: TextColor,
+    val id: UUID = UUID.randomUUID()
+) {
+
     private val members = mutableSetOf<UUID>()
+
+    val size
+        get() = members.size
 
     /**
      * Adds the given [player] to this team
@@ -55,6 +63,7 @@ class UHCTeam(private val game: UHCGame, val name: String, val color: Color) {
     }
 
     fun getPlayers() = members.map { Bukkit.getOfflinePlayer(it) }
+
 }
 
 

@@ -1,4 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import xyz.jpenilla.runtask.task.AbstractRun
+
 plugins {
     kotlin("jvm") version "2.2.10"
     id("com.gradleup.shadow") version "8.3.0"
@@ -24,7 +25,7 @@ repositories {
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("me.mrkirby153:KirbyUtils-Bukkit:3.3")
+    implementation("me.mrkirby153:KirbyUtils-Bukkit:7.0-SNAPSHOT")
     implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
 }
 
@@ -33,16 +34,13 @@ tasks {
         // Configure the Minecraft version for our task.
         // This is the only required configuration besides applying the plugin.
         // Your plugin's jar (or shadowJar if present) will be used automatically.
-        minecraftVersion("1.21")
+        minecraftVersion("1.21.8")
+        downloadPlugins {
+            modrinth("luckperms", "v5.5.0-bukkit")
+        }
     }
     shadowJar {
-        relocate("co.aikar.commands", "com.mrkirby153.uhc.vendor.acf")
-        relocate("co.aikar.locales", "com.mrkirby153.uhc.vendor.acflocales")
-        relocate("me.mrkirby153.kcutils", "com.mrkirby153.vendor.kcutils")
-        dependencies {
-            include(dependency("co.aikar:acf-paper"))
-            include(dependency("me.mrkirby153:KirbyUtils-Bukkit"))
-        }
+        minimize()
     }
 }
 
@@ -65,4 +63,12 @@ tasks.processResources {
     filesMatching("plugin.yml") {
         expand(props)
     }
+}
+
+tasks.withType<AbstractRun> {
+    javaLauncher = javaToolchains.launcherFor {
+        vendor = JvmVendorSpec.JETBRAINS
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    jvmArgs("-XX:+AllowEnhancedClassRedefinition")
 }

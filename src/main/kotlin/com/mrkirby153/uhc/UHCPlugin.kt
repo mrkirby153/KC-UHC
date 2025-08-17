@@ -1,12 +1,14 @@
 package com.mrkirby153.uhc
 
+import co.aikar.commands.PaperCommandManager
 import com.mrkirby153.uhc.game.UHCGame
 import me.mrkirby153.kcutils.event.UpdateEventHandler
 import org.bukkit.plugin.java.JavaPlugin
 
 class UHCPlugin : JavaPlugin() {
 
-    private lateinit var game: UHCGame
+    lateinit var game: UHCGame
+    private lateinit var commandManager: PaperCommandManager
     private lateinit var updateEventHandler: UpdateEventHandler
 
     override fun onEnable() {
@@ -18,7 +20,8 @@ class UHCPlugin : JavaPlugin() {
         game = UHCGame(this)
         game.init()
 
-        val commands = Commands(this)
+        commandManager = PaperCommandManager(this)
+        val commands = Commands(this, commandManager)
         commands.register()
     }
 

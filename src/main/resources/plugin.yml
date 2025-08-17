@@ -2,3 +2,37 @@ name: KC-UHC
 version: '3.0-SNAPSHOT'
 main: com.mrkirby153.uhc.UHCPlugin
 api-version: '1.21'
+permissions:
+  kcuhc.*:
+    description: Allows access to all KC-UHC commands
+    children:
+      kcuhc.admin: true
+      kcuhc.player: true
+  kcuhc.admin:
+    description: Allows access to admin commands
+    default: op
+    children:
+      kcuhc.teams.*: true
+  kcuhc.player:
+    description: Allows access to player commands
+    default: true
+    children:
+      kcuhc.teams.join: true
+      kcuhc.teams.show: true
+  kcuhc.teams.*:
+    description: Grants all team permissions
+    children:
+      kcuhc.teams.create:
+        description: Create a new team
+      kcuhc.teams.remove:
+        description: Remove a team
+      kcuhc.teams.join:
+        description: Join a team
+      kcuhc.teams.leave:
+        description: Leave a team
+      kcuhc.teams.join.other:
+        description: Join another player to a team
+      kcuhc.teams.list:
+        description: List all teams
+      kcuhc.teams.reload:
+        description: Reload all teams
