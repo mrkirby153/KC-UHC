@@ -20,6 +20,9 @@ class UHCPlugin : JavaPlugin() {
         game = UHCGame(this)
         game.init()
 
+        UHCPlayer.plugin = this
+        server.pluginManager.registerEvents(UHCPlayer.Companion, this)
+
         commandManager = PaperCommandManager(this)
         val commands = Commands(this, commandManager)
         commands.register()

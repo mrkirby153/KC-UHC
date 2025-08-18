@@ -1,5 +1,6 @@
 package com.mrkirby153.uhc
 
+import co.aikar.commands.ACFBukkitUtil
 import co.aikar.commands.InvalidCommandArgument
 import co.aikar.commands.PaperCommandManager
 import com.mrkirby153.uhc.game.teams.TeamCommands
@@ -56,6 +57,12 @@ class Commands(private val plugin: UHCPlugin, private val manager: PaperCommandM
                 ctx.issuer.issuer.sendMessage(Chat.message("Error", "Invalid color: $color"))
                 throw InvalidCommandArgument(false)
             }
+        }
+        manager.commandContexts.registerIssuerAwareContext(UHCPlayer::class.java) { ctx ->
+            val arg = ctx.popFirstArg() ?: throw InvalidCommandArgument()
+            val player =
+                ACFBukkitUtil.findPlayerSmart(ctx.issuer, arg) ?: throw InvalidCommandArgument()
+            player.uhcPlayer
         }
     }
 }
