@@ -27,6 +27,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("me.mrkirby153:KirbyUtils-Bukkit:7.0-SNAPSHOT")
     implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
+    implementation(kotlin("reflect"))
 }
 
 tasks {
@@ -40,7 +41,7 @@ tasks {
         }
     }
     shadowJar {
-        minimize()
+        archiveClassifier = ""
     }
 }
 

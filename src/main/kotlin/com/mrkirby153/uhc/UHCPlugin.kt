@@ -11,8 +11,12 @@ class UHCPlugin : JavaPlugin() {
     private lateinit var commandManager: PaperCommandManager
     private lateinit var updateEventHandler: UpdateEventHandler
 
+    var gameTitle = "UHC"
+
     override fun onEnable() {
         saveDefaultConfig()
+
+        gameTitle = config.getString("game_title") ?: "UHC"
 
         updateEventHandler = UpdateEventHandler(this)
         updateEventHandler.load()
